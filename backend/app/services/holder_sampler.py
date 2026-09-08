@@ -10,12 +10,13 @@ async def sample_token_holders_rpc(mint: str) -> int:
     Samples holder count (number of token accounts with non-zero balance) via Helius DAS API / RPC.
     Sampled EXACTLY ONCE at labeling time (48 hours after launch).
     """
-    if not settings.HELIUS_API_KEY:
+    api_key = settings.CLEAN_HELIUS_API_KEY
+    if not api_key:
         # Simulated holder count for testing / local execution
         import random
         return int(40 + random.random() ** 2.4 * 2600)
 
-    url = f"https://mainnet.helius-rpc.com/?api-key={settings.HELIUS_API_KEY}"
+    url = f"https://mainnet.helius-rpc.com/?api-key={api_key}"
     payload = {
         "jsonrpc": "2.0",
         "id": "emile-holders",

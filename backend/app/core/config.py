@@ -41,6 +41,16 @@ class Settings(BaseSettings):
 
     # Data Provider Endpoints & Keys
     HELIUS_API_KEY: str = os.getenv("HELIUS_API_KEY", "")
+
+    @property
+    def CLEAN_HELIUS_API_KEY(self) -> str:
+        key = self.HELIUS_API_KEY.strip()
+        if "api-key=" in key:
+            key = key.split("api-key=")[-1].split("&")[0]
+        elif key.startswith("http://") or key.startswith("https://"):
+            key = key.rstrip("/").split("/")[-1]
+        return key
+
     PUMP_FUN_WS_URL: str = os.getenv("PUMP_FUN_WS_URL", "wss://pumpscan.helius-rpc.com")
     DEXSCREENER_API_BASE: str = "https://api.dexscreener.com/latest/dex"
     SOLANA_RPC_URL: str = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")

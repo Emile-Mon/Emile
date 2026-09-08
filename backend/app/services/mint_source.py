@@ -65,8 +65,8 @@ class CommunityRestMintSource:
 
 def get_default_mint_source() -> MintSource:
     """Returns the primary configured MintSource according to brief §3.1 hierarchy."""
-    import os
-    helius_key = os.getenv("HELIUS_API_KEY", "")
+    from app.core.config import settings
+    helius_key = settings.CLEAN_HELIUS_API_KEY
     if helius_key:
         return HeliusWebhookMintSource(helius_key)
     return CommunityRestMintSource()
