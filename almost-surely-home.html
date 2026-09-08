@@ -1,0 +1,606 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Almost Surely — Émile is still reading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#0A0E13; --panel:#101720; --panel2:#0D131A;
+  --rule:#1D2836; --soft:#16202A;
+  --fg:#C8D4E2; --dim:#647688; --faint:#3B4854;
+  --banana:#E9C24B; --banana-hi:#F7DE8A; --banana-lo:#B58E28;
+  --fur:#7C6046; --fur-hi:#A8845E; --fur-face:#D9BD9B;
+  --live:#3FBF7F; --stall:#9C5850; --violet:#8B6FE8; --cyan:#4EA8C4;
+  --crt:#08100C;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ink);color:var(--fg);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1340px;margin:0 auto;border-left:1px solid var(--soft);border-right:1px solid var(--soft)}
+
+.top{padding:20px 24px;border-bottom:1px solid var(--rule);display:flex;gap:24px;align-items:flex-end;flex-wrap:wrap}
+.wordmark{font-family:'Fraunces',serif;font-weight:800;font-size:28px;letter-spacing:-.025em;color:#F0F5FA;line-height:1}
+.sub{color:var(--dim);font-size:11.5px;margin-top:6px;max-width:60ch}
+.sub em{color:var(--banana);font-style:normal}
+.topright{margin-left:auto;text-align:right}
+.sym{font-family:'Fraunces',serif;font-size:15px;color:var(--banana);font-weight:600}
+.phase{color:var(--faint);font-size:11px;margin-top:3px}
+
+/* ---- hero ---- */
+.hero{display:grid;grid-template-columns:1.02fr 1.28fr;position:relative}
+.scene{padding:14px 10px 0;background:radial-gradient(115% 85% at 46% 34%,#141C27 0%,var(--ink) 72%)}
+.scene svg{display:block;width:100%;height:auto}
+.scene-cap{padding:2px 20px 16px;color:var(--faint);font-size:11px;text-align:center}
+
+/* magnifier connectors */
+.zoomlines{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+.zoomlines line{stroke:var(--banana);stroke-width:1;stroke-dasharray:4 5;opacity:.32}
+
+/* ---- the screen ---- */
+.screen{border-left:1px solid var(--rule);display:flex;flex-direction:column;background:var(--crt);position:relative;overflow:hidden}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px)}
+.scr-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #14261C;background:#0A140F;position:relative;z-index:2}
+.scr-bar .lamp{width:7px;height:7px;border-radius:50%;background:var(--live);animation:blip 2.2s ease-in-out infinite}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.22}}
+.scr-bar .t{color:#8FB89D;font-size:11px}
+.scr-bar .r{margin-left:auto;color:#3E5C4A;font-size:10.5px}
+
+.code{flex:1;min-height:236px;max-height:236px;overflow:hidden;padding:12px 16px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:#9DBFA9;position:relative;z-index:2}
+.cur{display:inline-block;width:6px;height:13px;background:var(--banana);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+.k{color:var(--violet)} .s{color:var(--live)} .n{color:var(--cyan)} .c{color:#415A4A;font-style:italic}
+
+.pull{display:flex;gap:14px;padding:7px 16px;border-top:1px solid #14261C;border-bottom:1px solid #14261C;background:#0A140F;font-size:10.5px;color:#4E7360;position:relative;z-index:2}
+.pull b{color:#9FD1B2;font-weight:500}
+
+.feedbox{height:238px;overflow:hidden;position:relative;z-index:2}
+.feedin{position:absolute;inset:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1C3327 transparent}
+.feedin::-webkit-scrollbar{width:5px}.feedin::-webkit-scrollbar-thumb{background:#1C3327}
+.trow{display:grid;grid-template-columns:22px 1.35fr 62px 62px 66px;gap:10px;align-items:center;padding:6px 16px;border-bottom:1px solid #101E17;font-size:11.5px}
+.trow.new{animation:slide .3s ease-out}
+@keyframes slide{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.lg{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:8px;font-weight:700;color:#08100C}
+.nm{color:#DCEDE3}.sy{color:var(--banana);font-size:10.5px;margin-left:5px}
+.lore{color:#4E7360;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.tt{color:#3E5C4A;font-size:9.5px;margin-top:1px}
+.num{text-align:right;font-variant-numeric:tabular-nums;color:#8FB89D}
+.pass{color:var(--live)}.stall{color:var(--stall)}
+
+/* ---- stats ---- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule)}
+.st{padding:12px 18px}.st+.st{border-left:1px solid var(--soft)}
+.st-k{color:var(--faint);font-size:10px}
+.st-v{font-family:'Fraunces',serif;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px;letter-spacing:-.02em}
+#s-all{color:#EAF1F8}#s-pass{color:var(--live)}#s-stall{color:var(--stall)}#s-hold{color:var(--cyan)}
+
+/* ---- proof ---- */
+.proof{border-top:1px solid var(--rule);display:grid;grid-template-columns:1fr 1fr;background:var(--panel)}
+.pc{padding:18px 22px}.pc+.pc{border-left:1px solid var(--soft)}
+.ph{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:#EAF1F8;letter-spacing:-.01em}
+.pp{color:var(--dim);font-size:11.5px;margin-top:6px;line-height:1.65}.pp b{color:var(--fg);font-weight:500}
+.formula{background:var(--panel2);border:1px solid var(--soft);border-radius:3px;padding:14px;text-align:center;font-size:13.5px;color:#DCE6F0;margin:14px 0}
+.frac{display:inline-block;vertical-align:middle;text-align:center;margin:0 2px}
+.frac .nu{display:block;padding:0 6px 2px;border-bottom:1px solid var(--dim);font-size:11px}
+.frac .de{display:block;padding-top:2px;font-size:11px}
+.rad{display:inline-block;border-top:1px solid var(--dim);padding:3px 6px 0;margin-left:-2px}
+.eps{color:var(--violet);font-weight:700}.vv{color:var(--banana)}
+.ros{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--soft);border-radius:3px;overflow:hidden}
+.ro{padding:10px 12px;background:var(--panel2)}.ro+.ro{border-left:1px solid var(--soft)}
+.ro-k{color:var(--faint);font-size:9.5px}
+.ro-v{font-family:'Fraunces',serif;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#v-eps{color:var(--violet)}#v-lb{color:var(--banana)}#v-auc{color:var(--live)}
+.ctrl{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.sr{display:grid;grid-template-columns:96px 1fr 58px;gap:10px;align-items:center}
+.sr label{color:var(--dim);font-size:10.5px}
+.sr output{text-align:right;font-variant-numeric:tabular-nums;font-size:11px}
+input[type=range]{-webkit-appearance:none;appearance:none;height:3px;background:var(--rule);border-radius:2px;outline:none}
+input[type=range]:focus-visible{outline:2px solid var(--banana);outline-offset:5px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--banana);border:2px solid var(--ink);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--banana);border:2px solid var(--ink);cursor:pointer}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:3px;border:1px solid var(--soft);background:var(--panel2);font-size:11.5px;line-height:1.65;color:var(--dim)}
+.verdict.ready{border-color:var(--banana);color:var(--banana)}
+.verdict b{color:var(--fg);font-weight:500}.verdict.ready b{color:var(--banana-hi)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{background:transparent;border:1px solid var(--rule);color:var(--fg);font-family:inherit;font-size:11px;padding:7px 13px;border-radius:3px;cursor:pointer}
+.btn:hover{border-color:var(--banana);color:var(--banana)}
+.btn:focus-visible{outline:2px solid var(--banana);outline-offset:2px}
+.btn.on{border-color:var(--banana);color:var(--banana)}
+
+.foot{padding:13px 24px;border-top:1px solid var(--rule);color:var(--faint);font-size:10.5px;display:flex;gap:18px;flex-wrap:wrap}
+.foot .w{color:var(--banana-lo)}
+
+@media(max-width:980px){
+  .hero{grid-template-columns:1fr}
+  .screen{border-left:none;border-top:1px solid var(--rule)}
+  .zoomlines{display:none}
+  .proof{grid-template-columns:1fr}.pc+.pc{border-left:none;border-top:1px solid var(--soft)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .st:nth-child(3){border-left:none}
+  .st:nth-child(3),.st:nth-child(4){border-top:1px solid var(--soft)}
+  .trow{grid-template-columns:20px minmax(0,1fr) 50px 58px;gap:8px;padding:7px 13px}
+  .hide-sm{display:none}
+  .lore{font-size:9.5px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<div class="top">
+  <div>
+    <div class="wordmark">Almost Surely</div>
+    <div class="sub">Émile has been at this desk since day one, reading every Solana token that clears $10K. A banana goes in the jar only when the evidence is <em>provably</em> good enough — not when the calendar says so.</div>
+  </div>
+  <div class="topright">
+    <div class="sym">$SURELY</div>
+    <div class="phase" id="phase">phase 1 · learning</div>
+  </div>
+</div>
+
+<div class="hero">
+  <svg class="zoomlines" id="zl" preserveAspectRatio="none" aria-hidden="true">
+    <line id="zl1" x1="0" y1="0" x2="0" y2="0"/><line id="zl2" x1="0" y1="0" x2="0" y2="0"/>
+  </svg>
+
+  <!-- ================= SCENE ================= -->
+  <div>
+  <div class="scene">
+  <svg viewBox="0 0 720 470" id="sceneSvg" role="img" aria-labelledby="st">
+    <title id="st">Émile the monkey typing at a monitor, with a jar of bananas beside his desk</title>
+    <defs>
+      <symbol id="ban" viewBox="-4 -18 26 26">
+        <path d="M1 4 Q-1 -6 7 -14 Q12 -18 15 -16 Q16 -15 14 -13 Q7 -8 5 0 Q3 6 1 4 Z" fill="var(--banana)" stroke="var(--banana-lo)" stroke-width="1"/>
+        <path d="M7 -14 Q11 -17 14 -15" fill="none" stroke="var(--banana-hi)" stroke-width="1.3" stroke-linecap="round"/>
+        <rect x="13.4" y="-17.4" width="2.5" height="3.3" rx="1" transform="rotate(-28 14.7 -15.7)" fill="#6B5424"/>
+      </symbol>
+      <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8FB4CE" stop-opacity=".26"/>
+        <stop offset=".26" stop-color="#D6EBFA" stop-opacity=".10"/>
+        <stop offset=".64" stop-color="#5D7E96" stop-opacity=".07"/>
+        <stop offset="1" stop-color="#8FB4CE" stop-opacity=".24"/>
+      </linearGradient>
+      <clipPath id="jarClip"><path d="M46 218 L46 386 Q46 404 64 404 L134 404 Q152 404 152 386 L152 218 Z"/></clipPath>
+      <clipPath id="scrClip"><rect x="466" y="176" width="196" height="122" rx="3"/></clipPath>
+      <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#2BFF9E" stop-opacity=".16"/><stop offset="1" stop-color="#2BFF9E" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- floor -->
+    <ellipse cx="380" cy="432" rx="330" ry="17" fill="#000" opacity=".36"/>
+
+    <!-- ============ JAR ============ -->
+    <path d="M46 218 L46 386 Q46 404 64 404 L134 404 Q152 404 152 386 L152 218 Z" fill="#0C1219"/>
+    <g clip-path="url(#jarClip)">
+      <g id="pile"></g>
+      <rect id="sheen" x="46" y="404" width="106" height="2" fill="var(--banana-hi)" opacity="0"/>
+    </g>
+    <path d="M46 218 L46 386 Q46 404 64 404 L134 404 Q152 404 152 386 L152 218 Z" fill="url(#glass)" stroke="#7FA2BC" stroke-opacity=".45" stroke-width="2"/>
+    <rect x="57" y="234" width="7" height="146" rx="3.5" fill="#EAF6FF" opacity=".14"/>
+    <rect x="140" y="244" width="3" height="110" rx="1.5" fill="#EAF6FF" opacity=".08"/>
+    <rect x="40" y="204" width="118" height="15" rx="5" fill="#22303E" stroke="#7FA2BC" stroke-opacity=".4" stroke-width="1.4"/>
+    <rect x="45" y="194" width="108" height="12" rx="4" fill="#2A3B4B"/>
+    <line x1="36" y1="222" x2="162" y2="222" stroke="var(--banana)" stroke-width="1.1" stroke-dasharray="4 4" opacity=".7"/>
+    <text x="162" y="218" text-anchor="end" fill="var(--banana)" font-size="9.5" font-family="JetBrains Mono, monospace">AUC 0.60</text>
+    <text id="pct" x="99" y="320" text-anchor="middle" font-family="Fraunces, serif" font-size="27" font-weight="700" fill="#F2F7FB" opacity=".15">0%</text>
+
+    <!-- ============ DESK ============ -->
+    <rect x="180" y="332" width="530" height="15" rx="3" fill="#3A2E24"/>
+    <rect x="180" y="347" width="530" height="6" fill="#2A211A"/>
+    <rect x="238" y="353" width="13" height="66" fill="#2A211A"/>
+    <rect x="672" y="353" width="13" height="66" fill="#2A211A"/>
+
+    <!-- ============ ÉMILE ============ -->
+    <g id="emile">
+      <!-- stool -->
+      <rect x="252" y="392" width="9" height="34" fill="#2A211A"/>
+      <ellipse cx="256" cy="428" rx="34" ry="7" fill="#2A211A"/>
+      <!-- tail -->
+      <path id="tail" d="M228 356 Q182 362 178 322 Q176 300 195 298" fill="none" stroke="var(--fur)" stroke-width="10" stroke-linecap="round"/>
+      <!-- far leg -->
+      <path d="M262 372 Q292 384 300 404" fill="none" stroke="#6A5139" stroke-width="17" stroke-linecap="round"/>
+      <!-- seat -->
+      <ellipse cx="256" cy="386" rx="40" ry="16" fill="var(--fur)"/>
+      <!-- body, leaning toward the screen -->
+      <path d="M228 380 Q220 300 254 274 Q292 254 306 292 Q318 330 300 380 Z" fill="var(--fur)"/>
+      <path d="M252 372 Q248 320 272 300 Q294 288 300 318 Q304 348 292 374 Z" fill="var(--fur-face)" opacity=".42"/>
+
+      <!-- far arm -->
+      <path id="armB" d="M296 300 Q346 314 390 336" fill="none" stroke="#6A5139" stroke-width="16" stroke-linecap="round"/>
+      <circle id="handB" cx="394" cy="337" r="10" fill="#8D7050"/>
+      <!-- near arm -->
+      <path id="armA" d="M292 306 Q344 326 376 344" fill="none" stroke="var(--fur)" stroke-width="17" stroke-linecap="round"/>
+      <circle id="handA" cx="380" cy="345" r="10.5" fill="var(--fur-hi)"/>
+
+      <!-- head, profile facing right -->
+      <g id="head">
+        <circle cx="252" cy="238" r="15" fill="var(--fur-hi)"/>
+        <circle cx="252" cy="238" r="7.5" fill="var(--fur-face)" opacity=".55"/>
+        <circle cx="284" cy="238" r="38" fill="var(--fur)"/>
+        <path d="M296 226 Q330 228 330 250 Q330 268 300 268 Q288 250 296 226 Z" fill="var(--fur-face)"/>
+        <path d="M290 216 Q308 208 320 218" fill="none" stroke="#5B452F" stroke-width="3.2" stroke-linecap="round"/>
+        <g id="eyes">
+          <ellipse cx="303" cy="234" rx="7" ry="8" fill="#F4EFE6"/>
+          <circle id="pup" cx="306" cy="236" r="3.9" fill="#241A12"/>
+        </g>
+        <ellipse cx="325" cy="243" rx="4.5" ry="3.4" fill="#B79878" opacity=".85"/>
+        <path id="mouth" d="M306 258 Q316 264 324 258" fill="none" stroke="#87684A" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- keyboard -->
+    <g id="kb">
+      <path d="M352 348 L452 348 L462 330 L372 330 Z" fill="#2E3A46"/>
+      <path d="M362 344 L448 344 L455 334 L371 334 Z" fill="#1B242D"/>
+      <g fill="#3E4C5A">
+        <rect x="374" y="336" width="7" height="3" rx="1"/><rect x="385" y="336" width="7" height="3" rx="1"/>
+        <rect x="396" y="336" width="7" height="3" rx="1"/><rect x="407" y="336" width="7" height="3" rx="1"/>
+        <rect x="418" y="336" width="7" height="3" rx="1"/><rect x="429" y="336" width="7" height="3" rx="1"/>
+        <rect x="370" y="340" width="7" height="3" rx="1"/><rect x="381" y="340" width="7" height="3" rx="1"/>
+        <rect x="392" y="340" width="7" height="3" rx="1"/><rect x="403" y="340" width="7" height="3" rx="1"/>
+        <rect x="414" y="340" width="7" height="3" rx="1"/><rect x="425" y="340" width="7" height="3" rx="1"/>
+      </g>
+    </g>
+
+    <!-- ============ MONITOR ============ -->
+    <ellipse cx="564" cy="240" rx="150" ry="110" fill="url(#glow)"/>
+    <rect x="530" y="310" width="68" height="22" fill="#242F3A"/>
+    <ellipse cx="564" cy="332" rx="66" ry="9" fill="#2E3A46"/>
+    <rect x="452" y="162" width="224" height="150" rx="9" fill="#2A3542" stroke="#3B4957" stroke-width="1.5"/>
+    <rect x="466" y="176" width="196" height="122" rx="3" fill="#04150C"/>
+    <g clip-path="url(#scrClip)">
+      <rect x="466" y="176" width="196" height="122" fill="#04150C"/>
+      <text id="miniCode" x="472" y="186" font-family="JetBrains Mono, monospace" font-size="5.4" fill="#39D98A" opacity=".85"></text>
+      <rect x="466" y="176" width="196" height="122" fill="none"/>
+    </g>
+    <rect x="466" y="176" width="196" height="122" rx="3" fill="none" stroke="#0E2A1B" stroke-width="1"/>
+    <circle cx="564" cy="320" r="2.6" fill="var(--live)" opacity=".8"/>
+
+    <!-- flying banana -->
+    <g id="fly" opacity="0"><use href="#ban" width="26" height="26" x="-4" y="-18"/></g>
+  </svg>
+  </div>
+  <div class="scene-cap">He does not stop. The jar is the only thing that decides when he is allowed to launch.</div>
+  </div>
+
+  <!-- ================= SCREEN ================= -->
+  <div class="screen">
+    <div class="scr-bar">
+      <span class="lamp"></span>
+      <span class="t">emile@surely — live</span>
+      <span class="r" id="stage">booting</span>
+    </div>
+
+    <div class="code" id="code"></div>
+
+    <div class="pull">
+      <span>pump.fun <b id="p-pump">0</b> pulled</span>
+      <span>dexscreener <b id="p-dex">0</b> priced</span>
+      <span>rpc <b id="p-rpc">0</b> holder counts</span>
+    </div>
+
+    <div class="feedbox"><div class="feedin" id="feed"></div></div>
+  </div>
+</div>
+
+<!-- ================= STATS ================= -->
+<div class="stats">
+  <div class="st"><div class="st-k">above $10K</div><div class="st-v" id="s-all">0</div></div>
+  <div class="st"><div class="st-k">reached $30K</div><div class="st-v" id="s-pass">0</div></div>
+  <div class="st"><div class="st-k">stalled</div><div class="st-v" id="s-stall">0</div></div>
+  <div class="st"><div class="st-k">median holders</div><div class="st-v" id="s-hold">0</div></div>
+</div>
+
+<!-- ================= PROOF ================= -->
+<div class="proof">
+  <div class="pc">
+    <div class="ph">Why the jar fills slowly</div>
+    <div class="pp">A model can look good by luck on a small sample. Vapnik–Chervonenkis theory puts a number on that luck: with <b>n</b> tokens and a model of capacity <b>d</b>, the true score can sit below the measured one by at most ε, with 95% confidence.</div>
+    <div class="formula">
+      <span class="eps">ε</span> = <span class="rad">√<span class="frac">
+        <span class="nu">d(ln <span class="vv">2n</span>/d + 1) + ln 4/δ</span><span class="de">n</span></span></span>
+    </div>
+    <div class="pp">Émile fills the jar with <b>AUC − ε</b>, never with the raw score. Good model, thin sample: jar stays empty. That is the point.</div>
+  </div>
+
+  <div class="pc">
+    <div class="ros">
+      <div class="ro"><div class="ro-k">measured AUC</div><div class="ro-v" id="v-auc">0.500</div></div>
+      <div class="ro"><div class="ro-k">penalty ε</div><div class="ro-v" id="v-eps">0.000</div></div>
+      <div class="ro"><div class="ro-k">proven floor</div><div class="ro-v" id="v-lb">0.500</div></div>
+    </div>
+    <div class="ctrl">
+      <div class="sr"><label for="sn">tokens sampled</label><input type="range" id="sn" min="120" max="24000" step="20" value="340"><output id="on">340</output></div>
+      <div class="sr"><label for="sa">measured AUC</label><input type="range" id="sa" min="0.5" max="0.85" step="0.001" value="0.548"><output id="oa">0.548</output></div>
+      <div class="sr"><label for="sd">model capacity d</label><input type="range" id="sd" min="4" max="80" step="1" value="28"><output id="od">28</output></div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="btnrow">
+      <button class="btn on" id="runBtn">Pause the run</button>
+      <button class="btn" id="jumpBtn">Fast-forward 30 days</button>
+      <button class="btn" id="resetBtn">Reset to day 1</button>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <span>Simulated data · Émile is a mascot, not a financial adviser</span>
+  <span class="w">Four features cannot forecast a market. This measures survival, not price.</span>
+</div>
+</div>
+
+<script>
+'use strict';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ================= VC bound ================= */
+const DELTA=0.05, TARGET=0.60, FLOOR=0.50;
+const epsilon = (n,d) => n<=d ? 1 : Math.sqrt((d*(Math.log(2*n/d)+1)+Math.log(4/DELTA))/n);
+const floorOf = (a,n,d) => Math.max(FLOOR, a - epsilon(n,d));
+const levelOf = (a,n,d) => clamp((floorOf(a,n,d)-FLOOR)/(TARGET-FLOOR),0,1);
+
+/* ================= jar ================= */
+const J={x0:46,x1:152,yTop:222,yBot:398}, NB=36;
+const pile=$('pile');
+const cells=[...Array(NB)].map((_,i)=>{
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('opacity','0');
+  const u=document.createElementNS('http://www.w3.org/2000/svg','use');
+  u.setAttribute('href','#ban');u.setAttribute('width','26');u.setAttribute('height','26');
+  u.setAttribute('x','-4');u.setAttribute('y','-18');
+  g.appendChild(u);pile.appendChild(g);
+  return {g, rot:-58+Math.random()*116, sc:.66+Math.random()*.3, jx:(Math.random()-.5)*7};
+});
+function paintJar(lvl){
+  const shown=Math.round(lvl*NB);
+  cells.forEach((c,i)=>{
+    if(i>=shown){c.g.setAttribute('opacity','0');return;}
+    const row=Math.floor(i/3), col=i%3;
+    const y=J.yBot-12-row*14.5-(col===1?4:0);
+    const x=J.x0+26+col*28+(row%2?7:0)+c.jx;
+    c.g.setAttribute('opacity','1');
+    c.g.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${c.rot|0}) scale(${c.sc.toFixed(2)})`);
+  });
+  const surf=J.yBot-(J.yBot-J.yTop)*lvl;
+  $('sheen').setAttribute('y',(surf-1).toFixed(1));
+  $('sheen').setAttribute('opacity',lvl>.03?'.3':'0');
+  $('pct').textContent=Math.round(lvl*100)+'%';
+}
+
+/* ================= Émile ================= */
+const fly=$('fly');
+let tossing=false;
+function toss(){
+  if(tossing||RM)return; tossing=true;
+  $('armA').animate([{transform:'translateY(0)'},{transform:'translateY(-16px) translateX(-10px)'},{transform:'translateY(0)'}],{duration:900,easing:'ease-in-out'});
+  $('head').animate([{transform:'rotate(0deg)'},{transform:'rotate(-11deg)'},{transform:'rotate(0deg)'}],{duration:1200,easing:'ease-in-out'});
+  fly.setAttribute('opacity','1');
+  const a=fly.animate([
+    {transform:'translate(372px,332px) rotate(0deg)'},
+    {transform:'translate(250px,196px) rotate(220deg)',offset:.5},
+    {transform:'translate(100px,300px) rotate(500deg)'}
+  ],{duration:1000,easing:'cubic-bezier(.3,.05,.6,1)'});
+  a.onfinish=()=>{fly.setAttribute('opacity','0');tossing=false;};
+}
+if(!RM){
+  // typing hands
+  $('handA').animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}],{duration:340,iterations:Infinity,easing:'ease-in-out'});
+  $('armA').animate([{transform:'translateY(0)'},{transform:'translateY(-2px)'},{transform:'translateY(0)'}],{duration:340,iterations:Infinity,easing:'ease-in-out'});
+  $('handB').animate([{transform:'translateY(-4px)'},{transform:'translateY(0)'},{transform:'translateY(-4px)'}],{duration:410,iterations:Infinity,easing:'ease-in-out'});
+  $('armB').animate([{transform:'translateY(-2px)'},{transform:'translateY(0)'},{transform:'translateY(-2px)'}],{duration:410,iterations:Infinity,easing:'ease-in-out'});
+  $('tail').animate([{transform:'rotate(0deg)'},{transform:'rotate(3.5deg)'},{transform:'rotate(0deg)'}],{duration:5200,iterations:Infinity,easing:'ease-in-out'});
+  $('emile').animate([{transform:'translateY(0)'},{transform:'translateY(-2.6px)'},{transform:'translateY(0)'}],{duration:4400,iterations:Infinity,easing:'ease-in-out'});
+  setInterval(()=>$('eyes').animate([{transform:'scaleY(1)'},{transform:'scaleY(.1)'},{transform:'scaleY(1)'}],{duration:170}),3400+Math.random()*2800);
+  let t=0;setInterval(()=>{t+=.05;$('pup').setAttribute('cx',306+Math.sin(t)*1.5);},70);
+}
+
+/* ================= code stream ================= */
+const BLOCKS=[
+ {stage:'ingest · pump.fun',src:
+`# every mint from the launchpad, winners and losers alike
+new = pumpfun.tokens(since=cursor, limit=500)
+keep = new[new.peak_mc >= 10_000]          # the gate
+log(f"{len(new)} seen, {len(keep)} above the line")`},
+ {stage:'pricing · dexscreener',src:
+`# peak cap, never the current cap — a token that touched
+# 25K and fell back to 8K still crossed the gate
+pairs = dexscreener.pairs(chain="solana", tokens=keep.mint)
+keep = keep.join(pairs[["peak_mc","liq","image_url"]], on="mint")`},
+ {stage:'holders · rpc',src:
+`# the only feature that needs the chain itself
+accs = rpc.get_program_accounts(TOKEN_PROGRAM, filters=[
+    {"dataSize": 165},
+    {"memcmp": {"offset": 0, "bytes": mint}},
+])
+keep["holders"] = sum(1 for a in accs if a.amount > 0)`},
+ {stage:'features',src:
+`X = pd.DataFrame(index=df.index)
+X["hour_sin"] = np.sin(2*np.pi * df.launch_hour / 24)
+X["hour_cos"] = np.cos(2*np.pi * df.launch_hour / 24)
+X["holders"]  = np.log1p(df.holders)
+X["lore_len"] = df.lore.str.split().str.len()
+X = np.hstack([X.values, PCA(24).fit_transform(encode(df.lore))])`},
+ {stage:'training',src:
+`y = (df.peak_mc >= 30_000).astype(int)
+clf = LGBMClassifier(n_estimators=400, learning_rate=0.03,
+                     class_weight="balanced", min_child_samples=40)
+auc = cross_val_score(clf, X, y, cv=StratifiedKFold(5), scoring="roc_auc")
+log(f"roc_auc {auc.mean():.3f} +/- {auc.std():.3f}")`},
+ {stage:'the jar',src:
+`eps   = sqrt((d*(log(2*n/d)+1) + log(4/delta)) / n)
+floor = auc.mean() - eps
+
+if floor >= 0.60:
+    jar.fill(); agent.unlock("launch")
+else:
+    log(f"floor {floor:.3f} — not yet. keep reading.")`}
+];
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// one pass, so a span we just wrote can never be re-matched by a later rule
+const TOK=/(#[^\n]*)|("(?:[^"\\]|\\.)*")|\b(import|from|if|else|for|in|return|def|not|and|or|as|True|False|None|sum)\b|\b(\d[\d_.]*)\b/g;
+function hl(src){
+  let out='', last=0, m;
+  TOK.lastIndex=0;
+  while((m=TOK.exec(src))!==null){
+    out+=esc(src.slice(last,m.index));
+    if(m[1])      out+='<span class="c">'+esc(m[1])+'</span>';
+    else if(m[2]) out+='<span class="s">'+esc(m[2])+'</span>';
+    else if(m[3]) out+='<span class="k">'+esc(m[3])+'</span>';
+    else          out+='<span class="n">'+esc(m[4])+'</span>';
+    last=m.index+m[0].length;
+  }
+  return out+esc(src.slice(last));
+}
+const codeEl=$('code'), mini=$('miniCode');
+let bi=0,ci=0;
+function paintMini(buf){
+  const lines=buf.split('\n').slice(-16);
+  mini.textContent='';
+  lines.forEach((ln,i)=>{
+    const t=document.createElementNS('http://www.w3.org/2000/svg','tspan');
+    t.setAttribute('x','472'); t.setAttribute('dy', i? '7':'0');
+    t.textContent=ln.slice(0,44);
+    mini.appendChild(t);
+  });
+}
+function typeTick(){
+  const b=BLOCKS[bi]; $('stage').textContent=b.stage;
+  if(RM){ codeEl.innerHTML=hl(b.src); paintMini(b.src); bi=(bi+1)%BLOCKS.length; return setTimeout(typeTick,4200); }
+  if(ci<b.src.length){
+    ci+=2; const buf=b.src.slice(0,ci);
+    codeEl.innerHTML=hl(buf)+'<span class="cur"></span>';
+    paintMini(buf);
+    setTimeout(typeTick,14+Math.random()*20);
+  } else setTimeout(()=>{bi=(bi+1)%BLOCKS.length;ci=0;typeTick();},1500);
+}
+
+/* ================= tokens ================= */
+const A=['Quantum','Retro','Silent','Golden','Midnight','Feral','Broke','Cosmic','Tiny','Angry','Ancient','Neon','Humble','Loyal','Crooked','Velvet'];
+const B=['Capybara','Hamster','Toaster','Monk','Pigeon','Goose','Wizard','Janitor','Shrimp','Owl','Mule','Sloth','Crab','Dentist','Moth','Baker'];
+const L=['Fired on a Tuesday. The chart is his resignation letter.','Born in a server room in {y}. Refuses to explain himself.','Community takeover. The dev left a note and one sock.','No roadmap, no team. Only the {b}.','Still waiting on the airdrop from {y}.','They laughed in the group chat. He bought more.','The last honest {b} on the internet.','Made by three friends who have never met.','He does not check the chart. The chart checks him.','Rescued from a dead Discord. Still smells like it.'];
+const HUES=[38,152,268,196,12,88,320];
+let counters={pump:0,dex:0,rpc:0}, tally={all:0,pass:0,stall:0}, holders=[];
+
+function makeToken(){
+  const name=A[Math.random()*A.length|0]+' '+B[Math.random()*B.length|0];
+  const sym=name.split(' ').map(w=>w[0]).join('')+(Math.random()*90+10|0);
+  const beast=name.split(' ')[1].toLowerCase();
+  const lore=L[Math.random()*L.length|0].replace('{y}',2018+(Math.random()*7|0)).replace('{b}',beast);
+  const h=Math.round(40+Math.pow(Math.random(),2.4)*2600);
+  let p=.13; if(h>400)p*=2.5; if(h>1100)p*=1.9; if(lore.length>62)p*=1.2;
+  const passed=Math.random()<Math.min(p,.87);
+  return {name,sym,lore,holders:h,passed,hour:Math.random()*24|0,
+    peak:passed?30000+Math.random()*Math.random()*520000:10000+Math.random()*19500,
+    hue:HUES[Math.random()*HUES.length|0]};
+}
+const feed=$('feed');
+const fmt=v=>'$'+(v/1000).toFixed(v>=100000?0:1)+'K';
+function addRow(t){
+  tally.all++; t.passed?tally.pass++:tally.stall++;
+  holders.push(t.holders); if(holders.length>4000)holders.shift();
+  counters.pump++;counters.dex++;counters.rpc++;
+
+  const el=document.createElement('div');
+  el.className='trow new';
+  el.innerHTML='<div class="lg" style="background:hsl('+t.hue+' 58% 55%)"></div>'+
+    '<div><span class="nm"></span><span class="sy"></span><div class="lore"></div></div>'+
+    '<div class="num">'+t.holders.toLocaleString()+'</div>'+
+    '<div class="num hide-sm">'+fmt(t.peak)+'<div class="tt">'+String(t.hour).padStart(2,'0')+':00 UTC</div></div>'+
+    '<div class="num '+(t.passed?'pass':'stall')+'">'+(t.passed?'30K+':'stalled')+'</div>';
+  el.querySelector('.lg').textContent=t.sym.slice(0,2);
+  el.querySelector('.nm').textContent=t.name;
+  el.querySelector('.sy').textContent='$'+t.sym;
+  el.querySelector('.lore').textContent=t.lore;
+  feed.prepend(el);
+  while(feed.children.length>50)feed.lastChild.remove();
+  setTimeout(()=>el.classList.remove('new'),340);
+}
+function paintStats(){
+  $('s-all').textContent=tally.all.toLocaleString();
+  $('s-pass').textContent=tally.pass.toLocaleString();
+  $('s-stall').textContent=tally.stall.toLocaleString();
+  const s=[...holders].sort((a,b)=>a-b);
+  $('s-hold').textContent=s.length?s[s.length>>1].toLocaleString():'0';
+  $('p-pump').textContent=counters.pump.toLocaleString();
+  $('p-dex').textContent=counters.dex.toLocaleString();
+  $('p-rpc').textContent=counters.rpc.toLocaleString();
+}
+
+/* ================= state ================= */
+const TRUE_AUC=0.645;
+let state={n:340,auc:0.548,d:28}, last=0, running=true;
+
+function needed(a,d){
+  if(a<=TARGET)return null;
+  for(let n=200;n<=4e6;n=Math.ceil(n*1.06)) if(a-epsilon(n,d)>=TARGET) return Math.round(n/100)*100;
+  return null;
+}
+function refresh(anim){
+  const {n,auc,d}=state, e=epsilon(n,d), lb=floorOf(auc,n,d), lvl=levelOf(auc,n,d);
+  $('v-auc').textContent=auc.toFixed(3);
+  $('v-eps').textContent=e>=1?'—':e.toFixed(3);
+  $('v-lb').textContent=lb.toFixed(3);
+  $('sn').value=n;$('on').textContent=n.toLocaleString();
+  $('sa').value=auc;$('oa').textContent=auc.toFixed(3);
+  $('sd').value=d;$('od').textContent=d;
+  if(anim&&lvl>last+.012)toss();
+  last=lvl; paintJar(lvl);
+
+  const v=$('verdict');
+  if(lvl>=1){
+    v.className='verdict ready';
+    v.innerHTML='Jar full. The floor sits at <b>'+lb.toFixed(3)+'</b>, clear of 0.60. Émile has earned the launch, and the proof replays from the stored sample.';
+    $('phase').textContent='phase 2 · launch unlocked';
+  }else{
+    v.className='verdict';
+    const nd=needed(auc,d);
+    v.innerHTML='Measured <b>'+auc.toFixed(3)+'</b>, but ε takes <b>'+(e>=1?'all of it':e.toFixed(3))+'</b>. Floor is <b>'+lb.toFixed(3)+'</b>. '+
+      (nd?'At this score he needs about <b>'+nd.toLocaleString()+'</b> tokens.':'At this score the jar never fills, however long he waits.');
+    $('phase').textContent='phase 1 · learning';
+  }
+}
+
+/* ================= run ================= */
+function step(){
+  if(!running)return;
+  const b=3+(Math.random()*4|0);
+  for(let i=0;i<b;i++)setTimeout(()=>{addRow(makeToken());paintStats();},i*130);
+  state.n+=b;
+  state.auc=clamp(state.auc+(TRUE_AUC-state.auc)*.012+(Math.random()-.5)*(.9/Math.sqrt(state.n)),0.5,0.85);
+  refresh(true);
+}
+setInterval(step,1400);
+
+$('sn').oninput=e=>{state.n=+e.target.value;refresh(false)};
+$('sa').oninput=e=>{state.auc=+e.target.value;refresh(false)};
+$('sd').oninput=e=>{state.d=+e.target.value;refresh(false)};
+$('runBtn').onclick=e=>{running=!running;e.target.textContent=running?'Pause the run':'Resume the run';e.target.classList.toggle('on',running)};
+$('jumpBtn').onclick=()=>{state.n+=9200;state.auc=clamp(TRUE_AUC+(Math.random()-.5)*.012,.5,.85);refresh(true);toss()};
+$('resetBtn').onclick=()=>{state={n:340,auc:.548,d:28};last=0;refresh(false)};
+
+/* ================= magnifier lines ================= */
+function drawZoom(){
+  const hero=document.querySelector('.hero'), svg=$('sceneSvg'), scr=document.querySelector('.screen');
+  if(!hero||!svg||!scr)return;
+  const hb=hero.getBoundingClientRect(), sb=svg.getBoundingClientRect(), cb=scr.getBoundingClientRect();
+  const zl=$('zl'); zl.setAttribute('viewBox',`0 0 ${hb.width} ${hb.height}`);
+  zl.setAttribute('width',hb.width); zl.setAttribute('height',hb.height);
+  const sx=sb.width/720, sy=sb.height/470;
+  const x=sb.left-hb.left+(466+196)*sx;
+  const yT=sb.top-hb.top+176*sy, yB=sb.top-hb.top+298*sy;
+  $('zl1').setAttribute('x1',x);$('zl1').setAttribute('y1',yT);
+  $('zl1').setAttribute('x2',cb.left-hb.left);$('zl1').setAttribute('y2',0);
+  $('zl2').setAttribute('x1',x);$('zl2').setAttribute('y1',yB);
+  $('zl2').setAttribute('x2',cb.left-hb.left);$('zl2').setAttribute('y2',cb.height);
+}
+addEventListener('resize',drawZoom);
+
+/* ================= boot ================= */
+for(let i=0;i<28;i++)addRow(makeToken());
+paintStats(); refresh(false); typeTick();
+setTimeout(drawZoom,240);

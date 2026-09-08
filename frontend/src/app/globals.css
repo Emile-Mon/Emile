@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+:root {
+  /* Rich Dark Color System */
+  --ink: #06090D;
+  --panel: #0D131B;
+  --panel2: #090D13;
+  --panel-glass: rgba(13, 19, 27, 0.75);
+  --rule: #1B2635;
+  --soft: #141D29;
+  --crt: #050B08;
+
+  /* Typography Colors */
+  --fg: #D4E0EE;
+  --dim: #718497;
+  --faint: #3D4B59;
+
+  /* Brand Accents */
+  --banana: #F2C94C;
+  --banana-hi: #FFE885;
+  --banana-lo: #C49A18;
+  --banana-glow: rgba(242, 201, 76, 0.25);
+
+  --fur: #7C6046;
+  --fur-hi: #A8845E;
+  --fur-face: #D9BD9B;
+
+  /* Neon Status Signals */
+  --live: #34D399;
+  --live-glow: rgba(52, 211, 153, 0.3);
+  --stall: #F87171;
+  --stall-glow: rgba(248, 113, 113, 0.25);
+  --violet: #A78BFA;
+  --cyan: #38BDF8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ink);
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace, ui-monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(167, 139, 250, 0.03) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(242, 201, 76, 0.02) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+.wrap {
+  max-width: 1380px;
+  margin: 0 auto;
+  border-left: 1px solid var(--soft);
+  border-right: 1px solid var(--soft);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+}
+
+/* Glassmorphism Cards */
+.glass-panel {
+  background: var(--panel-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--rule);
+}
+
+/* Header Typography */
+.wordmark {
+  font-family: var(--font-fraunces, 'Fraunces', serif);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -.03em;
+  background: linear-gradient(135deg, #FFFFFF 0%, #C8D6E5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.brand-console {
+  font-family: var(--font-space-grotesk, 'Space Grotesk', sans-serif);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -.02em;
+  color: #F1F6FA;
+}
+
+/* CRT Screen Effect & CRT Phosphor Flicker */
+.screen {
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  background: var(--crt);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+}
+
+.screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+  z-index: 10;
+}
+
+.screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.04), transparent 75%);
+  z-index: 9;
+}
+
+/* Code Syntax Highlighter Token Colors */
+.k { color: var(--violet); text-shadow: 0 0 8px rgba(167, 139, 250, 0.3); }
+.s { color: var(--live); text-shadow: 0 0 8px rgba(52, 211, 153, 0.3); }
+.n { color: var(--cyan); text-shadow: 0 0 8px rgba(56, 189, 248, 0.3); }
+.c { color: #486351; font-style: italic; }
+
+.cur {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: var(--banana);
+  box-shadow: 0 0 8px var(--banana);
+  vertical-align: -2px;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes blip {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--live-glow); }
+  50% { opacity: .25; box-shadow: none; }
+}
+
+.lamp-active {
+  animation: blip 2s ease-in-out infinite;
+}
+
+/* Token Feed Row Animations & Hover Effects */
+.trow {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.trow:hover {
+  background-color: rgba(27, 38, 53, 0.4);
+}
+
+.trow-new {
+  animation: slideRow 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideRow {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Proof Panel Slider */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type=range]:focus-visible {
+  outline: 2px solid var(--banana);
+  outline-offset: 5px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--banana);
+  border: 2px solid var(--ink);
+  box-shadow: 0 0 10px var(--banana-glow);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Metric glow effects */
+.glow-live {
+  text-shadow: 0 0 16px rgba(52, 211, 153, 0.4);
+}
+.glow-stall {
+  text-shadow: 0 0 16px rgba(248, 113, 113, 0.4);
+}
+.glow-banana {
+  text-shadow: 0 0 16px rgba(242, 201, 76, 0.4);
+}
+.glow-cyan {
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+}
+
+/* Mobile responsive rules */
+@media (max-width: 980px) {
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .screen {
+    border-left: none !important;
+    border-top: 1px solid var(--rule);
+  }
+  .proof-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .hide-sm {
+    display: none !important;
+  }
+}
