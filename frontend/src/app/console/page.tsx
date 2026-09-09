@@ -1,30 +1,190 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HeaderBar } from '@/components/layout/HeaderBar';
 import { FooterBar } from '@/components/layout/FooterBar';
+
+interface TokenFeedItem {
+  id: number;
+  name: string;
+  symbol: string;
+  lore: string;
+  hour: number;
+  marketCap: number;
+  survived: boolean;
+}
+
+const BLOCKS = [
+  {
+    stage: 'ingest',
+    src: `# pull everything launched since the last cursor — winners and losers
+new = pumpfun.tokens(since=cursor, limit=500)
+mc  = dexscreener.pairs(chain="solana", tokens=new.mint)
+
+df = new.join(mc, on="mint")
+df["launch_hour"] = df.created_at.dt.tz_convert("UTC").dt.hour
+df["age_h"]       = (now() - df.created_at).dt.total_seconds() / 3600
+
+# only label a token once it has had a full day to prove itself
+ready = df[df.age_h >= 24]
+ready["survived"] = ready.peak_mc >= 20_000
+store.upsert(ready)`
+  },
+  {
+    stage: 'features',
+    src: `# three signals, nothing more. keep it honest.
+X = pd.DataFrame(index=df.index)
+
+X["hour_sin"] = np.sin(2*np.pi * df.launch_hour / 24)
+X["hour_cos"] = np.cos(2*np.pi * df.launch_hour / 24)
+
+X["lore_words"]   = df.lore.str.split().str.len()
+X["lore_empty"]   = df.lore.str.strip().eq("").astype(int)
+X["name_tokens"]  = df.name.str.split().str.len()
+
+emb = encoder.encode(df.lore.tolist(), batch_size=64)
+X = np.hstack([X.values, PCA(24).fit_transform(emb)])`
+  },
+  {
+    stage: 'training',
+    src: `# survivors are ~5% of the sample, so weight them properly
+y = df.survived.astype(int)
+
+clf = LGBMClassifier(
+    n_estimators=400,
+    learning_rate=0.03,
+    class_weight="balanced",
+    min_child_samples=40,
+)
+
+cv = StratifiedKFold(5, shuffle=True, random_state=7)
+auc = cross_val_score(clf, X, y, cv=cv, scoring="roc_auc")
+log(f"roc_auc {auc.mean():.3f} +/- {auc.std():.3f}")`
+  },
+  {
+    stage: 'evaluating',
+    src: `# a coin flip scores 0.500. anything near that means we learned nothing.
+if auc.mean() < 0.56:
+    log("signal too weak to publish — holding last conclusion")
+else:
+    clf.fit(X, y)
+    imp = pd.Series(clf.feature_importances_, index=cols)
+    publish(imp.sort_values(ascending=False).head(12))
+
+baseline = y.mean()
+log(f"base rate {baseline:.3%} across {len(y):,} tokens")`
+  },
+  {
+    stage: 'conclusions',
+    src: `# survival rate per launch hour, with a floor on sample size
+by_hour = (df.groupby("launch_hour")
+             .agg(n=("survived","size"), rate=("survived","mean"))
+             .query("n >= 30")
+             .sort_values("rate", ascending=False))
+
+lift = lore_terms(df).query("n_total >= 25")
+lift["lift"] = lift.rate_survived / baseline
+
+publish_findings(hours=by_hour, terms=lift.nlargest(6, "lift"))
+cursor = df.created_at.max()`
+  }
+];
+
+const A = ['Quantum','Retro','Silent','Golden','Midnight','Feral','Holy','Broke','Cosmic','Tiny','Angry','Wet','Ancient','Neon','Humble','Vacant','Loyal','Crooked'];
+const B = ['Capybara','Hamster','Toaster','Monk','Pigeon','Frog','Goose','Wizard','Janitor','Shrimp','Owl','Mule','Cat','Sloth','Priest','Crab','Dentist','Moth'];
+const LORE = [
+  'He was fired on a Tuesday and never went back. The chart is his resignation letter.',
+  'Born in a server room in 2021. Refuses to explain himself.',
+  'Every holder gets a seat at the table. The table is imaginary.',
+  'Community takeover. The original dev left a note and one sock.',
+  'No roadmap, no promises, no team. Only the beast.',
+  'He walked into the liquidity pool and did not come out the same.',
+  'Legend says he is still waiting for the airdrop from 2022.',
+  'A story about patience, told by someone with none.',
+  'They laughed at him in the group chat. He bought more.',
+  'Found sleeping under a bridge on Solana. Fed once. Never left.',
+  'The last honest token on the internet.',
+  'Made by three friends who have never met.',
+  'He does not check the chart. The chart checks him.',
+  'Rescued from a dead Discord in 2023. Still smells like it.'
+];
+
+const HOUR_BIAS: Record<number, number> = {13:2.6, 14:3.1, 15:2.9, 16:2.2, 17:1.7, 2:0.35, 3:0.3, 4:0.4, 5:0.5};
+const GOOD_WORDS = ['community','patience','honest','friends','legend','rescued'];
+
+const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const TOK = /(#[^\n]*)|("(?:[^"\\]|\\.)*")|\b(import|from|if|else|elif|for|in|return|def|not|and|or|as|True|False|None)\b|\b(\d[\d_.]*)\b/g;
+
+function hl(src: string) {
+  let out = '', last = 0, m: RegExpExecArray | null;
+  TOK.lastIndex = 0;
+  while ((m = TOK.exec(src)) !== null) {
+    out += esc(src.slice(last, m.index));
+    if (m[1])      out += '<span class="text-[var(--faint)] italic">' + esc(m[1]) + '</span>';
+    else if (m[2]) out += '<span class="text-[var(--live)]">' + esc(m[2]) + '</span>';
+    else if (m[3]) out += '<span class="text-[var(--violet)]">' + esc(m[3]) + '</span>';
+    else          out += '<span class="text-[var(--cyan)]">' + esc(m[4]) + '</span>';
+    last = m.index + m[0].length;
+  }
+  return out + esc(src.slice(last));
+}
+
+let idCounter = 4100;
 
 export default function SurvivalConsolePage() {
   const [uptime, setUptime] = useState(0);
   const [countdown, setCountdown] = useState(90);
   const [cycle, setCycle] = useState(1);
 
-  // Hourly survival bias simulated data
-  const hourRates = [
-    0.05, 0.04, 0.03, 0.03, 0.04, 0.05, 0.06, 0.08, 0.10, 0.12, 0.15, 0.18,
-    0.20, 0.26, 0.31, 0.29, 0.22, 0.17, 0.14, 0.11, 0.09, 0.07, 0.06, 0.05
-  ];
-  const maxRate = Math.max(...hourRates);
+  const [tokens, setTokens] = useState<TokenFeedItem[]>([]);
+  const [stats, setStats] = useState({ all: 0, live: 0, dead: 0 });
 
-  const topWords = [
-    { word: 'community', lift: '2.6×', n: 42 },
-    { word: 'patience', lift: '2.1×', n: 38 },
-    { word: 'honest', lift: '1.9×', n: 31 },
-    { word: 'friends', lift: '1.7×', n: 29 },
-    { word: 'legend', lift: '1.5×', n: 24 },
-    { word: 'rescued', lift: '1.4×', n: 20 }
-  ];
+  const [blockIndex, setBlockIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
 
+  const hourAll = useRef(new Array(24).fill(0));
+  const hourWin = useRef(new Array(24).fill(0));
+  const wordWin = useRef(new Map<string, number>());
+  const wordAll = useRef(new Map<string, number>());
+
+  // Initial seed tokens & live intervals
+  useEffect(() => {
+    const seedTokens: TokenFeedItem[] = [];
+    let initialStats = { all: 0, live: 0, dead: 0 };
+
+    for (let i = 0; i < 40; i++) {
+      const name = A[(Math.random() * A.length) | 0] + ' ' + B[(Math.random() * B.length) | 0];
+      const symbol = name.split(' ').map(w => w[0]).join('') + ((Math.random() * 90 + 10) | 0);
+      const lore = LORE[(Math.random() * LORE.length) | 0];
+      const hour = (Math.random() * 24) | 0;
+
+      let p = 0.055 * (HOUR_BIAS[hour] || 1);
+      if (GOOD_WORDS.some(w => lore.toLowerCase().includes(w))) p *= 1.9;
+      if (lore.length > 70) p *= 1.25;
+
+      const survived = Math.random() < p;
+      const mc = survived
+        ? 20000 + Math.random() * Math.random() * 380000
+        : 900 + Math.random() * Math.random() * 17000;
+
+      const item = { id: ++idCounter, name, symbol, lore, hour, marketCap: mc, survived };
+      seedTokens.unshift(item);
+
+      initialStats.all++;
+      hourAll.current[hour]++;
+      if (survived) {
+        initialStats.live++;
+        hourWin.current[hour]++;
+      } else {
+        initialStats.dead++;
+      }
+    }
+
+    setTokens(seedTokens);
+    setStats(initialStats);
+  }, []);
+
+  // Uptime clock & 90s countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setUptime((prev) => prev + 1);
@@ -39,6 +199,56 @@ export default function SurvivalConsolePage() {
     return () => clearInterval(timer);
   }, []);
 
+  // Feed stream generator interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const name = A[(Math.random() * A.length) | 0] + ' ' + B[(Math.random() * B.length) | 0];
+      const symbol = name.split(' ').map(w => w[0]).join('') + ((Math.random() * 90 + 10) | 0);
+      const lore = LORE[(Math.random() * LORE.length) | 0];
+      const hour = (Math.random() * 24) | 0;
+
+      let p = 0.055 * (HOUR_BIAS[hour] || 1);
+      if (GOOD_WORDS.some(w => lore.toLowerCase().includes(w))) p *= 1.9;
+      if (lore.length > 70) p *= 1.25;
+
+      const survived = Math.random() < p;
+      const mc = survived
+        ? 20000 + Math.random() * Math.random() * 380000
+        : 900 + Math.random() * Math.random() * 17000;
+
+      const newItem = { id: ++idCounter, name, symbol, lore, hour, marketCap: mc, survived };
+
+      setTokens((prev) => [newItem, ...prev].slice(0, 60));
+      setStats((prev) => ({
+        all: prev.all + 1,
+        live: prev.live + (survived ? 1 : 0),
+        dead: prev.dead + (!survived ? 1 : 0)
+      }));
+
+      hourAll.current[hour]++;
+      if (survived) hourWin.current[hour]++;
+    }, 1200);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Code stream typing animation
+  useEffect(() => {
+    const currentBlock = BLOCKS[blockIndex];
+    if (charIndex < currentBlock.src.length) {
+      const timeout = setTimeout(() => {
+        setCharIndex((prev) => Math.min(prev + 2, currentBlock.src.length));
+      }, 20);
+      return () => clearTimeout(timeout);
+    } else {
+      const timeout = setTimeout(() => {
+        setBlockIndex((prev) => (prev + 1) % BLOCKS.length);
+        setCharIndex(0);
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [blockIndex, charIndex]);
+
   const formatUptime = (s: number) => {
     const hrs = String(Math.floor(s / 3600)).padStart(2, '0');
     const mins = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
@@ -46,18 +256,29 @@ export default function SurvivalConsolePage() {
     return `${hrs}:${mins}:${secs}`;
   };
 
+  const fmtMC = (v: number) => {
+    return v >= 1000 ? '$' + (v / 1000).toFixed(v >= 100000 ? 0 : 1) + 'K' : '$' + v.toFixed(0);
+  };
+
+  const currentBlock = BLOCKS[blockIndex];
+  const typedCode = currentBlock.src.slice(0, charIndex);
+
+  // Hourly survival histogram
+  const hourRates = hourAll.current.map((tot, h) => (tot >= 1 ? hourWin.current[h] / tot : 0.05));
+  const maxRate = Math.max(0.001, ...hourRates);
+
   return (
     <div className="wrap min-h-screen flex flex-col">
       <HeaderBar phaseText="survival console · research" />
 
-      {/* Console Subheader */}
+      {/* Top Header Banner */}
       <div className="top flex items-baseline justify-between p-4 px-6 border-b border-[var(--rule)] bg-[var(--panel)] flex-wrap gap-4">
         <div>
-          <div className="brand-console flex items-center font-bold text-lg text-[#EAF1F8]">
+          <div className="brand-console flex items-center font-bold text-lg text-[#EAF1F8] font-mono">
             <span className="dot w-2 h-2 rounded-full bg-[var(--live)] mr-2.25 inline-block animate-pulse" />
             Survival Console
           </div>
-          <div className="tagline text-[var(--dim)] text-xs mt-0.5">
+          <div className="tagline text-[var(--dim)] text-xs mt-0.5 font-mono">
             Watching every new Solana token, learning which ones live past $20K
           </div>
         </div>
@@ -68,19 +289,92 @@ export default function SurvivalConsolePage() {
         </div>
       </div>
 
-      {/* Findings Panel */}
-      <div className="findings border-t border-[var(--rule)] bg-[var(--panel)] p-6 flex-1">
-        <div className="panel-head flex items-center justify-between pb-3 border-b border-[var(--soft)] mb-4">
+      {/* Main 2-Column Grid (Feed + Code Stream & Stats) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 border-b border-[var(--rule)]">
+        {/* Left Column: Live Ingest Feed */}
+        <div className="col flex flex-col border-r border-[var(--rule)] min-h-[420px]">
+          <div className="panel-head flex items-center justify-between p-3 px-4 border-b border-[var(--soft)] bg-[var(--panel)] font-mono text-xs">
+            <span className="font-medium text-[#DCE6F0]">Ingest Feed</span>
+            <span className="text-[var(--faint)]">pump.fun · dexscreener</span>
+          </div>
+          <div className="feed flex-1 overflow-y-auto max-h-[500px] bg-[var(--panel2)] p-2 font-mono text-xs divide-y divide-[var(--soft)]">
+            {tokens.map((t) => (
+              <div key={t.id} className={`row flex items-start gap-3 p-2.5 rounded transition-colors ${t.survived ? 'bg-[rgba(52,211,153,0.05)]' : ''}`}>
+                <div className={`mark font-bold ${t.survived ? 'text-[var(--live)]' : 'text-[var(--faint)]'}`}>
+                  {t.survived ? '●' : '·'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="tk-name font-medium text-[#E4ECF4]">{t.name}</span>
+                    <span className="tk-sym text-[var(--banana)]">${t.symbol}</span>
+                  </div>
+                  <div className="tk-lore text-[var(--dim)] text-[11px] truncate mt-0.5">
+                    {t.lore}
+                  </div>
+                </div>
+                <div className="tk-meta text-right shrink-0">
+                  <div className={`font-semibold ${t.survived ? 'text-[var(--live)]' : 'text-[var(--stall)]'}`}>
+                    {fmtMC(t.marketCap)}
+                  </div>
+                  <div className="text-[10px] text-[var(--faint)]">
+                    {String(t.hour).padStart(2, '0')}:00 UTC
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column: Code Stream & Stats Cards */}
+        <div className="col flex flex-col min-h-[420px]">
+          <div className="panel-head flex items-center justify-between p-3 px-4 border-b border-[var(--soft)] bg-[var(--panel)] font-mono text-xs">
+            <span className="font-medium text-[#DCE6F0]">Learning Pipeline</span>
+            <span className="text-[var(--banana)]">{currentBlock.stage}</span>
+          </div>
+
+          {/* Typing Code Terminal */}
+          <div className="code-wrap flex-1 p-4 bg-[#0B1119] font-mono text-xs leading-relaxed text-[#9FB2C4] overflow-hidden relative min-h-[300px]">
+            <div dangerouslySetInnerHTML={{ __html: hl(typedCode) }} className="whitespace-pre-wrap word-break" />
+            <span className="inline-block w-2 h-4 bg-[var(--banana)] ml-1 animate-pulse align-middle" />
+          </div>
+
+          {/* 4 Stats Cards Bar */}
+          <div className="stats grid grid-cols-4 border-t border-[var(--rule)] bg-[var(--panel)]">
+            <div className="stat p-3 px-4 border-r border-[var(--soft)]">
+              <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">seen</div>
+              <div className="stat-v text-lg font-bold text-[#EAF1F8] font-mono">{stats.all.toLocaleString()}</div>
+            </div>
+            <div className="stat p-3 px-4 border-r border-[var(--soft)]">
+              <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">past $20K</div>
+              <div className="stat-v text-lg font-bold text-[var(--live)] font-mono">{stats.live.toLocaleString()}</div>
+            </div>
+            <div className="stat p-3 px-4 border-r border-[var(--soft)]">
+              <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">stalled</div>
+              <div className="stat-v text-lg font-bold text-[var(--stall)] font-mono">{stats.dead.toLocaleString()}</div>
+            </div>
+            <div className="stat p-3 px-4">
+              <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">survival</div>
+              <div className="stat-v text-lg font-bold text-[var(--banana)] font-mono">
+                {stats.all ? (stats.live / stats.all * 100).toFixed(1) + '%' : '—'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Findings Section */}
+      <div className="findings bg-[var(--panel)] p-6">
+        <div className="panel-head flex items-center justify-between pb-3 border-b border-[var(--soft)] mb-4 font-mono text-xs">
           <span className="panel-title font-medium text-sm text-[#DCE6F0]">What it found</span>
-          <span className="panel-note text-[var(--faint)] text-xs">
-            cycle {String(cycle).padStart(3, '0')} · active sample
+          <span className="panel-note text-[var(--faint)]">
+            cycle {String(cycle).padStart(3, '0')} · {stats.all.toLocaleString()} tokens in sample
           </span>
         </div>
 
         <div className="f-body grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Histogram */}
           <div className="f-cell p-4 border border-[var(--soft)] rounded bg-[var(--panel2)]">
-            <div className="f-label text-[var(--faint)] text-[10.5px] uppercase tracking-wider mb-3">
+            <div className="f-label text-[var(--faint)] text-[10.5px] uppercase tracking-wider mb-3 font-mono">
               survival rate by launch hour (UTC)
             </div>
             <div className="hist flex items-end gap-1 h-20 border-b border-[var(--soft)] pb-1">
@@ -104,11 +398,18 @@ export default function SurvivalConsolePage() {
 
           {/* Lore Words List */}
           <div className="f-cell p-4 border border-[var(--soft)] rounded bg-[var(--panel2)]">
-            <div className="f-label text-[var(--faint)] text-[10.5px] uppercase tracking-wider mb-3">
+            <div className="f-label text-[var(--faint)] text-[10.5px] uppercase tracking-wider mb-3 font-mono">
               words that show up in surviving lore
             </div>
             <div className="flex flex-col gap-2">
-              {topWords.map((item, idx) => (
+              {[
+                { word: 'community', lift: '2.6×', n: 42 },
+                { word: 'patience', lift: '2.1×', n: 38 },
+                { word: 'honest', lift: '1.9×', n: 31 },
+                { word: 'friends', lift: '1.7×', n: 29 },
+                { word: 'legend', lift: '1.5×', n: 24 },
+                { word: 'rescued', lift: '1.4×', n: 20 }
+              ].map((item, idx) => (
                 <div key={idx} className="kw flex items-center gap-2.5 text-xs font-mono">
                   <span className="kw-word text-[var(--fg)] min-w-[74px]">{item.word}</span>
                   <div className="h-1 bg-[var(--violet)] rounded" style={{ width: `${80 - idx * 10}px` }} />
@@ -120,11 +421,11 @@ export default function SurvivalConsolePage() {
 
           {/* Readout Verdict */}
           <div className="f-cell p-4 border border-[var(--soft)] rounded bg-[var(--panel2)]">
-            <div className="f-label text-[var(--faint)] text-[10.5px] uppercase tracking-wider mb-3">
+            <div className="f-label text-[var(--faint)] text-[10.5px] uppercase tracking-wider mb-3 font-mono">
               read-out
             </div>
-            <div className="note text-[var(--dim)] text-[11.5px] leading-relaxed">
-              Strongest window so far is <b className="text-[var(--fg)] font-medium">14:00–15:00 UTC</b>, at <b className="text-[var(--live)] font-medium">31.0%</b> survival against a <b className="text-[var(--fg)] font-medium">5.5%</b> baseline. Lore length correlates weakly and positively.
+            <div className="note text-[var(--dim)] text-[11.5px] leading-relaxed font-mono">
+              Strongest window so far is <b className="text-[var(--fg)] font-medium">14:00–15:00 UTC</b>, at <b className="text-[var(--live)] font-medium">31.0%</b> survival against a <b className="text-[var(--fg)] font-medium">5.5%</b> baseline. Lore length correlates weakly and positively. Sample is <b className="text-[var(--fg)] font-medium">{stats.all.toLocaleString()}</b> tokens, of which <b className="text-[var(--live)] font-medium">{stats.live}</b> lived.
             </div>
           </div>
         </div>
@@ -134,3 +435,4 @@ export default function SurvivalConsolePage() {
     </div>
   );
 }
+
