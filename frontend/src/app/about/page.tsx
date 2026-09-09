@@ -9,7 +9,7 @@ export default function AboutEmilePage() {
     <div className="wrap min-h-screen flex flex-col">
       <HeaderBar phaseText="about · methodology & transparency" />
 
-      <main className="p-6 md:p-10 max-w-4xl mx-auto space-y-8 flex-1">
+      <main className="w-full p-6 md:p-10 space-y-8 flex-1">
         {/* SECTION 5: Mandatory Disclaimer (Above the fold on mobile as requested by brief §10.5) */}
         <section className="p-5 border border-[var(--banana-lo)] bg-[var(--panel2)] rounded text-[var(--banana-hi)] leading-relaxed">
           <h2 className="font-serif font-bold text-lg text-[var(--banana)] mb-2">
@@ -72,14 +72,14 @@ export default function AboutEmilePage() {
           </p>
           <div className="flex gap-4 font-mono text-xs flex-wrap">
             <a 
-              href="http://localhost:8000/api/dataset.csv" 
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/dataset.csv`} 
               target="_blank"
               className="px-3.5 py-2 bg-[var(--panel2)] border border-[var(--banana)] text-[var(--banana)] rounded hover:bg-[var(--banana)] hover:text-[var(--ink)] transition-colors"
             >
               📥 Download /api/dataset.csv
             </a>
             <a 
-              href="http://localhost:8000/api/methodology.json" 
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/methodology.json`} 
               target="_blank"
               className="px-3.5 py-2 bg-[var(--panel2)] border border-[var(--rule)] text-[var(--fg)] rounded hover:border-[var(--banana)] transition-colors"
             >
