@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useEmileStore } from '@/store/useEmileStore';
+import { IconPlay, IconPause, IconFastForward, IconReset } from '@/components/ui/CustomIcons';
 
 const DELTA = 0.05;
 const TARGET = 0.60;
@@ -135,27 +136,30 @@ export const ProofPanel: React.FC = () => {
         <div className="btnrow flex gap-2.5 flex-wrap mt-3.5">
           <button 
             onClick={() => setSimParams({ running: !running })}
-            className={`btn border text-[11px] px-3.5 py-1.75 rounded-md font-mono cursor-pointer transition-all duration-200 ${
+            className={`btn inline-flex items-center gap-1.5 border text-[11px] px-3.5 py-1.75 rounded-md font-mono cursor-pointer transition-all duration-200 ${
               running 
                 ? 'border-[var(--banana)] text-[var(--banana)] bg-[rgba(242,201,76,0.08)] shadow-sm' 
                 : 'border-[var(--rule)] text-[var(--fg)] hover:border-[var(--banana)] hover:text-[var(--banana)] bg-transparent'
             }`}
           >
-            {running ? '⏸ Pause the run' : '▶ Resume the run'}
+            {running ? <IconPause className="w-3 h-3 text-[var(--banana)]" /> : <IconPlay className="w-3 h-3 text-[var(--banana)]" />}
+            <span>{running ? 'Pause the run' : 'Resume the run'}</span>
           </button>
 
           <button 
             onClick={() => setSimParams({ n: n + 9200, auc: 0.645 })}
-            className="btn bg-transparent border border-[var(--rule)] text-[var(--fg)] hover:border-[var(--banana)] hover:text-[var(--banana)] text-[11px] px-3.5 py-1.75 rounded-md font-mono cursor-pointer transition-all duration-200"
+            className="btn inline-flex items-center gap-1.5 bg-transparent border border-[var(--rule)] text-[var(--fg)] hover:border-[var(--banana)] hover:text-[var(--banana)] text-[11px] px-3.5 py-1.75 rounded-md font-mono cursor-pointer transition-all duration-200"
           >
-            ⏩ Fast-forward 30 days
+            <IconFastForward className="w-3 h-3 text-[var(--fg)]" />
+            <span>Fast-forward 30 days</span>
           </button>
 
           <button 
             onClick={resetSim}
-            className="btn bg-transparent border border-[var(--rule)] text-[var(--fg)] hover:border-[var(--banana)] hover:text-[var(--banana)] text-[11px] px-3.5 py-1.75 rounded-md font-mono cursor-pointer transition-all duration-200"
+            className="btn inline-flex items-center gap-1.5 bg-transparent border border-[var(--rule)] text-[var(--fg)] hover:border-[var(--banana)] hover:text-[var(--banana)] text-[11px] px-3.5 py-1.75 rounded-md font-mono cursor-pointer transition-all duration-200"
           >
-            🔄 Reset to day 1
+            <IconReset className="w-3 h-3 text-[var(--fg)]" />
+            <span>Reset to day 1</span>
           </button>
         </div>
       </div>

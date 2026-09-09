@@ -3,6 +3,7 @@
 import React from 'react';
 import { HeaderBar } from '@/components/layout/HeaderBar';
 import { FooterBar } from '@/components/layout/FooterBar';
+import { IconWarning, IconDownload, IconFileCode } from '@/components/ui/CustomIcons';
 
 export default function AboutEmilePage() {
   return (
@@ -12,8 +13,9 @@ export default function AboutEmilePage() {
       <main className="w-full p-6 md:p-10 space-y-8 flex-1">
         {/* SECTION 5: Mandatory Disclaimer (Above the fold on mobile as requested by brief §10.5) */}
         <section className="p-5 border border-[var(--banana-lo)] bg-[var(--panel2)] rounded text-[var(--banana-hi)] leading-relaxed">
-          <h2 className="font-serif font-bold text-lg text-[var(--banana)] mb-2">
-            ⚠️ What Émile Is Not
+          <h2 className="font-serif font-bold text-lg text-[var(--banana)] mb-2 flex items-center gap-2">
+            <IconWarning className="w-5 h-5 text-[var(--banana)] glow-banana" />
+            <span>What Émile Is Not</span>
           </h2>
           <ul className="list-disc list-inside space-y-1.5 text-xs font-mono text-[var(--fg)]">
             <li>Émile <b className="text-[var(--banana)]">does not predict price</b>. He estimates the probability that a token which already reached $10K will reach $30K.</li>
@@ -74,16 +76,18 @@ export default function AboutEmilePage() {
             <a 
               href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/dataset.csv`} 
               target="_blank"
-              className="px-3.5 py-2 bg-[var(--panel2)] border border-[var(--banana)] text-[var(--banana)] rounded hover:bg-[var(--banana)] hover:text-[var(--ink)] transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--panel2)] border border-[var(--banana)] text-[var(--banana)] rounded hover:bg-[var(--banana)] hover:text-[var(--ink)] transition-colors group"
             >
-              📥 Download /api/dataset.csv
+              <IconDownload className="w-4 h-4 text-[var(--banana)] group-hover:text-[var(--ink)] transition-colors" />
+              <span>Download /api/dataset.csv</span>
             </a>
             <a 
               href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/methodology.json`} 
               target="_blank"
-              className="px-3.5 py-2 bg-[var(--panel2)] border border-[var(--rule)] text-[var(--fg)] rounded hover:border-[var(--banana)] transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--panel2)] border border-[var(--rule)] text-[var(--fg)] rounded hover:border-[var(--banana)] transition-colors"
             >
-              📄 View /api/methodology.json
+              <IconFileCode className="w-4 h-4 text-[var(--fg)]" />
+              <span>View /api/methodology.json</span>
             </a>
           </div>
         </section>
