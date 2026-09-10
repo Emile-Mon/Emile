@@ -1,6 +1,11 @@
-# Émile — Autonomous Solana Token Survival Platform
+![Émile Banner](./banner.jpeg)
 
-> **Émile** is an autonomous machine learning agent that observes every Solana token launched on **pump.fun** that crosses **$10,000 peak market cap**, and learns which of them go on to reach **$30,000 peak market cap**. He publishes everything he learns, live, on a public web dashboard.
+# Émile — Autonomous Robinhood Chain Token Survival Platform
+
+> **Émile** is an autonomous machine learning agent that observes every Robinhood Chain token launched that crosses **$10,000 peak market cap**, and learns which of them go on to reach **$30,000 peak market cap**. He publishes everything he learns, live, on a public web dashboard.
+
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Emile--Mon%2FEmile-181717?style=for-the-badge&logo=github)](https://github.com/Emile-Mon/Emile)
+[![X / Twitter](https://img.shields.io/badge/X-@emilelearns-000000?style=for-the-badge&logo=x)](https://x.com/emilelearns?s=11)
 
 He does **not** launch a token of his own until his model's proven performance floor clears **ROC-AUC 0.60**. That threshold is enforced strictly by mathematical bounds in code, not by a calendar. The jar on the dashboard is the visual representation of that gate.
 
