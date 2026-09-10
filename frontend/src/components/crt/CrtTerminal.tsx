@@ -5,9 +5,9 @@ import { useEmileStore, TokenItem } from '@/store/useEmileStore';
 
 const BLOCKS = [
   {
-    stage: 'ingest · pump.fun',
-    src: `# every mint from the launchpad, winners and losers alike
-new = pumpfun.tokens(since=cursor, limit=500)
+    stage: 'ingest · robinhood chain',
+    src: `# token scan from robinhood chain DEX pool
+new = dexscreener.latest_boosts(chain="robinhood", limit=500)
 keep = new[new.peak_mc >= 10_000]          # the gate
 log(f"{len(new)} seen, {len(keep)} above the line")`
   },
@@ -15,7 +15,7 @@ log(f"{len(new)} seen, {len(keep)} above the line")`
     stage: 'pricing · dexscreener',
     src: `# peak cap, never the current cap — a token that touched
 # 25K and fell back to 8K still crossed the gate
-pairs = dexscreener.pairs(chain="solana", tokens=keep.mint)
+pairs = dexscreener.pairs(chain="robinhood", tokens=keep.mint)
 keep = keep.join(pairs[["peak_mc","liq","image_url"]], on="mint")`
   },
   {
@@ -156,7 +156,7 @@ export const CrtTerminal: React.FC = () => {
 
       {/* Source Counters Bar */}
       <div className="pull flex gap-4 px-4.5 py-2 border-t border-b border-[#14261C] bg-[#09120D] text-[11px] text-[#4E7360] font-mono relative z-2">
-        <span>pump.fun <b className="text-[#A7E2BD] font-medium ml-1">{counters.pump}</b> pulled</span>
+        <span>robinhood chain <b className="text-[#A7E2BD] font-medium ml-1">{counters.pump}</b> pulled</span>
         <span>dexscreener <b className="text-[#A7E2BD] font-medium ml-1">{counters.dex}</b> priced</span>
         <span>rpc <b className="text-[#A7E2BD] font-medium ml-1">{counters.rpc}</b> holder counts</span>
       </div>
@@ -179,7 +179,7 @@ export const CrtTerminal: React.FC = () => {
               <div className="min-w-0">
                 <span className="nm text-[#E3F2E9] font-medium">{t.name}</span>
                 <a 
-                  href={`https://dexscreener.com/solana/${t.mint}`} 
+                  href={`https://dexscreener.com/robinhood/${t.mint}`} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="sy text-[var(--banana)] hover:underline text-[10.5px] ml-1.5 font-medium inline-flex items-center gap-0.5 cursor-pointer"

@@ -5,11 +5,12 @@ import { HeaderBar } from '@/components/layout/HeaderBar';
 import { FooterBar } from '@/components/layout/FooterBar';
 
 interface TokenFeedItem {
-  id: number;
+  id: number | string;
   name: string;
   symbol: string;
   lore: string;
   hour: number;
+  launched_at?: string;
   marketCap: number;
   survived: boolean;
 }
@@ -18,8 +19,8 @@ const BLOCKS = [
   {
     stage: 'ingest',
     src: `# pull everything launched since the last cursor — winners and losers
-new = pumpfun.tokens(since=cursor, limit=500)
-mc  = dexscreener.pairs(chain="solana", tokens=new.mint)
+new = dexscreener.latest_boosts(chain="robinhood", limit=500)
+mc  = dexscreener.pairs(chain="robinhood", tokens=new.mint)
 
 df = new.join(mc, on="mint")
 df["launch_hour"] = df.created_at.dt.tz_convert("UTC").dt.hour
@@ -102,7 +103,7 @@ const LORE = [
   'Legend says he is still waiting for the airdrop from 2022.',
   'A story about patience, told by someone with none.',
   'They laughed at him in the group chat. He bought more.',
-  'Found sleeping under a bridge on Solana. Fed once. Never left.',
+  'Found sleeping under a bridge on Robinhood Chain. Fed once. Never left.',
   'The last honest token on the internet.',
   'Made by three friends who have never met.',
   'He does not check the chart. The chart checks him.',
@@ -168,8 +169,8 @@ export default function SurvivalConsolePage() {
 
           const formattedTokens: TokenFeedItem[] = dbTokens.map((t: any, idx: number) => ({
             id: t.mint || idx,
-            name: t.name || 'Solana Token',
-            symbol: t.symbol || 'SOL',
+            name: t.name || 'Robinhood Chain Token',
+            symbol: t.symbol || 'RBN',
             lore: t.lore || 'No lore description.',
             hour: t.launch_hour ?? (new Date(t.launched_at || Date.now()).getUTCHours()),
             launched_at: t.launched_at,
@@ -194,7 +195,7 @@ export default function SurvivalConsolePage() {
 
     loadRealData();
 
-    // Connect WebSocket stream for real-time Solana token ingest
+    // Connect WebSocket stream for real-time Robinhood Chain token ingest
     let ws: WebSocket | null = null;
     try {
       ws = new WebSocket(`${wsBase}/stream`);
@@ -206,8 +207,8 @@ export default function SurvivalConsolePage() {
             const isSurvived = raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000);
             const newItem: TokenFeedItem = {
               id: raw.mint || Date.now(),
-              name: raw.name || 'Solana Token',
-              symbol: raw.symbol || 'SOL',
+              name: raw.name || 'Robinhood Chain Token',
+              symbol: raw.symbol || 'RBN',
               lore: raw.lore || 'No lore description.',
               hour: raw.hour ?? new Date().getUTCHours(),
               marketCap: raw.peak_mc || 10500,
@@ -289,7 +290,7 @@ export default function SurvivalConsolePage() {
             Survival Console
           </div>
           <div className="tagline text-[var(--dim)] text-xs mt-0.5 font-mono">
-            Watching every new Solana token, learning which ones live past $20K
+            Watching every new Robinhood Chain token, learning which ones live past $20K
           </div>
         </div>
         <div className="flex gap-6 text-xs text-[var(--dim)] font-mono">
@@ -305,7 +306,7 @@ export default function SurvivalConsolePage() {
         <div className="col flex flex-col border-r border-[var(--rule)] min-h-[420px]">
           <div className="panel-head flex items-center justify-between p-3 px-4 border-b border-[var(--soft)] bg-[var(--panel)] font-mono text-xs">
             <span className="font-medium text-[#DCE6F0]">Ingest Feed</span>
-            <span className="text-[var(--faint)]">solana · dexscreener</span>
+            <span className="text-[var(--faint)]">robinhood chain · dexscreener</span>
           </div>
           <div className="feed flex-1 overflow-y-auto max-h-[500px] bg-[var(--panel2)] p-2 font-mono text-xs divide-y divide-[var(--soft)]">
             {tokens.map((t) => (
@@ -317,7 +318,7 @@ export default function SurvivalConsolePage() {
                   <div className="flex items-center gap-2">
                     <span className="tk-name font-medium text-[#E4ECF4]">{t.name}</span>
                     <a 
-                      href={`https://dexscreener.com/solana/${t.id}`} 
+                      href={`https://dexscreener.com/robinhood/${t.id}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="tk-sym text-[var(--banana)] hover:underline flex items-center gap-0.5 cursor-pointer"

@@ -33,7 +33,7 @@ export function useEmileDatabase() {
           // Update Store with real Database metrics
           const formattedTokens = uniqueTokens.map((t: any) => ({
             mint: t.mint,
-            name: t.name || 'Solana DEX Token',
+            name: t.name || 'Robinhood Chain Token',
             symbol: t.symbol || (t.mint ? t.mint.slice(0, 6).toUpperCase() : 'SOL'),
             lore: t.lore || 'No lore description provided.',
             lore_withheld: t.lore_withheld || false,
@@ -105,7 +105,7 @@ export function useEmileDatabase() {
             const raw = payload.token;
             const newItem: TokenItem = {
               mint: raw.mint,
-              name: raw.name || 'Solana DEX Token',
+              name: raw.name || 'Robinhood Chain Token',
               symbol: raw.symbol || (raw.mint ? raw.mint.slice(0, 6).toUpperCase() : 'SOL'),
               lore: raw.lore || 'No lore description provided.',
               holders: raw.holders || 120,

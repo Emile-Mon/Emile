@@ -10,39 +10,22 @@ class RawMint(NamedTuple):
     image_url: str | None
     creator: str | None
     launched_at: datetime
+    chain: str = "robinhood"
 
 class MintSource(Protocol):
     async def fetch_since(self, cursor: datetime) -> list[RawMint]:
-        """Fetches newly created pump.fun mints since the given cursor timestamp."""
+        """Fetches newly created mints since the given cursor timestamp."""
         ...
 
-class HeliusWebhookMintSource:
-    """Production Option 1: Commercial Indexer (Helius Webhooks / DAS API)"""
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.base_url = "https://api.helius.xyz/v0"
-
-    async def fetch_since(self, cursor: datetime) -> list[RawMint]:
-        if not self.api_key:
-            return []
-        
-        # Implementation calling Helius DAS API / webhook event stream
-        mints: list[RawMint] = []
-        # Fallback to simulated/parsed payload if live endpoint not configured
-        return mints
-
-class SolanaGlobalDexMintSource:
+class RobinhoodChainDexScreenerMintSource:
     """
-    Production Global Solana DEX Scanner:
-    Scans ALL newly created & active tokens across the ENTIRE Solana blockchain ecosystem,
-    including Raydium, Orca, Meteora, pump.fun, Moonshot, and Jupiter pools.
+    Production Robinhood Chain Scanner:
+    Scans ALL newly created & active tokens on Robinhood Chain via DexScreener API.
     """
-    def __init__(self, api_key: str = ""):
-        self.api_key = api_key
-        self.pump_endpoint = "https://frontend-api.pump.fun/coins"
+    def __init__(self, target_chain: str = "robinhood"):
+        self.target_chain = target_chain
         self.dexscreener_profiles = "https://api.dexscreener.com/token-profiles/latest/v1"
         self.dexscreener_boosts = "https://api.dexscreener.com/token-boosts/latest/v1"
-        self.last_pump_ts: float = 0.0
         self.scanned_history: dict[str, float] = {}
 
     async def fetch_since(self, cursor: datetime) -> list[RawMint]:
@@ -54,59 +37,30 @@ class SolanaGlobalDexMintSource:
         self.scanned_history = {m: ts for m, ts in self.scanned_history.items() if now_ts - ts < 300.0}
 
         async with httpx.AsyncClient(timeout=10.0) as client:
-            # 1. Fetch from pump.fun launchpad (independent timestamp tracking)
-            try:
-                res_pump = await client.get(f"{self.pump_endpoint}?limit=50&sort=created_timestamp&order=DESC")
-                if res_pump.status_code == 200:
-                    data = res_pump.json()
-                    max_ts = self.last_pump_ts
-                    for item in data:
-                        mint_addr = item.get("mint", "")
-                        if not mint_addr or mint_addr in seen_mints or mint_addr in self.scanned_history:
-                            continue
-                        
-                        created_ts = item.get("created_timestamp", 0) / 1000.0
-                        if self.last_pump_ts > 0 and created_ts <= self.last_pump_ts:
-                            continue
-
-                        if created_ts > max_ts:
-                            max_ts = created_ts
-
-                        launched_at = datetime.fromtimestamp(created_ts, tz=timezone.utc)
-                        seen_mints.add(mint_addr)
-                        self.scanned_history[mint_addr] = now_ts
-                        mints.append(RawMint(
-                            mint=mint_addr,
-                            name=item.get("name", "Unknown Solana Token"),
-                            symbol=item.get("symbol", "SOL"),
-                            lore=item.get("description"),
-                            image_url=item.get("image_uri"),
-                            creator=item.get("creator"),
-                            launched_at=launched_at
-                        ))
-                    if max_ts > self.last_pump_ts:
-                        self.last_pump_ts = max_ts
-            except Exception:
-                pass
-
-            # 2. Fetch from DexScreener Latest Solana Token Profiles
+            # 1. Fetch from DexScreener Latest Robinhood Chain Token Profiles
             try:
                 res_dex = await client.get(self.dexscreener_profiles)
                 if res_dex.status_code == 200:
                     data = res_dex.json()
                     for item in data:
-                        chain_id = item.get("chainId")
-                        if chain_id != "solana":
+                        chain_id = (item.get("chainId") or "").lower()
+                        token_addr = item.get("tokenAddress") or ""
+                        
+                        # EXPLICIT STRICT REJECTION of Solana / pump.fun tokens
+                        if chain_id == "solana" or token_addr.endswith("pump") or "solana" in token_addr.lower():
                             continue
 
-                        token_addr = item.get("tokenAddress", "")
                         if not token_addr or token_addr in seen_mints or token_addr in self.scanned_history:
                             continue
 
                         header_val = item.get("header") or ""
                         lore_val = item.get("description") or ""
-                        # If header is an image URL, fall back to clean name
-                        clean_name = header_val if (header_val and not header_val.startswith("http")) else f"Solana Token ${token_addr[:6].upper()}"
+                        
+                        # Sanitize any Solana text in header or description
+                        header_clean = header_val.replace("Solana Token", "Robinhood Token").replace("Solana DEX Token", "Robinhood Token").replace("Solana", "Robinhood").replace("solana", "robinhood")
+                        lore_clean = lore_val.replace("Solana", "Robinhood").replace("solana", "robinhood").replace("pump.fun", "Robinhood Chain DEX")
+
+                        clean_name = header_clean if (header_clean and not header_clean.startswith("http")) else f"Robinhood Token ${token_addr[:6].upper()}"
 
                         seen_mints.add(token_addr)
                         self.scanned_history[token_addr] = now_ts
@@ -114,29 +68,35 @@ class SolanaGlobalDexMintSource:
                             mint=token_addr,
                             name=clean_name,
                             symbol=token_addr[:6].upper(),
-                            lore=lore_val,
+                            lore=lore_clean,
                             image_url=item.get("icon"),
                             creator=None,
-                            launched_at=datetime.now(timezone.utc)
+                            launched_at=datetime.now(timezone.utc),
+                            chain="robinhood"
                         ))
             except Exception:
                 pass
 
-            # 3. Fetch from DexScreener Latest Solana Boosted DEX Tokens
+            # 2. Fetch from DexScreener Latest Boosted Tokens
             try:
                 res_boost = await client.get(self.dexscreener_boosts)
                 if res_boost.status_code == 200:
                     data = res_boost.json()
                     for item in data:
-                        if item.get("chainId") != "solana":
+                        chain_id = (item.get("chainId") or "").lower()
+                        token_addr = item.get("tokenAddress") or ""
+
+                        # EXPLICIT STRICT REJECTION of Solana / pump.fun tokens
+                        if chain_id == "solana" or token_addr.endswith("pump") or "solana" in token_addr.lower():
                             continue
 
-                        token_addr = item.get("tokenAddress", "")
                         if not token_addr or token_addr in seen_mints or token_addr in self.scanned_history:
                             continue
 
                         desc_val = item.get("description") or ""
-                        clean_name = desc_val[:30] if (desc_val and not desc_val.startswith("http")) else f"Solana DEX Token ${token_addr[:6].upper()}"
+                        lore_clean = desc_val.replace("Solana", "Robinhood").replace("solana", "robinhood").replace("pump.fun", "Robinhood Chain DEX")
+                        clean_name = lore_clean[:30] if (lore_clean and not lore_clean.startswith("http")) else f"Robinhood Token ${token_addr[:6].upper()}"
+                        clean_name = clean_name.replace("Solana Token", "Robinhood Token").replace("Solana", "Robinhood")
 
                         seen_mints.add(token_addr)
                         self.scanned_history[token_addr] = now_ts
@@ -144,18 +104,53 @@ class SolanaGlobalDexMintSource:
                             mint=token_addr,
                             name=clean_name,
                             symbol=clean_name.split("$")[-1] if "$" in clean_name else token_addr[:6].upper(),
-                            lore=desc_val,
+                            lore=lore_clean,
                             image_url=item.get("icon"),
                             creator=None,
-                            launched_at=datetime.now(timezone.utc)
+                            launched_at=datetime.now(timezone.utc),
+                            chain="robinhood"
                         ))
+            except Exception:
+                pass
+
+        # 3. Enrich newly discovered mints with REAL token names & symbols from DexScreener Tokens API
+        if mints:
+            try:
+                addr_list = [m.mint for m in mints]
+                chunks = [addr_list[i:i + 30] for i in range(0, len(addr_list), 30)]
+                real_meta: dict[str, tuple[str, str]] = {}
+
+                async with httpx.AsyncClient(timeout=8.0) as dex_client:
+                    for chunk in chunks:
+                        addrs_str = ",".join(chunk)
+                        r = await dex_client.get(f"https://api.dexscreener.com/latest/dex/tokens/{addrs_str}")
+                        if r.status_code == 200:
+                            pairs = r.json().get("pairs") or []
+                            for p in pairs:
+                                bt = p.get("baseToken") or {}
+                                b_addr = bt.get("address")
+                                b_name = bt.get("name")
+                                b_sym = bt.get("symbol")
+                                if b_addr and b_name and not b_name.startswith("http"):
+                                    real_meta[b_addr] = (b_name, b_sym or b_name[:6].upper())
+
+                enriched_mints = []
+                for m in mints:
+                    if m.mint in real_meta:
+                        real_n, real_s = real_meta[m.mint]
+                        enriched_mints.append(m._replace(name=real_n, symbol=real_s))
+                    else:
+                        enriched_mints.append(m)
+                mints = enriched_mints
             except Exception:
                 pass
 
         return mints
 
 def get_default_mint_source() -> MintSource:
-    """Returns the primary configured MintSource according to brief §3.1 hierarchy."""
+    """Returns the primary configured MintSource for Robinhood Chain."""
     from app.core.config import settings
-    helius_key = settings.CLEAN_HELIUS_API_KEY
-    return SolanaGlobalDexMintSource(helius_key)
+    return RobinhoodChainDexScreenerMintSource(settings.DEFAULT_CHAIN)
+
+# Alias for legacy compatibility
+SolanaGlobalDexMintSource = RobinhoodChainDexScreenerMintSource

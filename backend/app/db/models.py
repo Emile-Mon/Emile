@@ -18,6 +18,7 @@ class Token(Base):
     __tablename__ = "tokens"
 
     mint = Column(String, primary_key=True, index=True)
+    chain = Column(String, nullable=False, default="robinhood")
     name = Column(String, nullable=False)
     symbol = Column(String, nullable=False)
     lore = Column(Text, nullable=True)

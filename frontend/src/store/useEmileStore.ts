@@ -74,7 +74,7 @@ const HUES = [38, 152, 268, 196, 12, 88, 320];
 
 export const useEmileStore = create<EmileState>((set, get) => ({
   isConnected: true,
-  stage: 'ingest · pump.fun',
+  stage: 'ingest · robinhood chain',
   codeBuffer: '',
   tokens: [],
   counters: { pump: 0, dex: 0, rpc: 0 },

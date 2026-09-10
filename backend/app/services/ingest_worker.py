@@ -3,7 +3,7 @@ from datetime import datetime, timezone, date
 from sqlalchemy import text
 from app.db.database import AsyncSessionLocal
 from app.db.models import IngestLog
-from app.services.mint_source import SolanaGlobalDexMintSource
+from app.services.mint_source import get_default_mint_source, RobinhoodChainDexScreenerMintSource
 from app.services.dexscreener import DexScreenerPoller
 from app.services.lore_safety import sanitize_lore
 from app.services.holder_sampler import run_label_worker_cycle
@@ -12,15 +12,15 @@ from app.api.websocket import manager
 async def start_ingest_worker_loop():
     """
     Continuous background worker loop that:
-    1. Scans ALL newly created & active Solana tokens across Raydium, Orca, Meteora, pump.fun & Moonshot.
-    2. Fetches real-time prices & Market Caps via DexScreener.
+    1. Scans ALL newly created & active tokens on Robinhood Chain / EVM DEX pools.
+    2. Fetches real-time prices & Market Caps via DexScreener API.
     3. Saves EVERY scanned token into the PostgreSQL database!
     4. Updates daily universe metrics & logs in database.
     5. Broadcasts live token events to connected WebSocket clients.
     6. Triggers 48h holder sampling & labeling cycle.
     """
-    print("[INGEST WORKER] STARTING EMILE GLOBAL SOLANA SCANNER & DATABASE INGEST WORKER...")
-    scanner = SolanaGlobalDexMintSource()
+    print("[INGEST WORKER] STARTING EMILE ROBINHOOD CHAIN SCANNER & DATABASE INGEST WORKER...")
+    scanner = get_default_mint_source()
     poller = DexScreenerPoller()
     cursor = None
 
@@ -43,6 +43,10 @@ async def start_ingest_worker_loop():
                     # Filter out tokens that ALREADY exist in DB and were polled recently (< 15 mins) or already passed
                     mints_to_process = []
                     for raw in raw_mints:
+                        # STRICT REJECTION: Never process or insert any Solana or pump.fun token
+                        if raw.mint.endswith("pump") or "solana" in raw.name.lower() or getattr(raw, "chain", "").lower() == "solana":
+                            continue
+
                         if raw.mint in existing_db:
                             status_val, last_polled = existing_db[raw.mint]
                             # 1. If token already passed ($30K+ peak MC), positive label is permanent. Skip permanently!
@@ -74,11 +78,11 @@ async def start_ingest_worker_loop():
                             # Insert or update token record
                             query = text("""
                                 INSERT INTO tokens (
-                                    mint, name, symbol, lore, lore_display, lore_withheld,
+                                    mint, chain, name, symbol, lore, lore_display, lore_withheld,
                                     image_url, creator, launched_at, peak_mc, last_seen_mc,
                                     status, first_seen_at, poll_count, crossed_10k_at
                                 ) VALUES (
-                                    :mint, :name, :symbol, :lore, :lore_disp, :withheld,
+                                    :mint, :chain, :name, :symbol, :lore, :lore_disp, :withheld,
                                     :image_url, :creator, :launched_at, :peak_mc, :last_seen_mc,
                                     CASE WHEN :peak_mc >= 30000.0 THEN 'passed'::token_status ELSE 'pending'::token_status END,
                                     :now, 1,
@@ -89,6 +93,14 @@ async def start_ingest_worker_loop():
                                     last_seen_mc = EXCLUDED.last_seen_mc,
                                     last_polled_at = :now,
                                     poll_count = tokens.poll_count + 1,
+                                    name = CASE 
+                                        WHEN EXCLUDED.name IS NOT NULL AND EXCLUDED.name != '' AND (tokens.name LIKE 'Robinhood Token $0X%' OR tokens.name LIKE 'Solana%') THEN EXCLUDED.name 
+                                        ELSE tokens.name 
+                                    END,
+                                    symbol = CASE 
+                                        WHEN EXCLUDED.symbol IS NOT NULL AND EXCLUDED.symbol != '' AND (tokens.symbol LIKE '0X%' OR tokens.symbol = 'SOL') THEN EXCLUDED.symbol 
+                                        ELSE tokens.symbol 
+                                    END,
                                     status = CASE
                                         WHEN GREATEST(tokens.peak_mc, EXCLUDED.peak_mc) >= 30000.0 THEN 'passed'::token_status
                                         ELSE tokens.status
@@ -102,6 +114,7 @@ async def start_ingest_worker_loop():
 
                             res = await db.execute(query, {
                                 "mint": raw.mint,
+                                "chain": getattr(raw, "chain", "robinhood"),
                                 "name": raw.name,
                                 "symbol": raw.symbol,
                                 "lore": raw.lore,
@@ -146,7 +159,7 @@ async def start_ingest_worker_loop():
                             await db.execute(cur_universe, {"day": today, "cnt": newly_inserted})
 
                         # Log ingest worker batch run
-                        log_entry = IngestLog(source="solana_global_dex", ok=len(mints_to_process), failed=0)
+                        log_entry = IngestLog(source="robinhood_dexscreener", ok=len(mints_to_process), failed=0)
                         db.add(log_entry)
 
                         # Trigger 48h holder sampler & label worker cycle

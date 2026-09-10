@@ -16,22 +16,20 @@ class DexScreenerPoller:
         self.consecutive_errors = 0
         self.circuit_open_until: float = 0.0
 
-    async def fetch_batch_prices(self, mint_addresses: list[str]) -> dict[str, float]:
+    async def fetch_batch_prices(self, mint_addresses: list[str]) -> dict[str, dict]:
         """
-        Fetches point-in-time market caps for a batch of token mint addresses.
-        Returns dict: { mint_address: market_cap }
+        Fetches point-in-time market caps, real token names, and symbols for a batch of token mint addresses.
+        Returns dict: { mint_address: {"mc": float, "name": str, "symbol": str} }
         """
         if not mint_addresses:
             return {}
 
         now = asyncio.get_event_loop().time()
         if now < self.circuit_open_until:
-            # Circuit breaker open, return empty to skip polling cycle
             return {}
 
-        # DexScreener pairs API supports comma-separated mint addresses (up to 30)
         chunks = [mint_addresses[i:i + 30] for i in range(0, len(mint_addresses), 30)]
-        results: dict[str, float] = {}
+        results: dict[str, dict] = {}
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             for chunk in chunks:
@@ -51,17 +49,23 @@ class DexScreenerPoller:
                             for pair in pairs:
                                 base_token = pair.get("baseToken") or {}
                                 mint = base_token.get("address")
-                                fdv = pair.get("fdv") or pair.get("marketCap") or 0.0
+                                fdv = float(pair.get("fdv") or pair.get("marketCap") or 0.0)
+                                real_name = base_token.get("name")
+                                real_sym = base_token.get("symbol")
+
                                 if mint and fdv > 0:
-                                    # Keep highest market cap seen in batch response
-                                    results[mint] = max(results.get(mint, 0.0), float(fdv))
+                                    prev_mc = results.get(mint, {}).get("mc", 0.0)
+                                    results[mint] = {
+                                        "mc": max(prev_mc, fdv),
+                                        "name": real_name,
+                                        "symbol": real_sym
+                                    }
                             
                             success = True
                             self.consecutive_errors = 0
                         elif res.status_code in [429, 500, 502, 503, 504]:
                             retries += 1
                             self.consecutive_errors += 1
-                            # Exponential backoff with jitter
                             delay = (2 ** retries) + (random.random() * 0.5)
                             await asyncio.sleep(delay)
                         else:
@@ -73,14 +77,13 @@ class DexScreenerPoller:
                         await asyncio.sleep(delay)
 
                 if self.consecutive_errors >= 10:
-                    # Trigger circuit breaker for 60 seconds
                     self.circuit_open_until = asyncio.get_event_loop().time() + 60.0
 
         return results
 
-    async def update_token_peaks(self, db: AsyncSession, prices: dict[str, float]) -> int:
+    async def update_token_peaks(self, db: AsyncSession, prices: dict[str, dict]) -> int:
         """
-        Executes GREATEST(peak_mc, new_mc) update query in database.
+        Executes GREATEST(peak_mc, new_mc) update query and updates real token name/symbol in database.
         """
         if not prices:
             return 0
@@ -88,13 +91,25 @@ class DexScreenerPoller:
         updated_count = 0
         now = datetime.now(timezone.utc)
 
-        for mint, mc in prices.items():
+        for mint, info in prices.items():
+            mc = info.get("mc", 0.0)
+            real_name = info.get("name")
+            real_sym = info.get("symbol")
+
             query = text("""
                 UPDATE tokens 
                 SET peak_mc = GREATEST(peak_mc, :mc), 
                     last_seen_mc = :mc, 
                     last_polled_at = :now,
                     poll_count = poll_count + 1,
+                    name = CASE 
+                        WHEN :real_name IS NOT NULL AND :real_name != '' AND (name LIKE 'Robinhood Token $0X%' OR name LIKE 'Solana%') THEN :real_name 
+                        ELSE name 
+                    END,
+                    symbol = CASE 
+                        WHEN :real_sym IS NOT NULL AND :real_sym != '' AND (symbol LIKE '0X%' OR symbol = 'SOL') THEN :real_sym 
+                        ELSE symbol 
+                    END,
                     status = CASE 
                         WHEN GREATEST(peak_mc, :mc) >= 30000.0 THEN 'passed'::token_status 
                         ELSE status 
@@ -105,7 +120,13 @@ class DexScreenerPoller:
                     END
                 WHERE mint = :mint;
             """)
-            res = await db.execute(query, {"mint": mint, "mc": mc, "now": now})
+            res = await db.execute(query, {
+                "mint": mint,
+                "mc": mc,
+                "now": now,
+                "real_name": real_name,
+                "real_sym": real_sym
+            })
             updated_count += res.rowcount
 
         await db.commit()

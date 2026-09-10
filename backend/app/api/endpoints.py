@@ -19,7 +19,7 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
     - Latest model run
     """
     try:
-        stmt_all = text("SELECT mint, name, symbol, lore, lore_display, lore_withheld, image_url, creator, launched_at, launch_hour_utc as launch_hour, holders, peak_mc, status::text FROM tokens WHERE status::text != 'excluded' ORDER BY first_seen_at DESC;")
+        stmt_all = text("SELECT mint, COALESCE(chain, 'robinhood') as chain, name, symbol, lore, lore_display, lore_withheld, image_url, creator, launched_at, launch_hour_utc as launch_hour, holders, peak_mc, status::text FROM tokens WHERE status::text != 'excluded' ORDER BY first_seen_at DESC;")
         res_all = await db.execute(stmt_all)
         all_rows = res_all.mappings().all()
 
@@ -31,7 +31,7 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
         holders_list = sorted([r["holders"] for r in all_rows if r["holders"] is not None])
         median_holders = holders_list[len(holders_list) // 2] if holders_list else 288
 
-        tokens = all_rows[:100]
+        tokens = all_rows[:400]
 
         stmt_model = select(ModelRun).order_by(desc(ModelRun.id)).limit(1)
         res_model = await db.execute(stmt_model)
@@ -59,6 +59,7 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
         token_list = [
             {
                 "mint": t["mint"],
+                "chain": t["chain"] or "robinhood",
                 "name": t["name"],
                 "symbol": t["symbol"],
                 "lore": t["lore_display"] or t["lore"],
@@ -126,7 +127,7 @@ async def get_model_history(days: int = 30, db: AsyncSession = Depends(get_db)):
 async def get_methodology():
     """GET /api/methodology.json - Machine-readable methodology specification."""
     return {
-        "universe": "Every Solana token launched on pump.fun",
+        "universe": "Every token launched on Robinhood Chain",
         "study_population": "Tokens with peak market cap >= $10,000",
         "positive_label": "Peak market cap reached >= $30,000",
         "negative_label": "Reached $10K, did not reach $30K, age >= 48 hours",

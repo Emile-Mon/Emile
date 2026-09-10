@@ -25,7 +25,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
           Almost Surely
         </Link>
         <div className="sub text-[var(--dim)] text-xs mt-1 max-w-[60ch] leading-relaxed truncate md:whitespace-normal">
-          Émile has been at this desk since day one, reading every Solana token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
+          Émile has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
         </div>
       </div>
 

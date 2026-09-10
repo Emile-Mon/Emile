@@ -50,7 +50,8 @@ class Settings(BaseSettings):
             key = key.rstrip("/").split("/")[-1]
         return key
 
-    PUMP_FUN_WS_URL: str = os.getenv("PUMP_FUN_WS_URL", "wss://pumpscan.helius-rpc.com")
+    DEFAULT_CHAIN: str = os.getenv("DEFAULT_CHAIN", "robinhood")
+    DEFAULT_CHAIN_LABEL: str = "Robinhood Chain"
     DEXSCREENER_API_BASE: str = "https://api.dexscreener.com/latest/dex"
     SOLANA_RPC_URL: str = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
 

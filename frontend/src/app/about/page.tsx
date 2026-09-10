@@ -37,10 +37,10 @@ export default function AboutEmilePage() {
         {/* SECTION 2: Why It Fits */}
         <section className="space-y-3">
           <h2 className="font-serif font-bold text-2xl text-[#F0F5FA]">
-            2. Why it fits pump.fun
+            2. Why it fits Robinhood Chain
           </h2>
           <p className="text-[var(--dim)] text-sm leading-relaxed">
-            pump.fun is the room full of typewriters. Thousands of people throwing random names at the wall every day, and once in a while something sticks. Émile is the one monkey who decided to sit down and write the results in a notebook.
+            Robinhood Chain is the room full of typewriters. Thousands of people throwing random token names at the DEX pools every day, and once in a while something sticks. Émile is the one monkey who decided to sit down and write the results in a notebook.
           </p>
         </section>
 
@@ -50,7 +50,7 @@ export default function AboutEmilePage() {
             3. What Émile Actually Does
           </h2>
           <p className="text-[var(--dim)] text-sm leading-relaxed">
-            Every token launched on pump.fun that reaches <b>$10,000 peak market cap</b> enters the study population. Émile observes whether it goes on to reach <b>$30,000 peak market cap</b>, using four feature families (launch hour sin/cos, day of week, 48h holder count, and lore text embeddings).
+            Every token launched on Robinhood Chain DEX pools that reaches <b>$10,000 peak market cap</b> enters the study population. Émile observes whether it goes on to reach <b>$30,000 peak market cap</b>, using four feature families (launch hour sin/cos, day of week, 48h holder count, and lore text embeddings).
           </p>
         </section>
 
