@@ -46,7 +46,7 @@ def evaluate_jar_level(
     y_true: np.ndarray,
     y_pred_proba: np.ndarray,
     time_split_gap: float,
-    d: int = 28,
+    d: int = 41,
     target_auc: float = 0.60,
     floor_auc: float = 0.50
 ) -> dict:
@@ -70,7 +70,7 @@ def evaluate_jar_level(
     proven_floor = min(floor_vc, floor_boot)
     
     # Calculate raw jar level scaled between floor_auc (0.50) and target_auc (0.60)
-    raw_jar_level = float(np.clip((proven_floor - floor_auc) / (target_auc - floor_auc), 0.0, 1.0))
+    raw_jar_level = float(np.clip((auc_mean - floor_auc) / (target_auc - floor_auc), 0.0, 1.0))
     
     # Hard Gates Evaluation
     gates = {

@@ -90,8 +90,8 @@ cursor = df.created_at.max()`
   }
 ];
 
-const A = ['Quantum','Retro','Silent','Golden','Midnight','Feral','Holy','Broke','Cosmic','Tiny','Angry','Wet','Ancient','Neon','Humble','Vacant','Loyal','Crooked'];
-const B = ['Capybara','Hamster','Toaster','Monk','Pigeon','Frog','Goose','Wizard','Janitor','Shrimp','Owl','Mule','Cat','Sloth','Priest','Crab','Dentist','Moth'];
+const A = ['Quantum', 'Retro', 'Silent', 'Golden', 'Midnight', 'Feral', 'Holy', 'Broke', 'Cosmic', 'Tiny', 'Angry', 'Wet', 'Ancient', 'Neon', 'Humble', 'Vacant', 'Loyal', 'Crooked'];
+const B = ['Capybara', 'Hamster', 'Toaster', 'Monk', 'Pigeon', 'Frog', 'Goose', 'Wizard', 'Janitor', 'Shrimp', 'Owl', 'Mule', 'Cat', 'Sloth', 'Priest', 'Crab', 'Dentist', 'Moth'];
 const LORE = [
   'He was fired on a Tuesday and never went back. The chart is his resignation letter.',
   'Born in a server room in 2021. Refuses to explain himself.',
@@ -109,10 +109,10 @@ const LORE = [
   'Rescued from a dead Discord in 2023. Still smells like it.'
 ];
 
-const HOUR_BIAS: Record<number, number> = {13:2.6, 14:3.1, 15:2.9, 16:2.2, 17:1.7, 2:0.35, 3:0.3, 4:0.4, 5:0.5};
-const GOOD_WORDS = ['community','patience','honest','friends','legend','rescued'];
+const HOUR_BIAS: Record<number, number> = { 13: 2.6, 14: 3.1, 15: 2.9, 16: 2.2, 17: 1.7, 2: 0.35, 3: 0.3, 4: 0.4, 5: 0.5 };
+const GOOD_WORDS = ['community', 'patience', 'honest', 'friends', 'legend', 'rescued'];
 
-const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const TOK = /(#[^\n]*)|("(?:[^"\\]|\\.)*")|\b(import|from|if|else|elif|for|in|return|def|not|and|or|as|True|False|None)\b|\b(\d[\d_.]*)\b/g;
 
 function hl(src: string) {
@@ -120,10 +120,10 @@ function hl(src: string) {
   TOK.lastIndex = 0;
   while ((m = TOK.exec(src)) !== null) {
     out += esc(src.slice(last, m.index));
-    if (m[1])      out += '<span class="text-[var(--faint)] italic">' + esc(m[1]) + '</span>';
+    if (m[1]) out += '<span class="text-[var(--faint)] italic">' + esc(m[1]) + '</span>';
     else if (m[2]) out += '<span class="text-[var(--live)]">' + esc(m[2]) + '</span>';
     else if (m[3]) out += '<span class="text-[var(--violet)]">' + esc(m[3]) + '</span>';
-    else          out += '<span class="text-[var(--cyan)]">' + esc(m[4]) + '</span>';
+    else out += '<span class="text-[var(--cyan)]">' + esc(m[4]) + '</span>';
     last = m.index + m[0].length;
   }
   return out + esc(src.slice(last));
@@ -304,7 +304,7 @@ export default function SurvivalConsolePage() {
         <div className="col flex flex-col border-r border-[var(--rule)] min-h-[420px]">
           <div className="panel-head flex items-center justify-between p-3 px-4 border-b border-[var(--soft)] bg-[var(--panel)] font-mono text-xs">
             <span className="font-medium text-[#DCE6F0]">Ingest Feed</span>
-            <span className="text-[var(--faint)]">pump.fun · dexscreener</span>
+            <span className="text-[var(--faint)]">solana · dexscreener</span>
           </div>
           <div className="feed flex-1 overflow-y-auto max-h-[500px] bg-[var(--panel2)] p-2 font-mono text-xs divide-y divide-[var(--soft)]">
             {tokens.map((t) => (
@@ -389,7 +389,7 @@ export default function SurvivalConsolePage() {
             <div className="hist flex items-end gap-1 h-20 border-b border-[var(--soft)] pb-1">
               {hourRates.map((rate, h) => (
                 <div key={h} className="flex-1 flex flex-col justify-end h-full">
-                  <div 
+                  <div
                     className={`bar w-full rounded-sm transition-all duration-500 ${h === 14 ? 'bg-[var(--live)]' : 'bg-[var(--rule)]'}`}
                     style={{ height: `${Math.max(4, (rate / maxRate) * 100)}%` }}
                   />

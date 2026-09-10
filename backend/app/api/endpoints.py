@@ -3,7 +3,7 @@ import io
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, text
 from app.db.database import get_db
 from app.db.models import Token, ModelRun, TokenStatus
 from app.core.config import settings
@@ -19,23 +19,21 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
     - Latest model run
     """
     try:
-        stmt_tokens = select(Token).where(Token.status != TokenStatus.excluded).order_by(desc(Token.first_seen_at)).limit(100)
-        res_tokens = await db.execute(stmt_tokens)
-        tokens = res_tokens.scalars().all()
-
-        stmt_all = select(Token).where(Token.status != TokenStatus.excluded)
+        stmt_all = text("SELECT mint, name, symbol, lore, lore_display, lore_withheld, image_url, creator, launched_at, launch_hour_utc as launch_hour, holders, peak_mc, status::text FROM tokens WHERE status::text != 'excluded' ORDER BY first_seen_at DESC;")
         res_all = await db.execute(stmt_all)
-        all_tokens = res_all.scalars().all()
+        all_rows = res_all.mappings().all()
 
-        above_10k = len(all_tokens)
-        passed_30k = sum(1 for t in all_tokens if t.status == TokenStatus.passed or (t.peak_mc is not None and float(t.peak_mc) >= 30000.0))
-        stalled = above_10k - passed_30k
-        pending = sum(1 for t in all_tokens if t.status == TokenStatus.pending and (t.peak_mc is None or float(t.peak_mc) < 30000.0))
+        above_10k = len(all_rows)
+        passed_30k = sum(1 for r in all_rows if r["status"] == "passed")
+        stalled = sum(1 for r in all_rows if r["status"] == "stalled")
+        pending = sum(1 for r in all_rows if r["status"] == "pending")
 
-        holders_list = sorted([t.holders for t in all_tokens if t.holders is not None])
+        holders_list = sorted([r["holders"] for r in all_rows if r["holders"] is not None])
         median_holders = holders_list[len(holders_list) // 2] if holders_list else 288
 
-        stmt_model = select(ModelRun).order_by(desc(ModelRun.ran_at)).limit(1)
+        tokens = all_rows[:100]
+
+        stmt_model = select(ModelRun).order_by(desc(ModelRun.id)).limit(1)
         res_model = await db.execute(stmt_model)
         latest_model = res_model.scalar_one_or_none()
 
@@ -60,17 +58,17 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
 
         token_list = [
             {
-                "mint": t.mint,
-                "name": t.name,
-                "symbol": t.symbol,
-                "lore": t.lore_display,
-                "lore_withheld": t.lore_withheld,
-                "logo": t.image_cached_path or t.image_url,
-                "launched_at": t.launched_at.isoformat(),
-                "launch_hour": t.launch_hour_utc,
-                "holders": t.holders or 0,
-                "peak_mc": float(t.peak_mc),
-                "status": t.status.value
+                "mint": t["mint"],
+                "name": t["name"],
+                "symbol": t["symbol"],
+                "lore": t["lore_display"] or t["lore"],
+                "lore_withheld": t["lore_withheld"],
+                "logo": t["image_url"],
+                "launched_at": t["launched_at"].isoformat() if hasattr(t["launched_at"], "isoformat") else str(t["launched_at"]),
+                "launch_hour": t["launch_hour"],
+                "holders": t["holders"] or 0,
+                "peak_mc": float(t["peak_mc"]) if t["peak_mc"] is not None else 0.0,
+                "status": t["status"]
             }
             for t in tokens
         ]
@@ -141,7 +139,7 @@ async def get_methodology():
             {"name": "lore_missing", "encoding": "binary flag"},
             {"name": "name_tokens", "encoding": "word count"}
         ],
-        "capacity_d": settings.CAPACITY_D,
+        "capacity_d": 41,
         "gates": {
             "n_samples_min": 2000,
             "n_positive_min": 200,
@@ -171,10 +169,12 @@ async def download_public_dataset(db: AsyncSession = Depends(get_db)):
         res = await db.execute(stmt)
         tokens = res.scalars().all()
         for t in tokens:
+            clean_name = (t.name or "").replace("\r", " ").replace("\n", " ").strip()
+            clean_symbol = (t.symbol or "").replace("\r", " ").replace("\n", " ").strip()
             writer.writerow([
-                t.mint, t.name, t.symbol, t.launched_at.isoformat(),
-                t.launch_hour_utc, float(t.peak_mc), t.holders or 0,
-                t.status.value, 1 if t.status == TokenStatus.passed else 0
+                t.mint, clean_name, clean_symbol, t.launched_at.isoformat() if t.launched_at else "",
+                t.launch_hour_utc, float(t.peak_mc) if t.peak_mc is not None else 0.0, t.holders or 0,
+                t.status.value if t.status else "", 1 if t.status == TokenStatus.passed else 0
             ])
     except Exception:
         # Sample row if DB uninitialized
@@ -183,9 +183,10 @@ async def download_public_dataset(db: AsyncSession = Depends(get_db)):
             datetime.now(timezone.utc).isoformat(), 20, 150300.0, 412, "passed", 1
         ])
 
-    csv_content = output.getvalue()
+    # Prepend UTF-8 BOM (\ufeff) so Excel opens with proper UTF-8 encoding
+    csv_content = "\ufeff" + output.getvalue()
     return Response(
-        content=csv_content,
-        media_type="text/csv",
+        content=csv_content.encode("utf-8"),
+        media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=emile_dataset.csv"}
     )

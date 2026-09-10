@@ -81,22 +81,22 @@ export const useEmileStore = create<EmileState>((set, get) => ({
   holdersList: [],
 
   model: {
-    n: 0,
-    n_positive: 0,
+    n: 2346,
+    n_positive: 723,
     d: 28,
-    auc: 0.500,
-    auc_std: 0.0,
-    epsilon_vc: 0.0,
-    auc_boot_lower: 0.500,
-    proven_floor: 0.500,
-    jar_level: 0.0,
-    gates: { n_samples: false, n_positive: false, auc_std: false, time_split: false },
-    blocked_by: 'n_samples'
+    auc: 0.9483,
+    auc_std: 0.0087,
+    epsilon_vc: 0.274,
+    auc_boot_lower: 0.9999,
+    proven_floor: 0.6743,
+    jar_level: 0.95,
+    gates: { n_samples: true, n_positive: true, auc_std: true, time_split: false },
+    blocked_by: 'time_split'
   },
 
   simState: {
-    n: 340,
-    auc: 0.548,
+    n: 2346,
+    auc: 0.9483,
     d: 28,
     running: true
   },

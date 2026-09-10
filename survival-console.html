@@ -417,7 +417,7 @@ function pushToken(t){
   store.push(t);
   stats.all++;
   hourAll[t.hour]++;
-  if (t.survived){ stats.live++; hourWin[t.hour]++; } else if (t.status === 'stalled') { stats.dead++; }
+  if (t.survived){ stats.live++; hourWin[t.hour]++; } else { stats.dead++; }
 
   t.lore.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).forEach(w=>{
     if (w.length < 4 || STOP.has(w)) return;
