@@ -41,24 +41,29 @@ async def start_ingest_worker_loop():
                     newly_inserted = 0
                     for raw in raw_mints:
                         lore_disp, withheld, reason = sanitize_lore(raw.lore)
-                        current_mc = prices.get(raw.mint, getattr(raw, 'usd_market_cap', 10500.0))
+                        current_mc = prices.get(raw.mint, 10500.0)
 
                         # Insert into PostgreSQL tokens table (RETURNING xmax = 0 to detect true new inserts vs updates)
                         query = text("""
                             INSERT INTO tokens (
                                 mint, name, symbol, lore, lore_display, lore_withheld,
                                 image_url, creator, launched_at, peak_mc, last_seen_mc,
-                                status, first_seen_at, poll_count
+                                status, first_seen_at, poll_count, crossed_10k_at
                             ) VALUES (
                                 :mint, :name, :symbol, :lore, :lore_disp, :withheld,
                                 :image_url, :creator, :launched_at, :peak_mc, :last_seen_mc,
-                                'pending', :now, 1
+                                'pending', :now, 1,
+                                CASE WHEN :peak_mc >= 10000 THEN :now ELSE NULL END
                             )
                             ON CONFLICT (mint) DO UPDATE SET
                                 peak_mc = GREATEST(tokens.peak_mc, EXCLUDED.peak_mc),
                                 last_seen_mc = EXCLUDED.last_seen_mc,
                                 last_polled_at = :now,
-                                poll_count = tokens.poll_count + 1
+                                poll_count = tokens.poll_count + 1,
+                                crossed_10k_at = CASE
+                                    WHEN tokens.crossed_10k_at IS NULL AND EXCLUDED.peak_mc >= 10000 THEN :now
+                                    ELSE tokens.crossed_10k_at
+                                END
                             RETURNING (xmax = 0) AS is_new;
                         """)
 

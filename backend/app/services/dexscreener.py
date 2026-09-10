@@ -96,8 +96,8 @@ class DexScreenerPoller:
                     last_polled_at = :now,
                     poll_count = poll_count + 1,
                     crossed_10k_at = CASE 
-                        WHEN peak_mc < 10000 AND :mc >= 10000 THEN :now 
-                        ELSE crossed_10k_at 
+                        WHEN tokens.crossed_10k_at IS NULL AND :mc >= 10000 THEN :now 
+                        ELSE tokens.crossed_10k_at 
                     END
                 WHERE mint = :mint;
             """)
