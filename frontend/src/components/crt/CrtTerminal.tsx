@@ -106,44 +106,6 @@ export const CrtTerminal: React.FC = () => {
     }
   }, [blockIdx, charIdx, setStage]);
 
-  // Simulated live token feed push if running
-  useEffect(() => {
-    if (isPaused) return;
-
-    const interval = setInterval(() => {
-      const A = ['Quantum', 'Retro', 'Silent', 'Golden', 'Midnight', 'Feral', 'Broke', 'Cosmic', 'Tiny', 'Angry'];
-      const B = ['Capybara', 'Hamster', 'Toaster', 'Monk', 'Pigeon', 'Goose', 'Wizard', 'Janitor', 'Shrimp'];
-      const L = [
-        'Fired on a Tuesday. The chart is his resignation letter.',
-        'Born in a server room in 2021. Refuses to explain himself.',
-        'Community takeover. The dev left a note and one sock.',
-        'No roadmap, no team. Only the beast.',
-        'They laughed in the group chat. He bought more.'
-      ];
-
-      const name = A[Math.floor(Math.random() * A.length)] + ' ' + B[Math.floor(Math.random() * B.length)];
-      const sym = name.split(' ').map(w => w[0]).join('') + Math.floor(Math.random() * 90 + 10);
-      const lore = L[Math.floor(Math.random() * L.length)];
-      const h = Math.round(40 + Math.pow(Math.random(), 2.4) * 2600);
-      const passed = Math.random() < 0.15;
-
-      const item: TokenItem = {
-        mint: Math.random().toString(36).slice(2, 9),
-        name,
-        symbol: sym,
-        lore,
-        holders: h,
-        peak_mc: passed ? 30000 + Math.random() * 200000 : 10000 + Math.random() * 19000,
-        status: passed ? 'passed' : 'stalled',
-        hour: Math.floor(Math.random() * 24)
-      };
-
-      addToken(item);
-    }, 1400);
-
-    return () => clearInterval(interval);
-  }, [isPaused, addToken]);
-
   const currentCodeSrc = BLOCKS[blockIdx].src.slice(0, charIdx);
 
   return (
