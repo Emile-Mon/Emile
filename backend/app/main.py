@@ -7,10 +7,23 @@ from app.core.config import settings
 from app.api.endpoints import router as api_router
 from app.api.websocket import router as ws_router
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    import asyncio
+    try:
+        from app.services.ingest_worker import start_ingest_worker_loop
+        asyncio.create_task(start_ingest_worker_loop())
+    except Exception as e:
+        print(f"[MAIN] Warning: Failed to start ingest worker loop: {e}")
+    yield
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Émile — Autonomous agent observing Solana token survival on pump.fun"
+    description="Émile — Autonomous agent observing Solana token survival on pump.fun",
+    lifespan=lifespan
 )
 
 # CORS Middleware setup
@@ -32,15 +45,6 @@ except Exception as e:
 # Include routers
 app.include_router(api_router)
 app.include_router(ws_router)
-
-@app.on_event("startup")
-async def startup_event():
-    import asyncio
-    try:
-        from app.services.ingest_worker import start_ingest_worker_loop
-        asyncio.create_task(start_ingest_worker_loop())
-    except Exception as e:
-        print(f"[MAIN] Warning: Failed to start ingest worker loop: {e}")
 
 @app.get("/")
 async def root():
