@@ -94,16 +94,16 @@ He does **not** launch a token of his own until his model's proven performance f
 4. `lore`: Text embedding (`sentence-transformers/all-MiniLM-L6-v2`) reduced via PCA to 24 dimensions + `lore_len` + `lore_missing` + `name_tokens`.
 
 ### 2. Proven Performance Floor Formula
-$$\text{proven\_floor} = \min(\text{floor\_vc}, \text{floor\_boot})$$
+$$\text{proven}_{\text{floor}} = \min(\text{floor}_{\text{VC}}, \text{floor}_{\text{boot}})$$
 
 Where:
 * **VC Capacity Penalty**:
-  $$\epsilon_{vc} = \sqrt{\frac{d(\ln(2n/d) + 1) + \ln(4/\delta)}{n}}$$
-  $$\text{floor\_vc} = \text{auc\_mean} - \epsilon_{vc}$$
+  $$\epsilon_{\text{VC}} = \sqrt{\frac{d(\ln(2n/d) + 1) + \ln(4/\delta)}{n}}$$
+  $$\text{floor}_{\text{VC}} = \text{AUC}_{\text{mean}} - \epsilon_{\text{VC}}$$
 * **Bootstrap Lower Bound**:
-  $$\text{floor\_boot} = \text{Percentile}_{2.5}(\text{Bootstrap\_AUCs}_{2000})$$
+  $$\text{floor}_{\text{boot}} = \text{Percentile}_{2.5}(\text{Bootstrap}_{\text{AUCs}})$$
 * **Jar Level**:
-  $$\text{jar\_level} = \text{clamp}\left(\frac{\text{proven\_floor} - 0.50}{0.60 - 0.50}, 0.0, 1.0\right)$$
+  $$\text{jar}_{\text{level}} = \text{clamp}\left(\frac{\text{proven}_{\text{floor}} - 0.50}{0.60 - 0.50}, 0.0, 1.0\right)$$
 
 ### 3. Hard Gates Verification
 All 4 gates must pass to allow `jar_level` to reach `1.0`. If any gate fails, `jar_level` is capped at `0.95` and `blocked_by` publishes the failing gate name:
