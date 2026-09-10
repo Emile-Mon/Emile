@@ -64,10 +64,24 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
         })}
       </nav>
 
-      {/* Right Column: $EMILE Badge & Phase */}
-      <div className="topright text-right shrink-0 min-w-[110px] hidden sm:block">
-        <div className="sym text-[var(--banana)] font-serif text-base font-semibold glow-banana leading-none">$EMILE</div>
-        <div className="phase text-[var(--faint)] text-[10.5px] mt-1 font-mono uppercase tracking-wider leading-none">{phaseText}</div>
+      {/* Right Column: X Redirect & $EMILE Badge */}
+      <div className="topright flex items-center justify-end gap-3.5 shrink-0">
+        <a
+          href="https://x.com/emilelearns?s=11"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--panel2)] border border-[var(--soft)] text-xs font-mono text-[var(--dim)] hover:text-[#F0F5FA] hover:border-[var(--banana)] hover:bg-white/5 transition-all duration-200 shadow-sm"
+          title="Follow Émile on X (@emilelearns)"
+        >
+          <svg className="w-3.5 h-3.5 fill-current text-[var(--banana)]" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span className="font-semibold text-xs text-[#F0F5FA]">X</span>
+        </a>
+        <div className="text-right shrink-0 min-w-[90px] hidden sm:block">
+          <div className="sym text-[var(--banana)] font-serif text-base font-semibold glow-banana leading-none">$EMILE</div>
+          <div className="phase text-[var(--faint)] text-[10.5px] mt-1 font-mono uppercase tracking-wider leading-none">{phaseText}</div>
+        </div>
       </div>
     </header>
   );
