@@ -22,7 +22,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
       {/* Left Column: Wordmark & Subtitle */}
       <div className="min-w-0">
         <Link href="/" className="wordmark inline-block hover:opacity-90 transition-opacity">
-          Almost Surely
+          Émile
         </Link>
         <div className="sub text-[var(--dim)] text-xs mt-1 max-w-[60ch] leading-relaxed truncate md:whitespace-normal">
           Émile has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
@@ -49,9 +49,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
         })}
       </nav>
 
-      {/* Right Column: $SURELY Badge & Phase */}
+      {/* Right Column: $EMILE Badge & Phase */}
       <div className="topright text-right shrink-0 min-w-[110px] hidden sm:block">
-        <div className="sym text-[var(--banana)] font-serif text-base font-semibold glow-banana leading-none">$SURELY</div>
+        <div className="sym text-[var(--banana)] font-serif text-base font-semibold glow-banana leading-none">$EMILE</div>
         <div className="phase text-[var(--faint)] text-[10.5px] mt-1 font-mono uppercase tracking-wider leading-none">{phaseText}</div>
       </div>
     </header>

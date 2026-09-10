@@ -133,7 +133,7 @@ export const CrtTerminal: React.FC = () => {
       <div className="scr-bar flex items-center gap-3 px-4 py-2.5 border-b border-[#14261C] bg-[#09120D] text-xs relative z-2">
         <div className="flex items-center gap-1.5">
           <span className={`lamp w-2 h-2 rounded-full ${isConnected ? 'bg-[var(--live)] lamp-active' : 'bg-[var(--stall)]'}`} />
-          <span className="t text-[#9ED8B3] font-mono font-medium">emile@surely — live</span>
+          <span className="t text-[#9ED8B3] font-mono font-medium">emile — live</span>
         </div>
 
         <span className="r ml-auto text-[#4E755D] font-mono text-[11px] bg-[#0E1F16] px-2.5 py-0.5 rounded border border-[#163625]">
