@@ -99,6 +99,16 @@ export const ProofPanel: React.FC = () => {
                 <div className="absolute -top-2 left-0 right-0 h-3 bg-white/30 rounded-full animate-pulse" />
               </div>
 
+              {/* Center Jar Level Readout inside Glass Jar */}
+              <div className="absolute inset-0 z-25 flex flex-col items-center justify-center pointer-events-none">
+                <div className="bg-black/75 border border-[var(--banana)]/40 backdrop-blur-md px-3 py-1.5 rounded-lg text-center shadow-[0_0_15px_rgba(242,201,76,0.25)]">
+                  <div className="text-[9px] font-mono text-[var(--faint)] uppercase tracking-wider">JAR LEVEL</div>
+                  <div className="text-base font-mono font-bold text-[var(--banana)] glow-banana">
+                    {jarPct.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+
               {/* Reflection */}
               <div className="absolute top-0 left-1.5 w-2.5 h-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none z-30" />
             </div>
@@ -163,7 +173,7 @@ export const ProofPanel: React.FC = () => {
                 onChange={(e) => setSimParams({ n: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
-              <output className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{n.toLocaleString()}</output>
+              <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{n.toLocaleString()}</output>
             </div>
 
             <div className="sr grid grid-cols-[105px_1fr_52px] gap-2 items-center">
@@ -178,7 +188,7 @@ export const ProofPanel: React.FC = () => {
                 onChange={(e) => setSimParams({ auc: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
-              <output className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{auc.toFixed(3)}</output>
+              <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{auc.toFixed(3)}</output>
             </div>
 
             <div className="sr grid grid-cols-[105px_1fr_52px] gap-2 items-center">
@@ -193,7 +203,7 @@ export const ProofPanel: React.FC = () => {
                 onChange={(e) => setSimParams({ d: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
-              <output className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{d}</output>
+              <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{d}</output>
             </div>
           </div>
 
