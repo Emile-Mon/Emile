@@ -42,27 +42,32 @@ class SolanaGlobalDexMintSource:
         self.pump_endpoint = "https://frontend-api.pump.fun/coins"
         self.dexscreener_profiles = "https://api.dexscreener.com/token-profiles/latest/v1"
         self.dexscreener_boosts = "https://api.dexscreener.com/token-boosts/latest/v1"
+        self.last_pump_ts: float = 0.0
 
     async def fetch_since(self, cursor: datetime) -> list[RawMint]:
         mints: list[RawMint] = []
         seen_mints: set[str] = set()
 
         async with httpx.AsyncClient(timeout=10.0) as client:
-            # 1. Fetch from pump.fun launchpad
+            # 1. Fetch from pump.fun launchpad (independent timestamp tracking)
             try:
                 res_pump = await client.get(f"{self.pump_endpoint}?limit=50&sort=created_timestamp&order=DESC")
                 if res_pump.status_code == 200:
                     data = res_pump.json()
+                    max_ts = self.last_pump_ts
                     for item in data:
                         mint_addr = item.get("mint", "")
                         if not mint_addr or mint_addr in seen_mints:
                             continue
                         
                         created_ts = item.get("created_timestamp", 0) / 1000.0
-                        launched_at = datetime.fromtimestamp(created_ts, tz=timezone.utc)
-                        if cursor and launched_at <= cursor:
+                        if self.last_pump_ts > 0 and created_ts <= self.last_pump_ts:
                             continue
 
+                        if created_ts > max_ts:
+                            max_ts = created_ts
+
+                        launched_at = datetime.fromtimestamp(created_ts, tz=timezone.utc)
                         seen_mints.add(mint_addr)
                         mints.append(RawMint(
                             mint=mint_addr,
@@ -73,10 +78,12 @@ class SolanaGlobalDexMintSource:
                             creator=item.get("creator"),
                             launched_at=launched_at
                         ))
+                    if max_ts > self.last_pump_ts:
+                        self.last_pump_ts = max_ts
             except Exception:
                 pass
 
-            # 2. Fetch from DexScreener Latest Solana Token Profiles (Raydium, Orca, Meteora, Moonshot, etc.)
+            # 2. Fetch from DexScreener Latest Solana Token Profiles
             try:
                 res_dex = await client.get(self.dexscreener_profiles)
                 if res_dex.status_code == 200:

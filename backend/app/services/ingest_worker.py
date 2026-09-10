@@ -43,7 +43,7 @@ async def start_ingest_worker_loop():
                         lore_disp, withheld, reason = sanitize_lore(raw.lore)
                         current_mc = prices.get(raw.mint, 10500.0)
 
-                        # Insert into PostgreSQL tokens table
+                        # Insert into PostgreSQL tokens table (RETURNING xmax = 0 to detect true new inserts vs updates)
                         query = text("""
                             INSERT INTO tokens (
                                 mint, name, symbol, lore, lore_display, lore_withheld,
@@ -58,7 +58,8 @@ async def start_ingest_worker_loop():
                                 peak_mc = GREATEST(tokens.peak_mc, EXCLUDED.peak_mc),
                                 last_seen_mc = EXCLUDED.last_seen_mc,
                                 last_polled_at = :now,
-                                poll_count = tokens.poll_count + 1;
+                                poll_count = tokens.poll_count + 1
+                            RETURNING (xmax = 0) AS is_new;
                         """)
 
                         res = await db.execute(query, {
@@ -76,21 +77,24 @@ async def start_ingest_worker_loop():
                             "now": now
                         })
 
-                        if res.rowcount > 0:
+                        row = res.fetchone()
+                        is_brand_new = row[0] if row else False
+
+                        if is_brand_new:
                             newly_inserted += 1
 
-                            # Broadcast live token event to connected WebSocket clients
-                            token_payload = {
-                                "mint": raw.mint,
-                                "name": raw.name,
-                                "symbol": raw.symbol,
-                                "lore": lore_disp,
-                                "holders": 120,
-                                "peak_mc": current_mc,
-                                "status": "pending",
-                                "hour": raw.launched_at.hour
-                            }
-                            await manager.broadcast({"token": token_payload})
+                        # Broadcast live token event to connected WebSocket clients
+                        token_payload = {
+                            "mint": raw.mint,
+                            "name": raw.name,
+                            "symbol": raw.symbol,
+                            "lore": lore_disp,
+                            "holders": 120,
+                            "peak_mc": current_mc,
+                            "status": "pending",
+                            "hour": raw.launched_at.hour
+                        }
+                        await manager.broadcast({"token": token_payload})
 
                     # Update daily universe metrics in database
                     if newly_inserted > 0:
@@ -111,7 +115,11 @@ async def start_ingest_worker_loop():
                     await run_label_worker_cycle(db)
                     await db.commit()
 
-                    print(f"[INGEST WORKER] Saved {len(raw_mints)} tokens to PostgreSQL DB ({newly_inserted} new).")
+                    # Query total count of tokens in DB
+                    count_res = await db.execute(text("SELECT COUNT(*) FROM tokens;"))
+                    total_db_count = count_res.scalar() or 0
+
+                    print(f"[INGEST WORKER] Processed {len(raw_mints)} tokens (+{newly_inserted} BRAND NEW added). Total Tokens in DB: {total_db_count}")
 
             if raw_mints:
                 cursor = max([m.launched_at for m in raw_mints])
