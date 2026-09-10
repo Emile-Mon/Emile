@@ -117,10 +117,11 @@ export const useEmileStore = create<EmileState>((set, get) => ({
     set((state) => {
       const newTokens = [item, ...state.tokens].slice(0, 50); // Cap DOM at 50 rows
       const isPassed = item.status === 'passed';
+      const isStalled = item.status === 'stalled';
       const newTally = {
         all: state.tally.all + 1,
         pass: state.tally.pass + (isPassed ? 1 : 0),
-        stall: state.tally.stall + (!isPassed ? 1 : 0)
+        stall: state.tally.stall + (isStalled ? 1 : 0)
       };
 
       const newHolders = [...state.holdersList, item.holders].slice(-4000);
