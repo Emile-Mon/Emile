@@ -6,15 +6,14 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     ENVIRONMENT: str = "production"
 
-    # Raw database URL input
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        "postgres://9446e742920b798f5d290b243cf838fc1f5806e7170c55c98cf16577c344aaf0:sk_fnBsEkU9uFtWEkWb2oRtF@pooled.db.prisma.io:5432/postgres?sslmode=require"
-    )
+    @property
+    def RAW_DATABASE_URL(self) -> str:
+        url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or "postgres://9446e742920b798f5d290b243cf838fc1f5806e7170c55c98cf16577c344aaf0:sk_fnBsEkU9uFtWEkWb2oRtF@pooled.db.prisma.io:5432/postgres?sslmode=require"
+        return url.strip()
 
     @property
     def DATABASE_URL_ASYNC(self) -> str:
-        url = self.DATABASE_URL
+        url = self.RAW_DATABASE_URL
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://"):
