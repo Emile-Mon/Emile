@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { HeaderBar } from '@/components/layout/HeaderBar';
 import { HeroScene } from '@/components/hero/HeroScene';
@@ -5,8 +7,11 @@ import { CrtTerminal } from '@/components/crt/CrtTerminal';
 import { StatsStrip } from '@/components/analytics/StatsStrip';
 import { ProofPanel } from '@/components/analytics/ProofPanel';
 import { FooterBar } from '@/components/layout/FooterBar';
+import { useEmileDatabase } from '@/hooks/useEmileDatabase';
 
 export default function HomePage() {
+  useEmileDatabase();
+
   return (
     <div className="wrap">
       <HeaderBar phaseText="phase 1 · learning" />
