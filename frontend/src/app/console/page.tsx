@@ -172,6 +172,7 @@ export default function SurvivalConsolePage() {
             symbol: t.symbol || 'SOL',
             lore: t.lore || 'No lore description.',
             hour: t.launch_hour ?? (new Date(t.launched_at || Date.now()).getUTCHours()),
+            launched_at: t.launched_at,
             marketCap: t.peak_mc || 10500,
             survived: t.status === 'passed' || t.peak_mc >= 30000
           }));
@@ -326,7 +327,17 @@ export default function SurvivalConsolePage() {
                     {fmtMC(t.marketCap)}
                   </div>
                   <div className="text-[10px] text-[var(--faint)]">
-                    {String(t.hour).padStart(2, '0')}:00 UTC
+                    {(() => {
+                      if (t.launched_at) {
+                        try {
+                          const d = new Date(t.launched_at);
+                          if (!isNaN(d.getTime())) {
+                            return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+                          }
+                        } catch (e) {}
+                      }
+                      return `${String(t.hour).padStart(2, '0')}:00 UTC`;
+                    })()}
                   </div>
                 </div>
               </div>

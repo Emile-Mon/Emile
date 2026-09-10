@@ -41,7 +41,8 @@ export function useEmileDatabase() {
             holders: t.holders || 120,
             peak_mc: t.peak_mc || 10500,
             status: ((t.status === 'passed' || (t.peak_mc && t.peak_mc >= 30000)) ? 'passed' : 'stalled') as 'passed' | 'stalled' | 'pending',
-            hour: t.hour ?? t.launch_hour ?? (t.launched_at ? new Date(t.launched_at).getUTCHours() : 4)
+            hour: t.hour ?? t.launch_hour ?? (t.launched_at ? new Date(t.launched_at).getUTCHours() : 4),
+            launched_at: t.launched_at
           }));
 
           const totalTokensInDB = counters.above_10k ?? formattedTokens.length;
@@ -110,7 +111,8 @@ export function useEmileDatabase() {
               holders: raw.holders || 120,
               peak_mc: raw.peak_mc || 10500,
               status: ((raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000)) ? 'passed' : 'stalled') as 'passed' | 'stalled' | 'pending',
-              hour: raw.hour ?? new Date().getUTCHours()
+              hour: raw.hour ?? new Date().getUTCHours(),
+              launched_at: raw.launched_at || new Date().toISOString()
             };
             addToken(newItem);
 

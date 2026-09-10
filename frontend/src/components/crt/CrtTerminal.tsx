@@ -172,7 +172,7 @@ export const CrtTerminal: React.FC = () => {
               {/* Peak MC Column: Hidden on mobile (hide-sm), lore remains displayed */}
               <div className="num text-right font-mono text-[#9ED8B3] hide-sm">
                 {fmtMC(t.peak_mc)}
-                <div className="tt text-[#41614E] text-[9.5px] mt-0.25">{String(t.hour).padStart(2, '0')}:00 UTC</div>
+                <div className="tt text-[#41614E] text-[9.5px] mt-0.25">{formatTimestamp(t)}</div>
               </div>
 
               <div className="text-right">

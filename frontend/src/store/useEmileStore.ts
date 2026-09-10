@@ -11,6 +11,7 @@ export interface TokenItem {
   peak_mc: number;
   status: 'passed' | 'stalled' | 'pending';
   hour: number;
+  launched_at?: string;
   hue?: number;
 }
 
