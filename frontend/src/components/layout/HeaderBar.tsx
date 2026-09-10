@@ -20,26 +20,26 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
   return (
     <header className="top glass-panel grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-center p-4 px-5 md:px-7 border-b border-[var(--rule)] gap-4 relative z-20">
       {/* Left Column: Wordmark Box & Subtitle */}
-      <div className="min-w-0 flex flex-col md:flex-row items-start md:items-center gap-3">
+      <div className="min-w-0 flex flex-col md:flex-row items-start md:items-center gap-4">
         <Link 
           href="/" 
-          className="wordmark inline-flex items-center gap-3 p-1.5 px-3.5 bg-[var(--panel2)] border border-[var(--soft)] hover:border-[var(--banana-lo)]/60 rounded-xl transition-all duration-200 shadow-sm group shrink-0"
+          className="wordmark inline-flex items-center gap-3.5 p-2 px-3.5 md:p-2.5 md:px-4 bg-[var(--panel2)] rounded-2xl transition-all duration-200 group shrink-0"
         >
           <img 
             src="/logo.jpg" 
             alt="Émile Logo" 
-            className="w-10 h-10 md:w-12 md:h-12 rounded-lg border border-[var(--banana)]/40 shadow-md object-cover group-hover:scale-105 transition-transform" 
+            className="w-14 h-14 md:w-18 md:h-18 rounded-xl border border-[var(--banana)]/60 shadow-lg object-cover group-hover:scale-105 transition-transform" 
           />
           <div className="flex flex-col">
-            <span className="font-serif font-bold text-lg md:text-xl tracking-tight text-[#F0F5FA] group-hover:text-[var(--banana)] transition-colors leading-none">
+            <span className="font-serif font-bold text-2xl md:text-3xl tracking-tight text-[#F0F5FA] group-hover:text-[var(--banana)] transition-colors leading-tight">
               Émile
             </span>
-            <span className="text-[9.5px] font-mono text-[var(--faint)] tracking-wider uppercase mt-1">
+            <span className="text-xs md:text-sm font-mono text-[var(--banana)]/90 tracking-widest uppercase mt-1 font-semibold">
               Robinhood Agent
             </span>
           </div>
         </Link>
-        <div className="sub text-[var(--dim)] text-xs max-w-[54ch] leading-relaxed truncate md:whitespace-normal">
+        <div className="sub text-[var(--dim)] text-xs md:text-sm max-w-[50ch] leading-relaxed truncate md:whitespace-normal">
           Émile has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
         </div>
       </div>
