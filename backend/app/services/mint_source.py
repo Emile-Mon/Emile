@@ -97,12 +97,17 @@ class SolanaGlobalDexMintSource:
                         if not token_addr or token_addr in seen_mints:
                             continue
 
+                        header_val = item.get("header") or ""
+                        lore_val = item.get("description") or ""
+                        # If header is an image URL, fall back to clean name
+                        clean_name = header_val if (header_val and not header_val.startswith("http")) else f"Solana Token ${token_addr[:6].upper()}"
+
                         seen_mints.add(token_addr)
                         mints.append(RawMint(
                             mint=token_addr,
-                            name=item.get("header") or "Solana Token",
+                            name=clean_name,
                             symbol=token_addr[:6].upper(),
-                            lore=item.get("description"),
+                            lore=lore_val,
                             image_url=item.get("icon"),
                             creator=None,
                             launched_at=datetime.now(timezone.utc)
@@ -123,12 +128,15 @@ class SolanaGlobalDexMintSource:
                         if not token_addr or token_addr in seen_mints:
                             continue
 
+                        desc_val = item.get("description") or ""
+                        clean_name = desc_val[:30] if (desc_val and not desc_val.startswith("http")) else f"Solana DEX Token ${token_addr[:6].upper()}"
+
                         seen_mints.add(token_addr)
                         mints.append(RawMint(
                             mint=token_addr,
-                            name=item.get("description")[:30] if item.get("description") else "Solana DEX Token",
+                            name=clean_name,
                             symbol=token_addr[:6].upper(),
-                            lore=item.get("description"),
+                            lore=desc_val,
                             image_url=item.get("icon"),
                             creator=None,
                             launched_at=datetime.now(timezone.utc)
