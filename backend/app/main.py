@@ -57,6 +57,8 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     raw_port = os.getenv("PORT", "8000")
     try:
         port = int(raw_port)
