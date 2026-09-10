@@ -41,7 +41,7 @@ async def start_ingest_worker_loop():
                     newly_inserted = 0
                     for raw in raw_mints:
                         lore_disp, withheld, reason = sanitize_lore(raw.lore)
-                        current_mc = prices.get(raw.mint, 10500.0)
+                        current_mc = prices.get(raw.mint, getattr(raw, 'usd_market_cap', 10500.0))
 
                         # Insert into PostgreSQL tokens table (RETURNING xmax = 0 to detect true new inserts vs updates)
                         query = text("""
