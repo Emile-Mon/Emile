@@ -22,15 +22,33 @@ export function useEmileDatabase() {
           const dbTokens = data.tokens || [];
 
           // Update Store with real Database metrics
-          useEmileStore.setState((state) => ({
-            tally: {
-              all: counters.above_10k ?? state.tally.all,
-              pass: counters.passed_30k ?? state.tally.pass,
-              stall: counters.stalled ?? state.tally.stall
-            },
-            holdersList: [counters.median_holders || 487],
-            tokens: dbTokens.length > 0 ? dbTokens : state.tokens
+          const formattedTokens = dbTokens.map((t: any) => ({
+            mint: t.mint,
+            name: t.name || 'Solana DEX Token',
+            symbol: t.symbol || (t.mint ? t.mint.slice(0, 6).toUpperCase() : 'SOL'),
+            lore: t.lore || 'No lore description provided.',
+            lore_withheld: t.lore_withheld || false,
+            logo: t.logo,
+            holders: t.holders || 120,
+            peak_mc: t.peak_mc || 10500,
+            status: t.status === 'passed' ? 'passed' : 'stalled',
+            hour: t.hour ?? t.launch_hour ?? (t.launched_at ? new Date(t.launched_at).getUTCHours() : 4)
           }));
+
+          useEmileStore.setState({
+            tally: {
+              all: counters.above_10k ?? formattedTokens.length,
+              pass: counters.passed_30k ?? 0,
+              stall: counters.stalled ?? (counters.above_10k ? counters.above_10k - counters.passed_30k : formattedTokens.length)
+            },
+            counters: {
+              pump: counters.above_10k ?? formattedTokens.length,
+              dex: counters.above_10k ?? formattedTokens.length,
+              rpc: counters.above_10k ?? formattedTokens.length
+            },
+            holdersList: [counters.median_holders || 120],
+            tokens: formattedTokens
+          });
 
           if (latestModel && latestModel.auc) {
             updateModel({
