@@ -23,8 +23,11 @@ app.add_middleware(
 )
 
 # Mount local thumbnails static directory
-os.makedirs(settings.STORAGE_LOCAL_PATH, exist_ok=True)
-app.mount("/thumbnails", StaticFiles(directory=settings.STORAGE_LOCAL_PATH), name="thumbnails")
+try:
+    os.makedirs(settings.STORAGE_LOCAL_PATH, exist_ok=True)
+    app.mount("/thumbnails", StaticFiles(directory=settings.STORAGE_LOCAL_PATH), name="thumbnails")
+except Exception as e:
+    print(f"[MAIN] Warning: Could not mount /thumbnails static directory: {e}")
 
 # Include routers
 app.include_router(api_router)
@@ -33,8 +36,11 @@ app.include_router(ws_router)
 @app.on_event("startup")
 async def startup_event():
     import asyncio
-    from app.services.ingest_worker import start_ingest_worker_loop
-    asyncio.create_task(start_ingest_worker_loop())
+    try:
+        from app.services.ingest_worker import start_ingest_worker_loop
+        asyncio.create_task(start_ingest_worker_loop())
+    except Exception as e:
+        print(f"[MAIN] Warning: Failed to start ingest worker loop: {e}")
 
 @app.get("/")
 async def root():
