@@ -75,6 +75,23 @@ function hl(src: string): string {
 
 const fmtMC = (v: number) => '$' + (v / 1000).toFixed(v >= 100000 ? 0 : 1) + 'K';
 
+const formatTimestamp = (t: any) => {
+  if (t && t.launched_at) {
+    try {
+      const date = new Date(t.launched_at);
+      if (!isNaN(date.getTime())) {
+        const hh = String(date.getUTCHours()).padStart(2, '0');
+        const mm = String(date.getUTCMinutes()).padStart(2, '0');
+        return `${hh}:${mm} UTC`;
+      }
+    } catch (e) {
+      // fallback
+    }
+  }
+  const hh = String(t?.hour ?? 12).padStart(2, '0');
+  return `${hh}:00 UTC`;
+};
+
 export const CrtTerminal: React.FC = () => {
   const stage = useEmileStore((state) => state.stage);
   const counters = useEmileStore((state) => state.counters);
@@ -161,7 +178,15 @@ export const CrtTerminal: React.FC = () => {
 
               <div className="min-w-0">
                 <span className="nm text-[#E3F2E9] font-medium">{t.name}</span>
-                <span className="sy text-[var(--banana)] text-[10.5px] ml-1.5 font-medium">${t.symbol}</span>
+                <a 
+                  href={`https://dexscreener.com/solana/${t.mint}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="sy text-[var(--banana)] hover:underline text-[10.5px] ml-1.5 font-medium inline-flex items-center gap-0.5 cursor-pointer"
+                  title={`View $${t.symbol} chart on DexScreener`}
+                >
+                  ${t.symbol} ↗
+                </a>
                 <div className="lore text-[#5A826D] text-[10px] truncate mt-0.25">
                   {t.lore_withheld ? '[lore withheld]' : t.lore}
                 </div>

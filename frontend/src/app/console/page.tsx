@@ -316,7 +316,15 @@ export default function SurvivalConsolePage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="tk-name font-medium text-[#E4ECF4]">{t.name}</span>
-                    <span className="tk-sym text-[var(--banana)]">${t.symbol}</span>
+                    <a 
+                      href={`https://dexscreener.com/solana/${t.id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="tk-sym text-[var(--banana)] hover:underline flex items-center gap-0.5 cursor-pointer"
+                      title={`View $${t.symbol} chart on DexScreener`}
+                    >
+                      ${t.symbol} ↗
+                    </a>
                   </div>
                   <div className="tk-lore text-[var(--dim)] text-[11px] truncate mt-0.5">
                     {t.lore}
