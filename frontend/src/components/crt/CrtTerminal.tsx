@@ -106,6 +106,8 @@ export const CrtTerminal: React.FC = () => {
     }
   }, [blockIdx, charIdx, setStage]);
 
+  // Live code typing loop (no fake token generator)
+
   const currentCodeSrc = BLOCKS[blockIdx].src.slice(0, charIdx);
 
   return (
