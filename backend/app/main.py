@@ -30,6 +30,12 @@ app.mount("/thumbnails", StaticFiles(directory=settings.STORAGE_LOCAL_PATH), nam
 app.include_router(api_router)
 app.include_router(ws_router)
 
+@app.on_event("startup")
+async def startup_event():
+    import asyncio
+    from app.services.ingest_worker import start_ingest_worker_loop
+    asyncio.create_task(start_ingest_worker_loop())
+
 @app.get("/")
 async def root():
     return {
