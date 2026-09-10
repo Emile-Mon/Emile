@@ -76,17 +76,17 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
         ]
     except Exception:
         # Fallback snapshot if database is uninitialized
-        above_10k, passed_30k, stalled, pending, median_holders = 340, 42, 298, 12, 288
+        above_10k, passed_30k, stalled, pending, median_holders = 0, 0, 0, 0, 0
         token_list = []
         model_data = {
             "ran_at": datetime.now(timezone.utc).isoformat(),
-            "n": 340, "n_positive": 42, "d": 28,
-            "auc": 0.548, "auc_std": 0.021, "epsilon_vc": 0.048,
+            "n": 0, "n_positive": 0, "d": 28,
+            "auc": 0.500, "auc_std": 0.0, "epsilon_vc": 0.0,
             "auc_boot_lower": 0.500, "proven_floor": 0.500, "jar_level": 0.0,
-            "gates": {"n_samples": False, "n_positive": False, "auc_std": True, "time_split": True},
+            "gates": {"n_samples": False, "n_positive": False, "auc_std": False, "time_split": False},
             "blocked_by": "n_samples",
-            "hour_rates": {"14": 0.31, "15": 0.29},
-            "feature_importance": {"holders": 0.51, "lore_pca_1": 0.08}
+            "hour_rates": {},
+            "feature_importance": {}
         }
 
     return {
