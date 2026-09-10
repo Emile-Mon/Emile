@@ -220,11 +220,7 @@ export const ProofPanel: React.FC = () => {
             ) : (
               <>
                 Measured <b className="text-[var(--fg)] font-medium">{auc.toFixed(3)}</b>, but ε takes <b className="text-[var(--fg)] font-medium">{e >= 1 ? 'all of it' : e.toFixed(3)}</b>. Floor is <b className="text-[var(--fg)] font-medium">{lb.toFixed(3)}</b>. 
-                {model.blocked_by && (
-                  <span className="block text-[var(--stall)] mt-1 font-mono text-[10px]">
-                    [GATE BLOCKED]: Jar capped at 95% because <b>{model.blocked_by}</b> gate failed.
-                  </span>
-                )}
+
               </>
             )}
           </div>
