@@ -28,9 +28,9 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
         all_tokens = res_all.scalars().all()
 
         above_10k = len(all_tokens)
-        passed_30k = sum(1 for t in all_tokens if t.status == TokenStatus.passed)
-        stalled = sum(1 for t in all_tokens if t.status == TokenStatus.stalled)
-        pending = sum(1 for t in all_tokens if t.status == TokenStatus.pending)
+        passed_30k = sum(1 for t in all_tokens if t.status == TokenStatus.passed or (t.peak_mc is not None and float(t.peak_mc) >= 30000.0))
+        stalled = above_10k - passed_30k
+        pending = sum(1 for t in all_tokens if t.status == TokenStatus.pending and (t.peak_mc is None or float(t.peak_mc) < 30000.0))
 
         holders_list = sorted([t.holders for t in all_tokens if t.holders is not None])
         median_holders = holders_list[len(holders_list) // 2] if holders_list else 288

@@ -31,7 +31,7 @@ export function useEmileDatabase() {
             logo: t.logo,
             holders: t.holders || 120,
             peak_mc: t.peak_mc || 10500,
-            status: t.status === 'passed' ? 'passed' : 'stalled',
+            status: (t.status === 'passed' || (t.peak_mc && t.peak_mc >= 30000)) ? 'passed' : 'stalled',
             hour: t.hour ?? t.launch_hour ?? (t.launched_at ? new Date(t.launched_at).getUTCHours() : 4)
           }));
 
