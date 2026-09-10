@@ -137,6 +137,22 @@ export default function SurvivalConsolePage() {
   const [countdown, setCountdown] = useState(90);
   const [cycle, setCycle] = useState(1);
 
+  // Active ticking timer for uptime, countdown, and research cycle
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setUptime((prev) => prev + 1);
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setCycle((c) => c + 1);
+          return 90;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const [tokens, setTokens] = useState<TokenFeedItem[]>([]);
   const [stats, setStats] = useState({ all: 0, live: 0, dead: 0 });
 
