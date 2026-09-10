@@ -19,7 +19,7 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
     - Latest model run
     """
     try:
-        stmt_tokens = select(Token).where(Token.status != TokenStatus.excluded).order_by(desc(Token.crossed_10k_at)).limit(100)
+        stmt_tokens = select(Token).where(Token.status != TokenStatus.excluded).order_by(desc(Token.first_seen_at)).limit(100)
         res_tokens = await db.execute(stmt_tokens)
         tokens = res_tokens.scalars().all()
 

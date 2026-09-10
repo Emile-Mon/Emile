@@ -5,7 +5,13 @@ try:
     import asyncpg
     from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
     DATABASE_URL = settings.DATABASE_URL_ASYNC
-    engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+    clean_url = DATABASE_URL.split("?")[0]
+    engine = create_async_engine(
+        clean_url, 
+        echo=False, 
+        future=True,
+        connect_args={"ssl": "require"}
+    )
     AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 except Exception:
     try:
