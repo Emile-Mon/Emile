@@ -17,6 +17,35 @@ class MintSource(Protocol):
         """Fetches newly created mints since the given cursor timestamp."""
         ...
 
+import re
+
+def derive_smart_token_name_and_symbol(header: str, lore: str, addr: str) -> tuple[str, str]:
+    # 1. Use header if present and valid
+    if header and not header.startswith("http") and "Robinhood Token $" not in header:
+        header_clean = header.strip()
+        dollar_match = re.search(r'\$([A-Za-z0-9]{2,8})', header_clean)
+        sym = dollar_match.group(1).upper() if dollar_match else header_clean[:6].upper()
+        return header_clean[:40], sym
+
+    # 2. Extract $TICKER or first 3-4 words from lore
+    if lore and not lore.startswith("http"):
+        lore_clean = lore.strip()
+        dollar_match = re.search(r'\$([A-Za-z0-9]{2,8})', lore_clean)
+        sym = dollar_match.group(1).upper() if dollar_match else None
+
+        first_line = lore_clean.split(".")[0].split("\n")[0].strip()
+        words = [w for w in first_line.split() if not w.startswith("http") and not w.startswith("$") and len(w) > 1]
+        
+        if words:
+            derived_name = " ".join([w.capitalize() for w in words[:4]])
+            if not sym:
+                sym = words[0][:6].upper()
+            return derived_name[:40], sym
+
+    # 3. Fallback to readable Robinhood name
+    short_hex = addr[:6].upper()
+    return f"Hood Protocol #{short_hex[-4:]}", f"HOOD{short_hex[-3:]}"
+
 class RobinhoodChainDexScreenerMintSource:
     """
     Production Robinhood Chain Scanner:
@@ -60,14 +89,14 @@ class RobinhoodChainDexScreenerMintSource:
                         header_clean = header_val.replace("Solana Token", "Robinhood Token").replace("Solana DEX Token", "Robinhood Token").replace("Solana", "Robinhood").replace("solana", "robinhood")
                         lore_clean = lore_val.replace("Solana", "Robinhood").replace("solana", "robinhood").replace("pump.fun", "Robinhood Chain DEX")
 
-                        clean_name = header_clean if (header_clean and not header_clean.startswith("http")) else f"Robinhood Token ${token_addr[:6].upper()}"
+                        clean_name, clean_sym = derive_smart_token_name_and_symbol(header_clean, lore_clean, token_addr)
 
                         seen_mints.add(token_addr)
                         self.scanned_history[token_addr] = now_ts
                         mints.append(RawMint(
                             mint=token_addr,
                             name=clean_name,
-                            symbol=token_addr[:6].upper(),
+                            symbol=clean_sym,
                             lore=lore_clean,
                             image_url=item.get("icon"),
                             creator=None,
@@ -95,15 +124,14 @@ class RobinhoodChainDexScreenerMintSource:
 
                         desc_val = item.get("description") or ""
                         lore_clean = desc_val.replace("Solana", "Robinhood").replace("solana", "robinhood").replace("pump.fun", "Robinhood Chain DEX")
-                        clean_name = lore_clean[:30] if (lore_clean and not lore_clean.startswith("http")) else f"Robinhood Token ${token_addr[:6].upper()}"
-                        clean_name = clean_name.replace("Solana Token", "Robinhood Token").replace("Solana", "Robinhood")
+                        clean_name, clean_sym = derive_smart_token_name_and_symbol("", lore_clean, token_addr)
 
                         seen_mints.add(token_addr)
                         self.scanned_history[token_addr] = now_ts
                         mints.append(RawMint(
                             mint=token_addr,
                             name=clean_name,
-                            symbol=clean_name.split("$")[-1] if "$" in clean_name else token_addr[:6].upper(),
+                            symbol=clean_sym,
                             lore=lore_clean,
                             image_url=item.get("icon"),
                             creator=None,
