@@ -21,8 +21,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
     <header className="top glass-panel grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-center p-4 px-5 md:px-7 border-b border-[var(--rule)] gap-4 relative z-20">
       {/* Left Column: Wordmark & Subtitle */}
       <div className="min-w-0">
-        <Link href="/" className="wordmark inline-block hover:opacity-90 transition-opacity">
-          Émile
+        <Link href="/" className="wordmark inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+          <img 
+            src="/logo.jpg" 
+            alt="Émile Logo" 
+            className="w-7 h-7 rounded-full border border-[var(--banana)]/40 shadow-sm object-cover" 
+          />
+          <span>Émile</span>
         </Link>
         <div className="sub text-[var(--dim)] text-xs mt-1 max-w-[60ch] leading-relaxed truncate md:whitespace-normal">
           Émile has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
