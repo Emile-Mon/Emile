@@ -202,8 +202,7 @@ export default function SurvivalConsolePage() {
           const payload = JSON.parse(event.data);
           if (payload.token) {
             const raw = payload.token;
-            const isPassed = raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000);
-            const isStalled = raw.status === 'stalled';
+            const isSurvived = raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000);
             const newItem: TokenFeedItem = {
               id: raw.mint || Date.now(),
               name: raw.name || 'Solana Token',
@@ -211,14 +210,17 @@ export default function SurvivalConsolePage() {
               lore: raw.lore || 'No lore description.',
               hour: raw.hour ?? new Date().getUTCHours(),
               marketCap: raw.peak_mc || 10500,
-              survived: isPassed
+              survived: isSurvived
             };
 
-            setTokens((prev) => [newItem, ...prev].slice(0, 60));
+            setTokens((prev) => {
+              const filtered = prev.filter(t => t.id !== newItem.id);
+              return [newItem, ...filtered].slice(0, 60);
+            });
             setStats((prev) => ({
               all: prev.all + 1,
-              live: prev.live + (isPassed ? 1 : 0),
-              dead: prev.dead + (isStalled ? 1 : 0)
+              live: prev.live + (isSurvived ? 1 : 0),
+              dead: prev.dead + (!isSurvived ? 1 : 0)
             }));
 
             if (newItem.hour >= 0 && newItem.hour < 24) {

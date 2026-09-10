@@ -21,8 +21,17 @@ export function useEmileDatabase() {
           const latestModel = data.latest_model || {};
           const dbTokens = data.tokens || [];
 
+          // Deduplicate tokens by mint address
+          const uniqueMap = new Map();
+          dbTokens.forEach((t: any) => {
+            if (t.mint && !uniqueMap.has(t.mint)) {
+              uniqueMap.set(t.mint, t);
+            }
+          });
+          const uniqueTokens = Array.from(uniqueMap.values());
+
           // Update Store with real Database metrics
-          const formattedTokens = dbTokens.map((t: any) => ({
+          const formattedTokens = uniqueTokens.map((t: any) => ({
             mint: t.mint,
             name: t.name || 'Solana DEX Token',
             symbol: t.symbol || (t.mint ? t.mint.slice(0, 6).toUpperCase() : 'SOL'),
