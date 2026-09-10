@@ -147,89 +147,95 @@ export default function SurvivalConsolePage() {
   const wordWin = useRef(new Map<string, number>());
   const wordAll = useRef(new Map<string, number>());
 
-  // Initial seed tokens & live intervals
+  // Fetch real state from PostgreSQL DB & connect live WebSocket
   useEffect(() => {
-    const seedTokens: TokenFeedItem[] = [];
-    let initialStats = { all: 0, live: 0, dead: 0 };
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || 'ws://localhost:8000';
 
-    for (let i = 0; i < 40; i++) {
-      const name = A[(Math.random() * A.length) | 0] + ' ' + B[(Math.random() * B.length) | 0];
-      const symbol = name.split(' ').map(w => w[0]).join('') + ((Math.random() * 90 + 10) | 0);
-      const lore = LORE[(Math.random() * LORE.length) | 0];
-      const hour = (Math.random() * 24) | 0;
+    async function loadRealData() {
+      try {
+        const res = await fetch(`${apiBase}/api/state`);
+        if (res.ok) {
+          const data = await res.json();
+          const counters = data.counters || {};
+          const dbTokens = data.tokens || [];
 
-      let p = 0.055 * (HOUR_BIAS[hour] || 1);
-      if (GOOD_WORDS.some(w => lore.toLowerCase().includes(w))) p *= 1.9;
-      if (lore.length > 70) p *= 1.25;
+          setStats({
+            all: counters.above_10k ?? 0,
+            live: counters.passed_30k ?? 0,
+            dead: counters.stalled ?? 0
+          });
 
-      const survived = Math.random() < p;
-      const mc = survived
-        ? 20000 + Math.random() * Math.random() * 380000
-        : 900 + Math.random() * Math.random() * 17000;
+          const formattedTokens: TokenFeedItem[] = dbTokens.map((t: any, idx: number) => ({
+            id: t.mint || idx,
+            name: t.name || 'Solana Token',
+            symbol: t.symbol || 'SOL',
+            lore: t.lore || 'No lore description.',
+            hour: t.launch_hour ?? (new Date(t.launched_at || Date.now()).getUTCHours()),
+            marketCap: t.peak_mc || 10500,
+            survived: t.status === 'passed' || t.peak_mc >= 30000
+          }));
 
-      const item = { id: ++idCounter, name, symbol, lore, hour, marketCap: mc, survived };
-      seedTokens.unshift(item);
+          setTokens(formattedTokens);
 
-      initialStats.all++;
-      hourAll.current[hour]++;
-      if (survived) {
-        initialStats.live++;
-        hourWin.current[hour]++;
-      } else {
-        initialStats.dead++;
+          // Update hour distribution counters
+          formattedTokens.forEach((t) => {
+            if (t.hour >= 0 && t.hour < 24) {
+              hourAll.current[t.hour]++;
+              if (t.survived) hourWin.current[t.hour]++;
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load initial state from DB:', err);
       }
     }
 
-    setTokens(seedTokens);
-    setStats(initialStats);
-  }, []);
+    loadRealData();
 
-  // Uptime clock & 90s countdown
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setUptime((prev) => prev + 1);
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          setCycle((c) => c + 1);
-          return 90;
+    // Connect WebSocket stream for real-time Solana token ingest
+    let ws: WebSocket | null = null;
+    try {
+      ws = new WebSocket(`${wsBase}/stream`);
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.token) {
+            const raw = payload.token;
+            const isSurvived = raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000);
+            const newItem: TokenFeedItem = {
+              id: raw.mint || Date.now(),
+              name: raw.name || 'Solana Token',
+              symbol: raw.symbol || 'SOL',
+              lore: raw.lore || 'No lore description.',
+              hour: raw.hour ?? new Date().getUTCHours(),
+              marketCap: raw.peak_mc || 10500,
+              survived: isSurvived
+            };
+
+            setTokens((prev) => [newItem, ...prev].slice(0, 60));
+            setStats((prev) => ({
+              all: prev.all + 1,
+              live: prev.live + (isSurvived ? 1 : 0),
+              dead: prev.dead + (!isSurvived ? 1 : 0)
+            }));
+
+            if (newItem.hour >= 0 && newItem.hour < 24) {
+              hourAll.current[newItem.hour]++;
+              if (isSurvived) hourWin.current[newItem.hour]++;
+            }
+          }
+        } catch (e) {
+          // ignore non-json or malformed frame
         }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+      };
+    } catch (e) {
+      console.warn('WebSocket connection error:', e);
+    }
 
-  // Feed stream generator interval
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const name = A[(Math.random() * A.length) | 0] + ' ' + B[(Math.random() * B.length) | 0];
-      const symbol = name.split(' ').map(w => w[0]).join('') + ((Math.random() * 90 + 10) | 0);
-      const lore = LORE[(Math.random() * LORE.length) | 0];
-      const hour = (Math.random() * 24) | 0;
-
-      let p = 0.055 * (HOUR_BIAS[hour] || 1);
-      if (GOOD_WORDS.some(w => lore.toLowerCase().includes(w))) p *= 1.9;
-      if (lore.length > 70) p *= 1.25;
-
-      const survived = Math.random() < p;
-      const mc = survived
-        ? 20000 + Math.random() * Math.random() * 380000
-        : 900 + Math.random() * Math.random() * 17000;
-
-      const newItem = { id: ++idCounter, name, symbol, lore, hour, marketCap: mc, survived };
-
-      setTokens((prev) => [newItem, ...prev].slice(0, 60));
-      setStats((prev) => ({
-        all: prev.all + 1,
-        live: prev.live + (survived ? 1 : 0),
-        dead: prev.dead + (!survived ? 1 : 0)
-      }));
-
-      hourAll.current[hour]++;
-      if (survived) hourWin.current[hour]++;
-    }, 1200);
-
-    return () => clearInterval(interval);
+    return () => {
+      if (ws) ws.close();
+    };
   }, []);
 
   // Code stream typing animation
