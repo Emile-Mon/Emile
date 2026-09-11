@@ -73,21 +73,21 @@ export default function AboutEmilePage() {
             Anyone can verify the model, reproduce the AUC score, and check whether the jar is honest.
           </p>
           <div className="flex gap-4 font-mono text-xs flex-wrap">
-            <a 
-              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/dataset.csv`} 
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/dataset.csv`}
               target="_blank"
               className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--panel2)] border border-[var(--banana)] text-[var(--banana)] rounded hover:bg-[var(--banana)] hover:text-[var(--ink)] transition-colors group"
             >
               <IconDownload className="w-4 h-4 text-[var(--banana)] group-hover:text-[var(--ink)] transition-colors" />
-              <span>Download /api/dataset.csv</span>
+              <span>Download dataset.csv</span>
             </a>
-            <a 
-              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/methodology.json`} 
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/methodology.json`}
               target="_blank"
               className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--panel2)] border border-[var(--rule)] text-[var(--fg)] rounded hover:border-[var(--banana)] transition-colors"
             >
               <IconFileCode className="w-4 h-4 text-[var(--fg)]" />
-              <span>View /api/methodology.json</span>
+              <span>View methodology.json</span>
             </a>
           </div>
         </section>
