@@ -88,3 +88,46 @@ class LoreModerationLog(Base):
     raw_lore = Column(Text, nullable=True)
     filtered_reason = Column(String, nullable=True)
     filtered_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+# Émile 1.5 — Autonomous Idea Generation Models
+class IdeaCycle(Base):
+    __tablename__ = "idea_cycles"
+
+    cycle_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    run_id = Column(BigInteger, ForeignKey("model_runs.id"), nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    generator_sha = Column(String, nullable=False)
+    model_version = Column(String, nullable=False)
+    seed = Column(String, nullable=False)
+    median_holders = Column(Integer, nullable=False)
+    n_generated = Column(Integer, nullable=False)
+    n_rejected = Column(Integer, nullable=False)
+    n_excluded = Column(Integer, nullable=False)
+
+class IdeaCandidate(Base):
+    __tablename__ = "idea_candidates"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    cycle_id = Column(BigInteger, ForeignKey("idea_cycles.cycle_id"), nullable=False)
+    rank = Column(Integer, nullable=False)
+    name = Column(String, nullable=False)
+    lore = Column(Text, nullable=False)
+    hour = Column(SmallInteger, nullable=False)
+    score = Column(Numeric(8, 6), nullable=False)
+    commitment = Column(String, nullable=False)
+    committed_at = Column(DateTime(timezone=True), nullable=False)
+    image_sha = Column(String, nullable=True)
+
+class IdeaExclusion(Base):
+    __tablename__ = "idea_exclusions"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    first_cycle = Column(BigInteger, nullable=False)
+    first_seen_at = Column(DateTime(timezone=True), nullable=False)
+    deployed_mint = Column(String, nullable=False)
+    deployer = Column(String, nullable=False)
+    deployed_at = Column(DateTime(timezone=True), nullable=False)
+    block_number = Column(BigInteger, nullable=False)
+

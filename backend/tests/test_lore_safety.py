@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import unittest
 from app.services.lore_safety import sanitize_lore, strip_zero_width_and_bidi, strip_urls
 

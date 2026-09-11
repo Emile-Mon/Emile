@@ -24,6 +24,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
   const navLinks = [
     { name: 'Hero', href: '/' },
     { name: 'Console', href: '/console' },
+    { name: 'Brain', href: '/brain' },
     { name: 'About', href: '/about' },
   ];
 
