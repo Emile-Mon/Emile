@@ -80,7 +80,8 @@ export function useEmileDatabase() {
               proven_floor: latestModel.proven_floor,
               jar_level: latestModel.jar_level,
               gates: latestModel.gates,
-              blocked_by: latestModel.blocked_by
+              blocked_by: latestModel.blocked_by,
+              feature_importance: latestModel.feature_importance
             });
           }
         }
