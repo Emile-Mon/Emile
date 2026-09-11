@@ -1,8 +1,15 @@
-'use client';
-
-import React from 'react';
+import React, { useState } from 'react';
+import { EMILE_CONTRACT_ADDRESS } from '@/config/constants';
 
 export const FooterBar: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCA = () => {
+    navigator.clipboard.writeText(EMILE_CONTRACT_ADDRESS);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="foot p-3 px-6 border-t border-[var(--rule)] text-[var(--faint)] text-[10.5px] flex gap-4.5 flex-wrap items-center justify-between">
       <div className="flex items-center gap-3.5 flex-wrap">
@@ -10,6 +17,25 @@ export const FooterBar: React.FC = () => {
         <span className="w text-[var(--banana-lo)]">
           Four features cannot forecast a market. This measures survival, not price.
         </span>
+        <button
+          onClick={handleCopyCA}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[var(--panel2)] border border-[var(--rule)] text-[var(--dim)] hover:text-[var(--banana)] hover:border-[var(--banana)]/40 transition-colors font-mono cursor-pointer group"
+          title="Click to copy full $EMILE Contract Address"
+        >
+          <span className="text-[var(--banana)] font-semibold">CA:</span>
+          <span className="text-[11px] font-mono text-[var(--fg)]">{EMILE_CONTRACT_ADDRESS}</span>
+          <span className={`p-1 rounded transition-colors flex items-center justify-center ${copied ? 'bg-[var(--live)] text-[var(--ink)]' : 'bg-[var(--banana)] text-[var(--ink)] group-hover:bg-[#FFE885]'}`}>
+            {copied ? (
+              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            ) : (
+              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+            )}
+          </span>
+        </button>
       </div>
       <div className="flex items-center gap-4">
         <a

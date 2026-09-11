@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { EMILE_CONTRACT_ADDRESS } from '@/config/constants';
 
 interface HeaderBarProps {
   phaseText?: string;
@@ -10,6 +11,15 @@ interface HeaderBarProps {
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · learning' }) => {
   const pathname = usePathname();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCA = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(EMILE_CONTRACT_ADDRESS);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const navLinks = [
     { name: 'Hero', href: '/' },
@@ -18,7 +28,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
   ];
 
   return (
-    <header className="top glass-panel grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-center p-4 px-5 md:px-7 border-b border-[var(--rule)] gap-4 relative z-20">
+    <header className="top glass-panel grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] items-center p-4 px-5 md:px-7 border-b border-[var(--rule)] gap-4 relative z-20">
       {/* Left Column: Wordmark Box & Subtitle */}
       <div className="min-w-0 flex flex-col md:flex-row items-start md:items-center gap-4">
         <Link 
@@ -44,7 +54,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
         </div>
       </div>
 
-      {/* Center Navigation Tabs - Fixed Width Buttons (No Shift/Jumping) */}
+      {/* Center Navigation Tabs */}
       <nav className="flex items-center gap-1 p-1 bg-[var(--panel2)] border border-[var(--soft)] rounded-lg text-xs font-mono shrink-0 justify-center">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
@@ -65,7 +75,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
       </nav>
 
       {/* Right Column: GitHub & X Redirects & $EMILE Badge */}
-      <div className="topright flex items-center justify-end gap-2.5 shrink-0">
+      <div className="topright flex items-center justify-end gap-3 shrink-0">
         <a
           href="https://github.com/Emile-Mon/Emile"
           target="_blank"
