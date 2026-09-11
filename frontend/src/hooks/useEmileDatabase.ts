@@ -8,8 +8,9 @@ export function useEmileDatabase() {
   const setConnected = useEmileStore((state) => state.setConnected);
 
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || 'ws://localhost:8000';
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || (typeof window !== 'undefined' ? `${wsProtocol}//${window.location.host}` : 'ws://localhost:8000');
 
     // 1. Fetch initial snapshot state from PostgreSQL DB via REST API
     async function fetchStateFromDB() {

@@ -166,8 +166,9 @@ export default function SurvivalConsolePage() {
 
   // Fetch real state from PostgreSQL DB & connect live WebSocket
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || 'ws://localhost:8000';
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || (typeof window !== 'undefined' ? `${wsProtocol}//${window.location.host}` : 'ws://localhost:8000');
 
     async function loadRealData() {
       try {

@@ -19,7 +19,7 @@ export const LearningProgressSection: React.FC = () => {
   const vcFloor = model.proven_floor || 0.6743;
   const epsilonVal = model.epsilon_vc || 0.274;
   const featureDim = model.d || 28;
-  const jarPct = model.jar_level ? (model.jar_level * 100).toFixed(1) : '95.0';
+  const jarPct = model.jar_level ? (model.jar_level * 100).toFixed(1) : '80.0';
 
   // Parse dynamic feature importance from PostgreSQL model DB state
   const rawImportance = model.feature_importance;

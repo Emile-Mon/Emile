@@ -21,16 +21,21 @@ export const ProofPanel: React.FC = () => {
   const resetSim = useEmileStore((state) => state.resetSim);
   const model = useEmileStore((state) => state.model);
 
+  const [hasUserInteracted, setHasUserInteracted] = React.useState(false);
+
   const { n, auc, d, running } = simState;
   const e = epsilon(n, d);
   const lb = floorOf(auc, n, d);
-  const jarPct = Math.max(0, Math.min(100, ((auc - FLOOR) / (TARGET - FLOOR)) * 100));
+  
+  const calculatedJarPct = Math.max(0, Math.min(100, ((lb - FLOOR) / (TARGET - FLOOR)) * 100));
+  const jarPct = hasUserInteracted ? calculatedJarPct : 76.0;
 
   const isReady = jarPct >= 100.0;
 
   const tally = useEmileStore((state) => state.tally);
 
   const fillToTarget = () => {
+    setHasUserInteracted(true);
     setSimParams({
       n: 9600,
       auc: 0.645,
@@ -40,6 +45,7 @@ export const ProofPanel: React.FC = () => {
   };
 
   const syncWithLiveDB = () => {
+    setHasUserInteracted(true);
     const state = useEmileStore.getState();
     const dbN = state.tally.all || state.model.n || 2346;
     const dbAuc = state.model.auc || 0.9483;
@@ -50,6 +56,11 @@ export const ProofPanel: React.FC = () => {
       d: dbD,
       running: false,
     });
+  };
+
+  const handleSliderChange = (params: Partial<{ n: number; auc: number; d: number }>) => {
+    setHasUserInteracted(true);
+    setSimParams(params);
   };
 
   return (
@@ -170,7 +181,7 @@ export const ProofPanel: React.FC = () => {
                 max="24000" 
                 step="20" 
                 value={n} 
-                onChange={(e) => setSimParams({ n: Number(e.target.value) })}
+                onChange={(e) => handleSliderChange({ n: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
               <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{n.toLocaleString()}</output>
@@ -185,7 +196,7 @@ export const ProofPanel: React.FC = () => {
                 max="0.85" 
                 step="0.001" 
                 value={auc} 
-                onChange={(e) => setSimParams({ auc: Number(e.target.value) })}
+                onChange={(e) => handleSliderChange({ auc: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
               <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{auc.toFixed(3)}</output>
@@ -200,7 +211,7 @@ export const ProofPanel: React.FC = () => {
                 max="80" 
                 step="1" 
                 value={d} 
-                onChange={(e) => setSimParams({ d: Number(e.target.value) })}
+                onChange={(e) => handleSliderChange({ d: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
               <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{d}</output>
@@ -220,7 +231,6 @@ export const ProofPanel: React.FC = () => {
             ) : (
               <>
                 Measured <b className="text-[var(--fg)] font-medium">{auc.toFixed(3)}</b>, but ε takes <b className="text-[var(--fg)] font-medium">{e >= 1 ? 'all of it' : e.toFixed(3)}</b>. Floor is <b className="text-[var(--fg)] font-medium">{lb.toFixed(3)}</b>. 
-
               </>
             )}
           </div>
@@ -243,7 +253,7 @@ export const ProofPanel: React.FC = () => {
             </button>
 
             <button 
-              onClick={resetSim}
+              onClick={() => { setHasUserInteracted(true); resetSim(); }}
               className="btn inline-flex items-center gap-1 bg-transparent border border-[var(--rule)] text-[var(--fg)] hover:border-[var(--banana)] hover:text-[var(--banana)] text-[10.5px] px-3 py-1.5 rounded-md font-mono cursor-pointer transition-all duration-200"
             >
               <IconReset className="w-3 h-3 text-[var(--fg)]" />
