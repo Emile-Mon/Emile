@@ -48,10 +48,10 @@ interface EmileState {
     stall: number;
   };
   holdersList: number[];
-  
+
   // Model state
   model: ModelMetrics;
-  
+
   // Interactive Simulation state
   simState: {
     n: number;
@@ -89,7 +89,7 @@ export const useEmileStore = create<EmileState>((set, get) => ({
     auc_std: 0.025,
     epsilon_vc: 0.3918,
     auc_boot_lower: 0.6360,
-    proven_floor: 0.5200,
+    proven_floor: 0.520,
     jar_level: 0.95,
     gates: { n_samples: true, n_positive: false, auc_std: true, time_split: true },
     blocked_by: 'n_positive'
@@ -120,7 +120,7 @@ export const useEmileStore = create<EmileState>((set, get) => ({
       const filtered = state.tokens.filter(t => t.mint !== item.mint);
       const newTokens = [item, ...filtered].slice(0, 50); // Cap DOM at 50 rows
       const isPassed = item.status === 'passed';
-      
+
       const newTally = isExisting ? state.tally : {
         all: state.tally.all + 1,
         pass: state.tally.pass + (isPassed ? 1 : 0),
