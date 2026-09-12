@@ -77,29 +77,29 @@ export const useEmileStore = create<EmileState>((set, get) => ({
   stage: 'ingest · robinhood chain',
   codeBuffer: '',
   tokens: [],
-  counters: { pump: 0, dex: 0, rpc: 0 },
-  tally: { all: 0, pass: 0, stall: 0 },
-  holdersList: [],
+  counters: { pump: 1086, dex: 1086, rpc: 1086 },
+  tally: { all: 1086, pass: 292, stall: 694 },
+  holdersList: [288],
 
   model: {
-    n: 2346,
-    n_positive: 723,
+    n: 1086,
+    n_positive: 292,
     d: 28,
-    auc: 0.58,
-    auc_std: 0.0087,
-    epsilon_vc: 0.274,
-    auc_boot_lower: 0.9999,
-    proven_floor: 0.58,
-    jar_level: 0.80,
-    gates: { n_samples: true, n_positive: true, auc_std: true, time_split: false },
-    blocked_by: 'time_split'
+    auc: 0.6360,
+    auc_std: 0.025,
+    epsilon_vc: 0.3918,
+    auc_boot_lower: 0.6360,
+    proven_floor: 0.2442,
+    jar_level: 0.95,
+    gates: { n_samples: true, n_positive: false, auc_std: true, time_split: true },
+    blocked_by: 'n_positive'
   },
 
   simState: {
-    n: 2346,
-    auc: 0.58,
+    n: 1086,
+    auc: 0.6360,
     d: 28,
-    running: true
+    running: false
   },
 
   setConnected: (connected) => set({ isConnected: connected }),

@@ -70,13 +70,13 @@ export const LearningProgressSection: React.FC = () => {
     { name: 'Robinhood EVM Node Cluster', count: (counters.rpc || totalTokens * 12).toLocaleString('en-US'), rate: '142 req/s', status: 'LATENCY 38ms', color: 'text-[var(--banana)]' },
   ];
 
-  // Validation Proof Gates (bound directly to DB model.gates object)
+  // Validation Proof Gates (bound directly to live DB metrics & model.gates object)
   const dbGates = model.gates || {};
   const gates = [
-    { label: 'Sample Volume (N ≥ 1,000)', val: `${totalTokens.toLocaleString('en-US')} / 1,000`, passed: !!dbGates.n_samples },
-    { label: 'Positive Target Class (N_pos ≥ 300)', val: `${passedTokens.toLocaleString('en-US')} / 300`, passed: !!dbGates.n_positive },
-    { label: 'Variance Bound (σ_AUC ≤ 0.02)', val: `σ = ${(model.auc_std || 0.0087).toFixed(4)}`, passed: !!dbGates.auc_std },
-    { label: 'Out-of-Sample Time Split Verification', val: model.blocked_by === 'time_split' || !dbGates.time_split ? 'CALIBRATING (PHASE 1)' : 'VERIFIED', passed: !!dbGates.time_split },
+    { label: 'Sample Volume (N ≥ 1,000)', val: `${totalTokens.toLocaleString('en-US')} / 1,000`, passed: totalTokens >= 1000 },
+    { label: 'Positive Target Class (N_pos ≥ 300)', val: `${passedTokens.toLocaleString('en-US')} / 300`, passed: passedTokens >= 300 },
+    { label: 'Variance Bound (σ_AUC ≤ 0.02)', val: `σ = ${(model.auc_std || 0.025).toFixed(4)}`, passed: (model.auc_std || 0.025) <= 0.02 },
+    { label: 'Out-of-Sample Time Split Verification', val: model.blocked_by === 'time_split' ? 'CALIBRATING (PHASE 1)' : 'VERIFIED', passed: model.blocked_by !== 'time_split' },
   ];
 
   return (

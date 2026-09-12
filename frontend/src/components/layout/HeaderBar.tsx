@@ -60,17 +60,31 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
       <nav className="flex items-center gap-1 p-1 bg-[var(--panel2)] border border-[var(--soft)] rounded-lg text-xs font-mono shrink-0 justify-center">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
+          const isLaunches = link.name === 'Launches';
+
+          let tabStyle = 'text-[var(--dim)] hover:text-[var(--fg)] hover:bg-white/5 border border-transparent';
+          if (isActive) {
+            tabStyle = isLaunches
+              ? 'bg-[var(--banana)]/15 text-[var(--banana)] border border-[var(--banana)] shadow-[0_0_12px_rgba(242,201,76,0.35)] font-semibold'
+              : 'bg-[var(--rule)] text-[var(--banana)] border border-[var(--banana-lo)]/40 shadow-sm';
+          }
+
           return (
             <Link
               key={link.name}
               href={link.href}
-              className={`px-3.5 py-1.5 text-center rounded-md font-medium min-w-[4.5rem] transition-colors duration-150 ${
-                isActive
-                  ? 'bg-[var(--rule)] text-[var(--banana)] border border-[var(--banana-lo)]/40 shadow-sm'
-                  : 'text-[var(--dim)] hover:text-[var(--fg)] hover:bg-white/5 border border-transparent'
-              }`}
+              className={`relative px-3.5 py-1.5 text-center rounded-md font-medium min-w-[4.5rem] transition-all duration-200 flex items-center justify-center gap-1.5 ${tabStyle}`}
             >
-              {link.name}
+              <span>{link.name}</span>
+              {isLaunches && (
+                <span className={`px-1.5 py-0.2 text-[0.58rem] font-black tracking-widest uppercase rounded font-mono shadow-md ${
+                  isActive 
+                    ? 'bg-[var(--banana)] text-[var(--panel)] animate-pulse'
+                    : 'bg-[var(--banana)]/80 text-[var(--panel)] opacity-90'
+                }`}>
+                  NEW
+                </span>
+              )}
             </Link>
           );
         })}

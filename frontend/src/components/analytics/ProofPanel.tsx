@@ -28,7 +28,12 @@ export const ProofPanel: React.FC = () => {
   const lb = floorOf(auc, n, d);
   
   const calculatedJarPct = Math.max(0, Math.min(100, ((lb - FLOOR) / (TARGET - FLOOR)) * 100));
-  const jarPct = hasUserInteracted ? calculatedJarPct : 76.0;
+  const liveJarLevel = model.jar_level ? model.jar_level * 100 : calculatedJarPct;
+  const jarPct = hasUserInteracted ? calculatedJarPct : liveJarLevel;
+
+  const displayAuc = hasUserInteracted ? auc : (model.auc || auc);
+  const displayEps = hasUserInteracted ? e : (model.epsilon_vc || e);
+  const displayFloor = hasUserInteracted ? lb : (model.proven_floor || lb);
 
   const isReady = jarPct >= 100.0;
 
@@ -39,7 +44,7 @@ export const ProofPanel: React.FC = () => {
     setSimParams({
       n: 9600,
       auc: 0.645,
-      d: 41,
+      d: 28,
       running: false,
     });
   };
@@ -47,8 +52,8 @@ export const ProofPanel: React.FC = () => {
   const syncWithLiveDB = () => {
     setHasUserInteracted(true);
     const state = useEmileStore.getState();
-    const dbN = state.tally.all || state.model.n || 2346;
-    const dbAuc = state.model.auc || 0.9483;
+    const dbN = state.tally.all || state.model.n || 1086;
+    const dbAuc = state.model.auc || 0.9045;
     const dbD = state.model.d || 28;
     setSimParams({
       n: dbN,
@@ -101,20 +106,20 @@ export const ProofPanel: React.FC = () => {
                 <span className="text-[8.5px] font-mono text-white/50 bg-black/80 px-1 rounded">0%</span>
               </div>
 
-              {/* Animated Glowing Liquid */}
+              {/* Dynamic Liquid Level (Filled according to Jar Level %) */}
               <div 
-                className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out bg-gradient-to-t from-[var(--banana)] via-[#F2994A] to-[var(--live)] opacity-85 shadow-[0_0_20px_rgba(242,201,76,0.5)]"
-                style={{ height: `${Math.max(5, jarPct)}%` }}
+                className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out bg-gradient-to-t from-[var(--banana-lo)] via-[var(--banana)] to-[var(--live)] opacity-85 shadow-[0_0_15px_rgba(242,201,76,0.5)]"
+                style={{ height: `${Math.max(4, Math.min(96, jarPct))}%` }}
               >
-                {/* Surface Wave Effect */}
-                <div className="absolute -top-2 left-0 right-0 h-3 bg-white/30 rounded-full animate-pulse" />
+                {/* Surface Liquid Glow */}
+                <div className="w-full h-1.5 bg-white/70 shadow-[0_0_8px_white] animate-pulse" />
               </div>
 
-              {/* Center Jar Level Readout inside Glass Jar */}
-              <div className="absolute inset-0 z-25 flex flex-col items-center justify-center pointer-events-none">
-                <div className="bg-black/75 border border-[var(--banana)]/40 backdrop-blur-md px-3 py-1.5 rounded-lg text-center shadow-[0_0_15px_rgba(242,201,76,0.25)]">
-                  <div className="text-[9px] font-mono text-[var(--faint)] uppercase tracking-wider">JAR LEVEL</div>
-                  <div className="text-base font-mono font-bold text-[var(--banana)] glow-banana">
+              {/* Jar Level Badge Center Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                <div className="px-3 py-1.5 rounded-xl bg-black/80 border border-[var(--banana)] text-center shadow-xl backdrop-blur-md">
+                  <div className="text-[9px] font-mono text-[var(--dim)] uppercase font-semibold">JAR LEVEL</div>
+                  <div className="text-lg font-serif font-bold text-[var(--banana)] glow-banana tabular-nums">
                     {jarPct.toFixed(1)}%
                   </div>
                 </div>
@@ -128,15 +133,16 @@ export const ProofPanel: React.FC = () => {
             <div className="absolute -top-3.5 w-32 h-4.5 bg-gradient-to-r from-gray-700 via-gray-400 to-gray-700 rounded-t-md border-b border-black shadow z-30" />
           </div>
 
-          <div className="text-[11px] font-mono text-[var(--dim)] mt-3 text-center">
-            Proven Floor: <b className="text-[var(--banana)] font-semibold">{lb.toFixed(3)}</b>
+          <div className="text-center font-mono text-[11px] mt-3">
+            <span className="text-[var(--dim)]">Proven Floor: </span>
+            <b className="text-[var(--banana)] font-bold">{displayFloor.toFixed(3)}</b>
           </div>
         </div>
 
         {/* Middle Column: Theory Explanation & Formula */}
         <div className="lg:col-span-4 p-5 md:p-6 border-r border-[var(--soft)] flex flex-col justify-between">
           <div>
-            <div className="ph font-serif text-lg font-bold text-[#F1F6FA] tracking-tight">
+            <div className="font-serif font-bold text-xl text-[#F0F5FA] tracking-tight">
               Why the jar fills slowly
             </div>
             <div className="pp text-[var(--dim)] text-[12px] mt-2 leading-relaxed">
@@ -158,15 +164,15 @@ export const ProofPanel: React.FC = () => {
           <div className="ros grid grid-cols-3 border border-[var(--soft)] rounded-lg overflow-hidden shadow-sm">
             <div className="ro p-3 px-3 bg-[var(--panel2)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">measured AUC</div>
-              <div className="ro-v font-serif text-lg font-bold text-[var(--live)] tracking-tight glow-live">{auc.toFixed(3)}</div>
+              <div className="ro-v font-serif text-lg font-bold text-[var(--live)] tracking-tight glow-live">{displayAuc.toFixed(3)}</div>
             </div>
             <div className="ro p-3 px-3 bg-[var(--panel2)] border-l border-[var(--soft)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">penalty ε</div>
-              <div className="ro-v font-serif text-lg font-bold text-[var(--violet)] tracking-tight">{e >= 1 ? '—' : e.toFixed(3)}</div>
+              <div className="ro-v font-serif text-lg font-bold text-[var(--violet)] tracking-tight">{displayEps >= 1 ? '—' : displayEps.toFixed(3)}</div>
             </div>
             <div className="ro p-3 px-3 bg-[var(--panel2)] border-l border-[var(--soft)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">proven floor</div>
-              <div className="ro-v font-serif text-lg font-bold text-[var(--banana)] tracking-tight glow-banana">{lb.toFixed(3)}</div>
+              <div className="ro-v font-serif text-lg font-bold text-[var(--banana)] tracking-tight glow-banana">{displayFloor.toFixed(3)}</div>
             </div>
           </div>
 

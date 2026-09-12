@@ -45,10 +45,30 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const dayIndex = data?.day_index || 7;
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
-  const name = data?.name || 'Fletcher';
+  const name = data?.name || '🍌 EMILE’S BANANA';
   const rawSymbol = data?.symbol;
-  const symbol = (!rawSymbol || rawSymbol === 'SHRWD' || name === 'Fletcher') ? 'FLTCHR' : rawSymbol;
-  const lore = data?.lore || 'Built for the ones who check the receipts.';
+  const symbol = (!rawSymbol || name.includes('BANANA')) ? 'BANANA' : rawSymbol;
+  const lore = data?.lore || `He was asked to find patterns.
+So he started looking everywhere.
+
+1,090 tokens entered the dataset.
+292 crossed $30K.
+28 signals were extracted.
+Holder retention. Launch cycles. Seasonality. Lore length.
+
+Émile watched them all.
+
+He learned that numbers mattered.
+He learned that timing mattered.
+He learned that holders mattered.
+
+And then, somewhere between all the data…
+
+Émile found a banana.
+
+He didn’t know why it mattered.
+
+He simply kept looking at it.`;
   const launchHour = data?.launch_hour || 14;
   const rankInCycle = data?.rank_in_cycle || 1;
   const predictedProb = data?.predicted_prob !== undefined ? data.predicted_prob : 0.8117;
@@ -90,12 +110,28 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
     }
   };
 
-  const contributions: ContributionItem[] = data?.contributions || [
-    { feature: 'launch_hour_cos', label: 'Launch hour 14:00 UTC', value: 0.211 },
-    { feature: 'lore_length', label: 'Lore length 71 characters', value: 0.094 },
-    { feature: 'name_tokens', label: 'Name token count 2', value: 0.038 },
-    { feature: 'holders', label: 'Holder count (held at median)', value: 0.000 }
-  ];
+  const rawContributions: ContributionItem[] = (data?.contributions && data.contributions.length > 0)
+    ? data.contributions
+    : [
+        { feature: 'launch_hour_cos', label: `Launch hour ${String(launchHour).padStart(2, '0')}:00 UTC`, value: 0.211 },
+        { feature: 'lore_length', label: `Lore length ${lore.length} characters`, value: 0.094 },
+        { feature: 'name_tokens', label: `Name token count 3`, value: 0.038 },
+        { feature: 'holders', label: 'Holder count (held at median)', value: 0.000 }
+      ];
+
+  const contributions: ContributionItem[] = rawContributions.map(c => {
+    if (c.feature === 'lore_length' || c.label.toLowerCase().includes('lore length')) {
+      return { ...c, label: `Lore length ${lore.length} characters` };
+    }
+    if (c.feature === 'name_tokens' || c.label.toLowerCase().includes('name token')) {
+      const tokenCount = name.replace(/[^\w\s']/g, '').trim().split(/\s+/).filter(Boolean).length || 3;
+      return { ...c, label: `Name token count ${tokenCount}` };
+    }
+    if (c.feature === 'launch_hour_cos' || c.label.toLowerCase().includes('launch hour')) {
+      return { ...c, label: `Launch hour ${String(launchHour).padStart(2, '0')}:00 UTC` };
+    }
+    return c;
+  });
 
   return (
     <div className="panel bg-[var(--panel)] border-2 border-[var(--banana)] rounded-lg overflow-hidden mb-6 shadow-lg relative">
@@ -129,9 +165,29 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
             {getAuthorshipText(authorship)}
           </div>
 
-          <p className="tlore text-[var(--fg)] text-sm mt-3 max-w-[58ch] leading-relaxed font-mono">
-            {lore}
-          </p>
+          {/* Candidate Lore & Memory Log Box */}
+          <div className="tlore-box bg-[var(--panel2)]/90 border-l-2 border-[var(--banana)] rounded-r-lg p-4 px-5 my-4 max-w-[62ch] shadow-inner relative overflow-hidden">
+            <div className="text-[0.62rem] font-mono tracking-widest text-[var(--banana)] uppercase mb-2 font-semibold flex items-center gap-1.5">
+              <span>✦ CANDIDATE LORE & MEMORY LOG</span>
+            </div>
+            <div className="space-y-2.5 font-serif text-[0.94rem] leading-relaxed">
+              {lore.split(/\n\s*\n/).filter(Boolean).map((paragraph, idx) => {
+                const isPunchline = paragraph.toLowerCase().includes('banana') || paragraph.toLowerCase().includes('looking at it');
+                return (
+                  <p
+                    key={idx}
+                    className={`${
+                      isPunchline
+                        ? 'text-[var(--banana)] font-medium text-[0.98rem] tracking-wide'
+                        : 'text-[var(--fg-hi)] opacity-90'
+                    } whitespace-pre-line leading-relaxed m-0`}
+                  >
+                    {paragraph}
+                  </p>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="meta flex flex-wrap gap-4 mt-4 text-[0.72rem] text-[var(--dim)] font-mono">
             <span>rank <b className="text-[var(--fg)] font-medium">{rankInCycle} of 100</b></span>
@@ -155,7 +211,7 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
           <div className="big font-serif text-3xl md:text-4xl font-bold text-[var(--banana)] leading-none tabular-nums">
             {predictedProb.toFixed(4)}
           </div>
-          
+
           <div className="note text-[0.66rem] text-[var(--dim)] mt-3 leading-relaxed">
             <div>
               <span className="text-[var(--dim)]">Commitment time:</span>{' '}

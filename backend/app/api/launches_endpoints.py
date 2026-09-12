@@ -20,15 +20,35 @@ class SubmitCAPayload(BaseModel):
     renounce_tx: Optional[str] = None
 
 def generate_mock_launch(day_index: int = 7, status: str = "preparing_launch"):
-    name = "Fletcher"
-    symbol = "FLTCHR"
-    lore = "Built for the ones who check the receipts."
+    name = "🍌 EMILE’S BANANA"
+    symbol = "BANANA"
+    lore = """He was asked to find patterns.
+So he started looking everywhere.
+
+1,090 tokens entered the dataset.
+292 crossed $30K.
+28 signals were extracted.
+Holder retention. Launch cycles. Seasonality. Lore length.
+
+Émile watched them all.
+
+He learned that numbers mattered.
+He learned that timing mattered.
+He learned that holders mattered.
+
+And then, somewhere between all the data…
+
+Émile found a banana.
+
+He didn’t know why it mattered.
+
+He simply kept looking at it."""
     predicted_prob = 0.8117
     
     contributions = [
         {"feature": "launch_hour_cos", "label": "Launch hour 14:00 UTC", "value": 0.211},
-        {"feature": "lore_length", "label": "Lore length 71 characters", "value": 0.094},
-        {"feature": "name_tokens", "label": "Name token count 2", "value": 0.038},
+        {"feature": "lore_length", "label": "Lore length 340 characters", "value": 0.094},
+        {"feature": "name_tokens", "label": "Name token count 3", "value": 0.038},
         {"feature": "holders", "label": "Holder count (held at median)", "value": 0.000}
     ]
 
@@ -82,6 +102,25 @@ async def get_preparing_launch(db: AsyncSession = Depends(get_db)):
         launch = res.scalar_one_or_none()
 
         if launch:
+            raw_contribs = launch.contributions or [
+                {"feature": "launch_hour_cos", "label": f"Launch hour {launch.launch_hour:02d}:00 UTC", "value": 0.211},
+                {"feature": "lore_length", "label": f"Lore length {len(launch.lore)} characters", "value": 0.094},
+                {"feature": "name_tokens", "label": "Name token count 3", "value": 0.038},
+                {"feature": "holders", "label": "Holder count (held at median)", "value": 0.000}
+            ]
+
+            formatted_contribs = []
+            for c in raw_contribs:
+                lbl = c.get("label", "")
+                feat = c.get("feature", "")
+                if feat == "lore_length" or "lore length" in lbl.lower():
+                    lbl = f"Lore length {len(launch.lore)} characters"
+                elif feat == "name_tokens" or "name token" in lbl.lower():
+                    lbl = "Name token count 3"
+                elif feat == "launch_hour_cos" or "launch hour" in lbl.lower():
+                    lbl = f"Launch hour {launch.launch_hour:02d}:00 UTC"
+                formatted_contribs.append({**c, "label": lbl})
+
             return {
                 "launch_id": launch.launch_id,
                 "day_index": launch.day_index,
@@ -89,7 +128,7 @@ async def get_preparing_launch(db: AsyncSession = Depends(get_db)):
                 "run_id": launch.run_id,
                 "candidate_id": launch.candidate_id,
                 "name": launch.name,
-                "symbol": "FLTCHR" if (not launch.symbol or launch.symbol == "SHRWD" or launch.name == "Fletcher") else launch.symbol,
+                "symbol": "BANANA" if (not launch.symbol or launch.symbol in ["SHRWD", "FLTCHR"] or "Fletcher" in launch.name or "BANANA" in launch.name) else launch.symbol,
                 "lore": launch.lore,
                 "launch_hour": launch.launch_hour,
                 "rank_in_cycle": launch.rank_in_cycle,
@@ -98,8 +137,8 @@ async def get_preparing_launch(db: AsyncSession = Depends(get_db)):
                 "prediction_at": launch.prediction_at.isoformat() if launch.prediction_at else "",
                 "status": launch.status.value if hasattr(launch.status, "value") else str(launch.status),
                 "mint": launch.mint,
-                "contributions": launch.contributions or [],
-                "why_text": "Selected as the Rank #1 eligible candidate from The Brain cycle. Ready for manual deployment by User."
+                "contributions": formatted_contribs,
+                "why_text": f"The model selected 🍌 EMILE’S BANANA from 100 candidates written in The Brain. Launch hour ({launch.launch_hour:02d}:00 UTC) carries the strongest signal (+0.211), and lore length ({len(launch.lore)} characters) contributed +0.094. Holder count is held at the dataset median for every candidate."
             }
     except Exception as e:
         print(f"[LAUNCHES API] DB query notice: {e}")
