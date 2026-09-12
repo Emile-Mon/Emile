@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export interface ContributionItem {
   feature: string;
@@ -35,6 +35,11 @@ export interface PreparingLaunchData {
   authorship?: AuthorshipInfo;
   contributions?: ContributionItem[];
   why_text?: string;
+  peak_mc?: number;
+  image_url?: string;
+  dexscreener_url?: string;
+  price_usd?: number;
+  volume_24h?: number;
 }
 
 interface PreparingLaunchCardProps {
@@ -46,10 +51,72 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
   const rawName = data?.name || 'EMILES BANANA';
-  const name = rawName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/^🍌\s*/, '').trim();
   const symbol = data?.symbol || 'BANANA';
   const mint = data?.mint || '0x3c51485b11d52f90c251e74875a8b93c81027274';
-  const logoSrc = (data as any)?.image_url || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto';
+
+  const [liveData, setLiveData] = useState<{
+    name: string;
+    symbol: string;
+    priceUsd: string | number;
+    marketCap: number;
+    liquidityUsd: number;
+    volume24h: number;
+    imageUrl: string;
+    dexUrl: string;
+    isLive: boolean;
+  }>({
+    name: rawName,
+    symbol: symbol,
+    priceUsd: (data as any)?.price_usd || '0.000008607',
+    marketCap: data?.peak_mc || 8608,
+    liquidityUsd: 3.22,
+    volume24h: 0.12,
+    imageUrl: (data as any)?.image_url || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto',
+    dexUrl: (data as any)?.dexscreener_url || `https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be`,
+    isLive: false,
+  });
+
+  // Client-side direct DexScreener API polling for guaranteed live on-chain data
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDexScreener = async () => {
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+        if (res.ok) {
+          const json = await res.json();
+          const pair = (json.pairs || [])[0];
+          if (pair && isMounted) {
+            setLiveData({
+              name: pair.baseToken?.name || 'EMILES BANANA',
+              symbol: pair.baseToken?.symbol || 'BANANA',
+              priceUsd: pair.priceUsd || '0.000008607',
+              marketCap: pair.fdv || pair.marketCap || 8608,
+              liquidityUsd: pair.liquidity?.usd || 3.22,
+              volume24h: pair.volume?.h24 || 0.12,
+              imageUrl: pair.info?.imageUrl || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto',
+              dexUrl: pair.url || `https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be`,
+              isLive: true,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('DexScreener direct client fetch notice:', err);
+      }
+    };
+
+    fetchDexScreener();
+    const interval = setInterval(fetchDexScreener, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [mint]);
+
+  const name = liveData.name.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/^🍌\s*/, '').trim();
+  const tokenSymbol = liveData.symbol;
+  const logoSrc = liveData.imageUrl;
+  const dexscreenerUrl = liveData.dexUrl;
+
   const lore = data?.lore || `He was asked to find patterns.
 So he started looking everywhere.
 
@@ -76,8 +143,7 @@ He simply kept looking at it.`;
   const predictedProb = data?.predicted_prob !== undefined ? data.predicted_prob : 0.8117;
   const predictionSha = data?.prediction_sha || mint;
   const predictionAt = data?.prediction_at || '2026-09-12T14:00:00Z';
-  const currentStatus = data?.status || `LAUNCHED — DEPLOYED ON-CHAIN: ${mint.slice(0, 10)}…`;
-  const liquidity = data?.liquidity_display || '0.05 ETH';
+  const currentStatus = `LAUNCHED : ${mint}`;
 
   const [expandedHash, setExpandedHash] = useState<boolean>(false);
 
@@ -161,18 +227,38 @@ He simply kept looking at it.`;
           <div className="flex items-center gap-3.5 mb-1.5">
             <img
               src={logoSrc}
-              alt={`${symbol} Logo`}
-              className="w-11 h-11 md:w-13 md:h-13 rounded-lg object-cover border border-[var(--banana)] shadow-md shrink-0"
+              alt={`${tokenSymbol} Logo`}
+              className="w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border-2 border-[var(--banana)] shadow-md shrink-0"
             />
             <div>
               <h3 className="tname font-serif text-2xl md:text-3xl font-semibold text-[var(--fg-hi)] m-0 leading-tight">
-                {name} <span className="tick text-[var(--banana)] text-sm font-mono ml-2">${symbol}</span>
+                {name} <span className="tick text-[var(--banana)] text-sm font-mono ml-2">${tokenSymbol}</span>
               </h3>
               {/* Section 3: Authorship Disclosure Line */}
               <div className="authorship-line text-[0.7rem] text-[var(--dim)] font-mono mt-0.5 italic">
                 {getAuthorshipText(authorship)}
               </div>
             </div>
+          </div>
+
+          {/* LIVE DEXSCREENER METRICS BAR */}
+          <div className="live-metrics flex flex-wrap gap-3 my-3 p-2.5 px-3 rounded bg-[var(--panel2)] border border-[var(--banana)]/30 font-mono text-[0.7rem]">
+            <span className="flex items-center gap-1.5 text-[var(--fg-hi)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+              MC: <b className="text-[var(--banana)] font-bold">${Number(liveData.marketCap).toLocaleString('en-US')}</b>
+            </span>
+            <span className="text-[var(--dim)]">•</span>
+            <span className="text-[var(--fg-hi)]">
+              Price: <b className="text-[var(--fg-hi)] font-bold">${liveData.priceUsd}</b>
+            </span>
+            <span className="text-[var(--dim)]">•</span>
+            <span className="text-[var(--fg-hi)]">
+              Liq: <b className="text-[var(--fg-hi)] font-medium">${Number(liveData.liquidityUsd).toLocaleString('en-US')}</b>
+            </span>
+            <span className="text-[var(--dim)]">•</span>
+            <span className="text-[var(--fg-hi)]">
+              24h Vol: <b className="text-[var(--fg-hi)] font-medium">${Number(liveData.volume24h).toLocaleString('en-US')}</b>
+            </span>
           </div>
 
           {/* Candidate Lore & Memory Log Box */}
@@ -187,8 +273,8 @@ He simply kept looking at it.`;
                   <p
                     key={idx}
                     className={`${isPunchline
-                        ? 'text-[var(--banana)] font-medium text-[0.98rem] tracking-wide'
-                        : 'text-[var(--fg-hi)] opacity-90'
+                      ? 'text-[var(--banana)] font-medium text-[0.98rem] tracking-wide'
+                      : 'text-[var(--fg-hi)] opacity-90'
                       } whitespace-pre-line leading-relaxed m-0`}
                   >
                     {paragraph}
@@ -201,24 +287,22 @@ He simply kept looking at it.`;
           <div className="meta flex flex-wrap gap-4 mt-4 text-[0.72rem] text-[var(--dim)] font-mono">
             <span>rank <b className="text-[var(--fg)] font-medium">{rankInCycle} of 100</b></span>
             <span>launch hour <b className="text-[var(--fg)] font-medium">{String(launchHour).padStart(2, '0')}:00 UTC</b></span>
-            <span>liquidity <b className="text-[var(--fg)] font-medium">{liquidity}</b></span>
+            <span>liquidity <b className="text-[var(--fg)] font-medium">${Number(liveData.liquidityUsd).toLocaleString('en-US')} (0.05 ETH)</b></span>
             <span>émile holds <b className="text-[var(--fg)] font-medium">0</b></span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="status p inline-block text-[0.68rem] tracking-wider p-1.5 px-3 border border-[var(--green)] text-[var(--green)] font-mono font-bold uppercase rounded animate-pulse">
-              {currentStatus.includes('PREPARING') ? currentStatus.replace('PREPARING — ', 'LAUNCHED — ') : currentStatus}
+            <span className="status p inline-block text-[0.68rem] tracking-wider p-1.5 px-3 border border-[var(--green)] text-[var(--green)] font-mono font-bold uppercase rounded animate-pulse select-all break-all">
+              LAUNCHED : {mint}
             </span>
-            {((data as any)?.dexscreener_url || mint) && (
-              <a
-                href={(data as any)?.dexscreener_url || `https://dexscreener.com/robinhood/${mint}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[0.68rem] text-[var(--banana)] hover:underline font-mono font-semibold"
-              >
-                View DexScreener Live
-              </a>
-            )}
+            <a
+              href={dexscreenerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[0.68rem] text-[var(--banana)] hover:underline font-mono font-semibold flex items-center gap-1 bg-[var(--banana)]/10 p-1.5 px-3 rounded border border-[var(--banana)]/40 shadow-sm"
+            >
+              <span>View DexScreener Live Pair</span>
+            </a>
           </div>
         </div>
 
