@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     @property
     def RAW_DATABASE_URL(self) -> str:
-        url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or "postgres://9446e742920b798f5d290b243cf838fc1f5806e7170c55c98cf16577c344aaf0:sk_fnBsEkU9uFtWEkWb2oRtF@pooled.db.prisma.io:5432/postgres?sslmode=require"
+        url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or "postgresql://postgres:postgres@localhost:5432/emile_db"
         return url.strip()
 
     @property
