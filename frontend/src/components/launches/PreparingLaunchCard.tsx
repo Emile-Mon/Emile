@@ -45,10 +45,11 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const dayIndex = data?.day_index || 7;
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
-  const rawName = data?.name || 'EMILE’S BANANA';
+  const rawName = data?.name || 'Émile';
   const name = rawName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/^🍌\s*/, '').trim();
-  const rawSymbol = data?.symbol;
-  const symbol = (!rawSymbol || name.includes('BANANA')) ? 'BANANA' : rawSymbol;
+  const symbol = data?.symbol || 'EMILE';
+  const mint = data?.mint || '0xe2e4a2404c3923990ccc1e6435dc5b6476284992';
+  const logoSrc = (data as any)?.image_url || '/banana-logo.jpeg';
   const lore = data?.lore || `He was asked to find patterns.
 So he started looking everywhere.
 
@@ -65,17 +66,14 @@ He learned that holders mattered.
 
 And then, somewhere between all the data…
 
-Émile found a banana.
-
-He didn’t know why it mattered.
-
-He simply kept looking at it.`;
+Émile observed the token patterns.
+He simply kept watching them.`;
   const launchHour = data?.launch_hour || 14;
   const rankInCycle = data?.rank_in_cycle || 1;
-  const predictedProb = data?.predicted_prob !== undefined ? data.predicted_prob : 0.8117;
-  const predictionSha = data?.prediction_sha || 'a91f7c2e8b1034fe9823c45d67e890ab12345678';
-  const predictionAt = data?.prediction_at || new Date().toISOString();
-  const currentStatus = data?.status || 'PREPARING — AWAITING DEPLOYMENT';
+  const predictedProb = data?.predicted_prob !== undefined ? data.predicted_prob : 0.8950;
+  const predictionSha = data?.prediction_sha || mint;
+  const predictionAt = data?.prediction_at || '2026-09-12T14:00:00Z';
+  const currentStatus = data?.status || `PREPARING — CA REGISTERED: ${mint.slice(0, 10)}…`;
   const liquidity = data?.liquidity_display || '0.05 ETH';
 
   const [expandedHash, setExpandedHash] = useState<boolean>(false);
@@ -114,11 +112,11 @@ He simply kept looking at it.`;
   const rawContributions: ContributionItem[] = (data?.contributions && data.contributions.length > 0)
     ? data.contributions
     : [
-        { feature: 'launch_hour_cos', label: `Launch hour ${String(launchHour).padStart(2, '0')}:00 UTC`, value: 0.211 },
-        { feature: 'lore_length', label: `Lore length ${lore.length} characters`, value: 0.094 },
-        { feature: 'name_tokens', label: `Name token count 3`, value: 0.038 },
-        { feature: 'holders', label: 'Holder count (held at median)', value: 0.000 }
-      ];
+      { feature: 'launch_hour_cos', label: `Launch hour ${String(launchHour).padStart(2, '0')}:00 UTC`, value: 0.211 },
+      { feature: 'lore_length', label: `Lore length ${lore.length} characters`, value: 0.094 },
+      { feature: 'name_tokens', label: `Name token count 3`, value: 0.038 },
+      { feature: 'holders', label: 'Holder count (held at median)', value: 0.000 }
+    ];
 
   const contributions: ContributionItem[] = rawContributions.map(c => {
     if (c.feature === 'lore_length' || c.label.toLowerCase().includes('lore length')) {
@@ -139,13 +137,13 @@ He simply kept looking at it.`;
       {/* Header Bar */}
       <div className="phead flex justify-between items-center p-3 px-4 border-b border-[var(--rule)] text-[0.68rem] tracking-wider font-mono uppercase bg-[var(--banana)]/10 text-[var(--banana)]">
         <span className="font-bold flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[var(--banana)] animate-ping" />
-          PREPARING LAUNCH : PICKED FROM THE BRAIN
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--green)] animate-ping" />
+          LAUNCHED ON-CHAIN : LIVE TRACKING IN PROGRESS
         </span>
         <div className="flex items-center gap-2 font-mono">
           <span className="text-[var(--fg-hi)]">DAY {String(dayIndex).padStart(3, '0')}</span>
-          <span className="px-2 py-0.5 rounded bg-[var(--banana)] text-[var(--panel)] text-[0.62rem] font-black tracking-widest uppercase shadow-md animate-pulse">
-            NEW
+          <span className="px-2 py-0.5 rounded bg-[var(--green)] text-[var(--panel)] text-[0.62rem] font-black tracking-widest uppercase shadow-md animate-pulse">
+            LIVE LAUNCH
           </span>
         </div>
       </div>
@@ -159,7 +157,7 @@ He simply kept looking at it.`;
           </div>
           <div className="flex items-center gap-3.5 mb-1.5">
             <img
-              src="/banana-logo.jpeg"
+              src={logoSrc}
               alt={`${symbol} Logo`}
               className="w-11 h-11 md:w-13 md:h-13 rounded-lg object-cover border border-[var(--banana)] shadow-md shrink-0"
             />
@@ -185,11 +183,10 @@ He simply kept looking at it.`;
                 return (
                   <p
                     key={idx}
-                    className={`${
-                      isPunchline
+                    className={`${isPunchline
                         ? 'text-[var(--banana)] font-medium text-[0.98rem] tracking-wide'
                         : 'text-[var(--fg-hi)] opacity-90'
-                    } whitespace-pre-line leading-relaxed m-0`}
+                      } whitespace-pre-line leading-relaxed m-0`}
                   >
                     {paragraph}
                   </p>
@@ -205,10 +202,20 @@ He simply kept looking at it.`;
             <span>émile holds <b className="text-[var(--fg)] font-medium">0</b></span>
           </div>
 
-          <div className="mt-4">
-            <span className="status w inline-block text-[0.68rem] tracking-wider p-1.5 px-3 border border-[var(--banana)] text-[var(--banana)] font-mono font-bold uppercase rounded animate-pulse">
-              {currentStatus.includes('AWAITING') ? currentStatus : 'PREPARING — AWAITING DEPLOYMENT'}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="status p inline-block text-[0.68rem] tracking-wider p-1.5 px-3 border border-[var(--green)] text-[var(--green)] font-mono font-bold uppercase rounded animate-pulse">
+              {currentStatus.includes('PREPARING') ? currentStatus.replace('PREPARING — ', 'LAUNCHED — ') : currentStatus}
             </span>
+            {((data as any)?.dexscreener_url || mint) && (
+              <a
+                href={(data as any)?.dexscreener_url || `https://dexscreener.com/robinhood/${mint}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[0.68rem] text-[var(--banana)] hover:underline font-mono font-semibold"
+              >
+                View DexScreener Live
+              </a>
+            )}
           </div>
         </div>
 

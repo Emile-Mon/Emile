@@ -24,6 +24,10 @@ export interface LaunchItemData {
   holders_48h?: number | null;
   outcome?: string | null;
   contributions?: ContributionItem[];
+  image_url?: string | null;
+  dexscreener_url?: string | null;
+  website_url?: string | null;
+  twitter_url?: string | null;
 }
 
 interface LaunchLogEntryProps {
@@ -35,10 +39,11 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
 
   const isPassed = data.outcome === 'passed';
   const isStalled = data.outcome === 'stalled';
-  const isPending = data.status === 'pending_48h';
 
   const statusClass = isPassed ? 'p border-[var(--green)] text-[var(--green)]' : (isStalled ? 's border-[var(--stall)] text-[var(--stall)]' : 'w border-[var(--banana-lo)] text-[var(--banana-lo)]');
   const statusLabel = isPassed ? 'PASSED · REACHED $30K' : (isStalled ? 'STALLED · DID NOT REACH $30K' : 'PENDING 48h · TRACKING IN PROGRESS');
+
+  const logoSrc = data.image_url || ((data.symbol === 'BANANA' || data.name.includes('BANANA')) ? '/banana-logo.jpeg' : null);
 
   return (
     <div className="entry border-b border-[var(--rule)] last:border-b-0 font-mono">
@@ -48,10 +53,10 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
             DAY {String(data.day_index).padStart(3, '0')} : {data.deployed_at ? data.deployed_at.slice(0, 10) : ''} {String(data.launch_hour).padStart(2, '0')}:00 UTC : CYCLE {data.cycle_id} : RUN {data.run_id}
           </div>
           <div className="flex items-center gap-3">
-            {(data.symbol === 'BANANA' || data.name.includes('BANANA')) && (
+            {logoSrc && (
               <img
-                src="/banana-logo.jpeg"
-                alt="BANANA Logo"
+                src={logoSrc}
+                alt={`${data.symbol} Logo`}
                 className="w-9 h-9 rounded-md object-cover border border-[var(--banana)]/50 shrink-0"
               />
             )}
@@ -136,6 +141,27 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
           </div>
 
           <div className="links flex flex-wrap gap-4 mt-3 text-[0.68rem]">
+            {data.dexscreener_url ? (
+              <a
+                href={data.dexscreener_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--banana)] hover:underline flex items-center gap-1 font-semibold"
+              >
+                DexScreener Live Pair ↗
+              </a>
+            ) : (
+              data.mint && (
+                <a
+                  href={`https://dexscreener.com/robinhood/${data.mint}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--cyan)] hover:underline"
+                >
+                  DexScreener Pair ({data.mint.slice(0, 8)}…)
+                </a>
+              )
+            )}
             {data.mint && (
               <a
                 href={`https://robinhood.dune.com/token/${data.mint}`}
@@ -144,6 +170,16 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
                 className="text-[var(--cyan)] hover:underline"
               >
                 Contract Explorer ({data.mint.slice(0, 8)}…)
+              </a>
+            )}
+            {data.website_url && (
+              <a href={data.website_url} target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">
+                Website ↗
+              </a>
+            )}
+            {data.twitter_url && (
+              <a href={data.twitter_url} target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">
+                Twitter/X ↗
               </a>
             )}
             <a href="/brain" className="text-[var(--cyan)] hover:underline">
