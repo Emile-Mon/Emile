@@ -20,7 +20,7 @@ class SubmitCAPayload(BaseModel):
     renounce_tx: Optional[str] = None
 
 def generate_mock_launch(day_index: int = 7, status: str = "preparing_launch"):
-    name = "🍌 EMILE’S BANANA"
+    name = "EMILE’S BANANA"
     symbol = "BANANA"
     lore = """He was asked to find patterns.
 So he started looking everywhere.
@@ -138,7 +138,7 @@ async def get_preparing_launch(db: AsyncSession = Depends(get_db)):
                 "status": launch.status.value if hasattr(launch.status, "value") else str(launch.status),
                 "mint": launch.mint,
                 "contributions": formatted_contribs,
-                "why_text": f"The model selected 🍌 EMILE’S BANANA from 100 candidates written in The Brain. Launch hour ({launch.launch_hour:02d}:00 UTC) carries the strongest signal (+0.211), and lore length ({len(launch.lore)} characters) contributed +0.094. Holder count is held at the dataset median for every candidate."
+                "why_text": f"The model selected EMILE’S BANANA from 100 candidates written in The Brain. Launch hour ({launch.launch_hour:02d}:00 UTC) carries the strongest signal (+0.211), and lore length ({len(launch.lore)} characters) contributed +0.094. Holder count is held at the dataset median for every candidate."
             }
     except Exception as e:
         print(f"[LAUNCHES API] DB query notice: {e}")
@@ -352,6 +352,23 @@ async def get_pending_launch():
     """GET /api/launches/pending - Returns pre-registered prediction before outcome is known."""
     return generate_mock_launch(day_index=7, status="preparing_launch")
 
+@router.get("/rhj/assets")
+async def get_robinhood_assets():
+    """GET /api/launches/rhj/assets - Proxy to Robinhood Stock Token assets API."""
+    from app.services.robinhood_api import RobinhoodStockTokenService
+    service = RobinhoodStockTokenService()
+    return await service.fetch_assets()
+
+@router.get("/rhj/prices/{symbol}")
+async def get_robinhood_price(symbol: str):
+    """GET /api/launches/rhj/prices/{symbol} - Proxy to Robinhood Stock Token price API."""
+    from app.services.robinhood_api import RobinhoodStockTokenService
+    service = RobinhoodStockTokenService()
+    quote = await service.fetch_price(symbol)
+    if not quote:
+        raise HTTPException(status_code=404, detail=f"Stock token quote for '{symbol}' not found")
+    return quote
+
 @router.get("/{day_index}")
 async def get_launch_by_day(day_index: int, db: AsyncSession = Depends(get_db)):
     """GET /api/launches/{day_index} - Serves detailed info for a single day launch."""
@@ -390,3 +407,4 @@ async def get_launch_by_day(day_index: int, db: AsyncSession = Depends(get_db)):
         pass
 
     return generate_mock_launch(day_index=day_index, status="preparing_launch")
+

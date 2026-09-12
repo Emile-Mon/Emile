@@ -61,5 +61,12 @@ class TestLaunchesEndpoints(unittest.TestCase):
         
         self.assertIn("predicted_prob", data)
 
+    def test_get_robinhood_assets_endpoint(self):
+        response = self.client.get("/api/launches/rhj/assets")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, list)
+
 if __name__ == "__main__":
     unittest.main()
+

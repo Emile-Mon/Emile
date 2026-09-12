@@ -45,7 +45,8 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const dayIndex = data?.day_index || 7;
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
-  const name = data?.name || '🍌 EMILE’S BANANA';
+  const rawName = data?.name || 'EMILE’S BANANA';
+  const name = rawName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/^🍌\s*/, '').trim();
   const rawSymbol = data?.symbol;
   const symbol = (!rawSymbol || name.includes('BANANA')) ? 'BANANA' : rawSymbol;
   const lore = data?.lore || `He was asked to find patterns.
@@ -156,13 +157,21 @@ He simply kept looking at it.`;
           <div className="day text-[0.64rem] tracking-widest text-[var(--dim)] mb-1 font-mono uppercase">
             DAY {String(dayIndex).padStart(3, '0')} : CYCLE {cycleId} : RUN {runId}
           </div>
-          <h3 className="tname font-serif text-2xl md:text-3xl font-semibold text-[var(--fg-hi)] m-0 leading-tight">
-            {name} <span className="tick text-[var(--banana)] text-sm font-mono ml-2">${symbol}</span>
-          </h3>
-
-          {/* Section 3: Authorship Disclosure Line */}
-          <div className="authorship-line text-[0.7rem] text-[var(--dim)] font-mono mt-1 italic">
-            {getAuthorshipText(authorship)}
+          <div className="flex items-center gap-3.5 mb-1.5">
+            <img
+              src="/banana-logo.jpeg"
+              alt={`${symbol} Logo`}
+              className="w-11 h-11 md:w-13 md:h-13 rounded-lg object-cover border border-[var(--banana)] shadow-md shrink-0"
+            />
+            <div>
+              <h3 className="tname font-serif text-2xl md:text-3xl font-semibold text-[var(--fg-hi)] m-0 leading-tight">
+                {name} <span className="tick text-[var(--banana)] text-sm font-mono ml-2">${symbol}</span>
+              </h3>
+              {/* Section 3: Authorship Disclosure Line */}
+              <div className="authorship-line text-[0.7rem] text-[var(--dim)] font-mono mt-0.5 italic">
+                {getAuthorshipText(authorship)}
+              </div>
+            </div>
           </div>
 
           {/* Candidate Lore & Memory Log Box */}

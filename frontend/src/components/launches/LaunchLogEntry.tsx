@@ -47,9 +47,18 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
           <div className="day text-[0.64rem] tracking-widest text-[var(--dim)] mb-1 uppercase">
             DAY {String(data.day_index).padStart(3, '0')} : {data.deployed_at ? data.deployed_at.slice(0, 10) : ''} {String(data.launch_hour).padStart(2, '0')}:00 UTC : CYCLE {data.cycle_id} : RUN {data.run_id}
           </div>
-          <h4 className="tname font-serif text-xl font-normal text-[var(--fg-hi)] m-0 leading-snug">
-            {data.name} <span className="tick text-[var(--banana)] text-xs font-mono ml-1.5">${data.symbol || data.name.replace(/[^a-zA-Z]/g, '').slice(0, 5).toUpperCase()}</span>
-          </h4>
+          <div className="flex items-center gap-3">
+            {(data.symbol === 'BANANA' || data.name.includes('BANANA')) && (
+              <img
+                src="/banana-logo.jpeg"
+                alt="BANANA Logo"
+                className="w-9 h-9 rounded-md object-cover border border-[var(--banana)]/50 shrink-0"
+              />
+            )}
+            <h4 className="tname font-serif text-xl font-normal text-[var(--fg-hi)] m-0 leading-snug">
+              {data.name} <span className="tick text-[var(--banana)] text-xs font-mono ml-1.5">${data.symbol || data.name.replace(/[^a-zA-Z]/g, '').slice(0, 5).toUpperCase()}</span>
+            </h4>
+          </div>
           <p className="tlore text-[var(--dim)] text-xs mt-1.5 max-w-[50ch] leading-relaxed">
             {data.lore}
           </p>
