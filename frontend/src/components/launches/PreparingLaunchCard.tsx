@@ -45,11 +45,11 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const dayIndex = data?.day_index || 7;
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
-  const rawName = data?.name || 'Émile';
+  const rawName = data?.name || 'EMILES BANANA';
   const name = rawName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/^🍌\s*/, '').trim();
-  const symbol = data?.symbol || 'EMILE';
-  const mint = data?.mint || '0xe2e4a2404c3923990ccc1e6435dc5b6476284992';
-  const logoSrc = (data as any)?.image_url || '/banana-logo.jpeg';
+  const symbol = data?.symbol || 'BANANA';
+  const mint = data?.mint || '0x3c51485b11d52f90c251e74875a8b93c81027274';
+  const logoSrc = (data as any)?.image_url || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto';
   const lore = data?.lore || `He was asked to find patterns.
 So he started looking everywhere.
 
@@ -66,14 +66,17 @@ He learned that holders mattered.
 
 And then, somewhere between all the data…
 
-Émile observed the token patterns.
-He simply kept watching them.`;
+Émile found a banana.
+
+He didn’t know why it mattered.
+
+He simply kept looking at it.`;
   const launchHour = data?.launch_hour || 14;
   const rankInCycle = data?.rank_in_cycle || 1;
-  const predictedProb = data?.predicted_prob !== undefined ? data.predicted_prob : 0.8950;
+  const predictedProb = data?.predicted_prob !== undefined ? data.predicted_prob : 0.8117;
   const predictionSha = data?.prediction_sha || mint;
   const predictionAt = data?.prediction_at || '2026-09-12T14:00:00Z';
-  const currentStatus = data?.status || `PREPARING — CA REGISTERED: ${mint.slice(0, 10)}…`;
+  const currentStatus = data?.status || `LAUNCHED — DEPLOYED ON-CHAIN: ${mint.slice(0, 10)}…`;
   const liquidity = data?.liquidity_display || '0.05 ETH';
 
   const [expandedHash, setExpandedHash] = useState<boolean>(false);
