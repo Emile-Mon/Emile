@@ -162,7 +162,7 @@ export const LearningProgressSection: React.FC = () => {
           </div>
           <div className="text-[11px] font-mono text-[var(--dim)] mt-2 flex items-center justify-between border-t border-[var(--soft)] pt-2">
             <span>VC Bound Floor (ε={epsilonVal}):</span>
-            <span className="text-[var(--banana)] font-bold">{vcFloor.toFixed(4)}</span>
+            <span className="text-[var(--banana)] font-bold">{vcFloor.toFixed(3)}</span>
           </div>
         </div>
 
