@@ -52,7 +52,8 @@ export const LaunchesSection: React.FC = () => {
   const showLaunchLog = resolvedLaunchesCount >= 2;
   const showCalibrationStrip = resolvedLaunchesCount >= 5 || (calibrationData?.resolved_count ?? 0) >= 5;
 
-  const hasPreparingCandidate = Boolean(preparingData && (preparingData.prediction_sha || preparingData.name));
+  // Always render candidate card (uses default candidate data if backend fetch is pending/offline)
+  const hasPreparingCandidate = preparingData === undefined || Boolean(preparingData?.name || preparingData?.prediction_sha);
 
   return (
     <section className="section max-w-[1120px] mx-auto p-4 md:p-8 font-mono text-[13px] leading-relaxed">
