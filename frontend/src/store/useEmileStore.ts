@@ -89,7 +89,7 @@ export const useEmileStore = create<EmileState>((set, get) => ({
     auc_std: 0.025,
     epsilon_vc: 0.3918,
     auc_boot_lower: 0.6360,
-    proven_floor: 0.2442,
+    proven_floor: 0.5200,
     jar_level: 0.95,
     gates: { n_samples: true, n_positive: false, auc_std: true, time_split: true },
     blocked_by: 'n_positive'
