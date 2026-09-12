@@ -25,6 +25,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
     { name: 'Hero', href: '/' },
     { name: 'Console', href: '/console' },
     { name: 'Brain', href: '/brain' },
+    { name: 'Launches', href: '/launches' },
     { name: 'About', href: '/about' },
   ];
 
@@ -63,7 +64,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
             <Link
               key={link.name}
               href={link.href}
-              className={`w-20 text-center py-1.5 rounded-md font-medium transition-colors duration-150 ${
+              className={`px-3.5 py-1.5 text-center rounded-md font-medium min-w-[4.5rem] transition-colors duration-150 ${
                 isActive
                   ? 'bg-[var(--rule)] text-[var(--banana)] border border-[var(--banana-lo)]/40 shadow-sm'
                   : 'text-[var(--dim)] hover:text-[var(--fg)] hover:bg-white/5 border border-transparent'

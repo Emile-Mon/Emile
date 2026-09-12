@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Émile — Launch log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A0E13; --panel:#101720; --panel-2:#0D141C;
+  --rule:#1D2836; --fg:#C8D4E2; --fg-hi:#E4EBF2; --dim:#647688;
+  --banana:#E9C24B; --banana-lo:#B58E28;
+  --green:#3FBF7F; --stall:#9C5850; --violet:#8B6FE8; --cyan:#4EA8C4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--ink);color:var(--fg);
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.section{max-width:1120px;margin:0 auto;padding:2.5rem 1.15rem 4rem}
+.kicker{font-size:.68rem;letter-spacing:.18em;color:var(--dim);margin:0 0 .7rem}
+h2{
+  font-family:"Fraunces",Georgia,serif;font-weight:600;
+  font-size:clamp(1.45rem,4vw,1.95rem);line-height:1.2;
+  margin:0 0 .8rem;color:var(--fg-hi);letter-spacing:-.01em;
+}
+.intro{max-width:66ch;margin:0 0 1.75rem}
+.intro strong{color:var(--fg-hi);font-weight:500}
+
+/* calibration strip */
+.calib{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;
+}
+@media(min-width:52rem){.calib{grid-template-columns:repeat(5,1fr)}}
+.cell{background:var(--panel-2);padding:.9rem 1rem}
+.cell .lab{font-size:.62rem;letter-spacing:.14em;color:var(--dim);margin-bottom:.35rem}
+.cell .val{
+  font-family:"Fraunces",Georgia,serif;font-size:1.35rem;font-weight:600;
+  color:var(--fg-hi);line-height:1;font-variant-numeric:tabular-nums;
+}
+.cell .val.g{color:var(--green)}
+.cell .val.r{color:var(--stall)}
+.cell .sub{font-size:.62rem;color:var(--dim);margin-top:.3rem}
+
+.panel{background:var(--panel);border:1px solid var(--rule);margin-bottom:1rem}
+.phead{
+  display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+  padding:.7rem 1rem;border-bottom:1px solid var(--rule);
+  font-size:.68rem;letter-spacing:.13em;color:var(--dim);
+}
+
+/* launch entry */
+.entry{border-bottom:1px solid var(--rule)}
+.entry:last-child{border-bottom:0}
+.etop{
+  display:grid;grid-template-columns:1fr;gap:1rem;padding:1.15rem 1rem;
+}
+@media(min-width:56rem){
+  .etop{grid-template-columns:1fr 15rem;gap:2.5rem}
+}
+.day{font-size:.64rem;letter-spacing:.14em;color:var(--dim);margin-bottom:.5rem}
+.tname{
+  font-family:"Fraunces",Georgia,serif;font-size:1.3rem;font-weight:400;
+  color:var(--fg-hi);margin:0 0 .1rem;line-height:1.25;
+}
+.tick{color:var(--banana);font-size:.82rem}
+.tlore{color:var(--dim);font-size:.78rem;margin:.45rem 0 0;max-width:50ch;line-height:1.6}
+.meta{
+  display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin-top:.8rem;
+  font-size:.68rem;color:var(--dim);
+}
+.meta b{color:var(--fg);font-weight:400}
+
+.pred{border-left:1px solid var(--rule);padding-left:1.25rem}
+@media(max-width:56rem){.pred{border-left:0;border-top:1px solid var(--rule);padding:1rem 0 0}}
+.pred .lab{font-size:.62rem;letter-spacing:.14em;color:var(--dim);margin-bottom:.3rem}
+.pred .big{
+  font-family:"Fraunces",Georgia,serif;font-size:1.8rem;font-weight:600;
+  color:var(--banana);line-height:1;font-variant-numeric:tabular-nums;
+}
+.pred .note{font-size:.64rem;color:var(--dim);margin-top:.45rem;line-height:1.55}
+
+.status{
+  display:inline-block;font-size:.64rem;letter-spacing:.08em;
+  padding:.15rem .5rem;border:1px solid currentColor;margin-top:.75rem;
+}
+.status.p{color:var(--green)}
+.status.s{color:var(--stall)}
+.status.w{color:var(--banana-lo)}
+
+/* why panel */
+.why{
+  background:var(--panel-2);border-top:1px solid var(--rule);
+  padding:1rem 1rem 1.15rem;
+}
+.why .lab{font-size:.62rem;letter-spacing:.14em;color:var(--dim);margin-bottom:.7rem}
+.bars{display:grid;gap:.5rem;max-width:44rem}
+.bar{display:grid;grid-template-columns:1fr auto;gap:.7rem;align-items:center;font-size:.7rem}
+.bar .t{color:var(--fg)}
+.bar .v{color:var(--dim);font-variant-numeric:tabular-nums}
+.track{grid-column:1/-1;height:3px;background:var(--rule)}
+.track i{display:block;height:100%;background:var(--banana-lo)}
+.track i.neg{background:var(--stall)}
+.whytext{
+  font-size:.72rem;color:var(--dim);margin:.9rem 0 0;max-width:62ch;line-height:1.7;
+}
+
+.links{display:flex;flex-wrap:wrap;gap:1.1rem;margin-top:.9rem;font-size:.68rem}
+.links a{color:var(--cyan);text-decoration:none;border-bottom:1px solid var(--rule)}
+.links a:hover{border-bottom-color:var(--cyan)}
+
+.note{
+  margin-top:1.25rem;padding-top:1.1rem;border-top:1px solid var(--rule);
+  font-size:.74rem;color:var(--dim);max-width:78ch;line-height:1.75;
+}
+.note b{color:var(--fg)}
+.demo{
+  margin-top:1rem;border:1px dashed var(--stall);padding:.7rem 1rem;
+  font-size:.7rem;color:var(--stall);
+}
+</style>
+</head>
+<body>
+<section class="section">
+
+  <p class="kicker">ÉMILE DAILY — PRE-REGISTERED LAUNCH LOG</p>
+  <h2>One token a day, and the prediction he made before deploying it</h2>
+  <p class="intro">
+    Each day Émile selects one candidate from the hundred he wrote that cycle,
+    publishes the survival probability his model assigns to it, and only then
+    deploys it on Pons V2. <strong>The prediction is on the record before the
+    outcome exists.</strong> Forty-eight hours later the token is labelled by the
+    same rule as every other row in the dataset — did peak market cap reach
+    $30,000 — and the result lands here whether or not it flatters him.
+  </p>
+
+  <div class="calib">
+    <div class="cell">
+      <div class="lab">LAUNCHES</div>
+      <div class="val">7</div>
+      <div class="sub">5 resolved, 2 open</div>
+    </div>
+    <div class="cell">
+      <div class="lab">PREDICTED SURVIVORS</div>
+      <div class="val">3.4</div>
+      <div class="sub">sum of probabilities</div>
+    </div>
+    <div class="cell">
+      <div class="lab">ACTUAL SURVIVORS</div>
+      <div class="val r">1</div>
+      <div class="sub">of 5 resolved</div>
+    </div>
+    <div class="cell">
+      <div class="lab">BRIER SCORE</div>
+      <div class="val r">0.3412</div>
+      <div class="sub">lower is better; 0.25 = always guessing base rate</div>
+    </div>
+    <div class="cell">
+      <div class="lab">CALIBRATION</div>
+      <div class="val r">overconfident</div>
+      <div class="sub">predicting more survivors than occur</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="phead">
+      <span>LAUNCH LOG — MOST RECENT FIRST</span>
+      <span>PONS V2 · ROBINHOOD CHAIN</span>
+    </div>
+
+    <!-- ENTRY -->
+    <div class="entry">
+      <div class="etop">
+        <div>
+          <div class="day">DAY 007 · 2026-09-11 14:00 UTC · CYCLE 1418 · RUN 444</div>
+          <p class="tname">Fletcher <span class="tick">$FLTCHR</span></p>
+          <p class="tlore">
+            Built for the ones who check the receipts.
+          </p>
+          <div class="meta">
+            <span>rank <b>1 of 100</b></span>
+            <span>launch hour <b>14:00 UTC</b></span>
+            <span>liquidity <b>0.05 ETH</b></span>
+            <span>émile holds <b>0</b></span>
+          </div>
+          <span class="status w">WINDOW OPEN · 31h REMAINING</span>
+        </div>
+        <div class="pred">
+          <div class="lab">PREDICTED SURVIVAL</div>
+          <div class="big">0.8117</div>
+          <p class="note">
+            Committed at 13:58:04 UTC, two minutes before deployment.
+            Commitment a91f7c2e…
+          </p>
+        </div>
+      </div>
+
+      <div class="why">
+        <div class="lab">WHY THIS ONE — FEATURE CONTRIBUTIONS</div>
+        <div class="bars">
+          <div class="bar"><span class="t">Launch hour 14:00 UTC</span><span class="v">+0.211</span>
+            <span class="track"><i style="width:62%"></i></span></div>
+          <div class="bar"><span class="t">Lore length 71 characters</span><span class="v">+0.094</span>
+            <span class="track"><i style="width:28%"></i></span></div>
+          <div class="bar"><span class="t">Name token count 2</span><span class="v">+0.038</span>
+            <span class="track"><i style="width:11%"></i></span></div>
+          <div class="bar"><span class="t">Holder count (held at median)</span><span class="v">0.000</span>
+            <span class="track"><i style="width:1%"></i></span></div>
+        </div>
+        <p class="whytext">
+          The model put this first almost entirely on launch hour. The two
+          cyclical launch terms carry 40.4% of its total signal, and 14:00 UTC
+          sits near the peak of that curve. Lore length contributed a little.
+          The name contributed almost nothing, which is consistent with
+          everything the feature panel has said since day one.
+          <b style="color:var(--fg)">Holder count is pinned at the dataset median
+          for every candidate, so it cannot distinguish between them.</b>
+        </p>
+        <div class="links">
+          <a href="#">Contract on explorer</a>
+          <a href="#">Pons V2 pair</a>
+          <a href="#">Commitment log entry</a>
+          <a href="#">All 100 candidates, cycle 1418</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENTRY -->
+    <div class="entry">
+      <div class="etop">
+        <div>
+          <div class="day">DAY 006 · 2026-09-10 09:00 UTC · CYCLE 1392 · RUN 431</div>
+          <p class="tname">Fletcher <span class="tick">$FLTCH</span></p>
+          <p class="tlore">
+            Every arrow is a claim about the future. Most of them miss.
+          </p>
+          <div class="meta">
+            <span>rank <b>1 of 100</b></span>
+            <span>launch hour <b>09:00 UTC</b></span>
+            <span>peak MC <b>$14,208</b></span>
+            <span>holders at 48h <b>312</b></span>
+          </div>
+          <span class="status s">STALLED · DID NOT REACH $30K</span>
+        </div>
+        <div class="pred">
+          <div class="lab">PREDICTED SURVIVAL</div>
+          <div class="big">0.7742</div>
+          <p class="note">
+            Predicted 0.7742, outcome 0. Brier contribution 0.5994 — the worst
+            single prediction so far.
+          </p>
+        </div>
+      </div>
+
+      <div class="why">
+        <div class="lab">WHY THIS ONE — FEATURE CONTRIBUTIONS</div>
+        <div class="bars">
+          <div class="bar"><span class="t">Launch hour 09:00 UTC</span><span class="v">+0.186</span>
+            <span class="track"><i style="width:55%"></i></span></div>
+          <div class="bar"><span class="t">Lore length 58 characters</span><span class="v">+0.071</span>
+            <span class="track"><i style="width:21%"></i></span></div>
+          <div class="bar"><span class="t">Name token count 1</span><span class="v">−0.012</span>
+            <span class="track"><i class="neg" style="width:4%"></i></span></div>
+        </div>
+        <p class="whytext">
+          A confident prediction that was wrong by a wide margin. The token
+          cleared the $10K gate and stopped at $14.2K. Nothing about this
+          outcome is surprising given a proven floor of −0.1420 — a model that
+          cannot beat a coin flip will produce confident errors, and this is what
+          one looks like when it is written down beforehand instead of quietly
+          forgotten.
+        </p>
+        <div class="links">
+          <a href="#">Contract on explorer</a>
+          <a href="#">Pons V2 pair</a>
+          <a href="#">Commitment log entry</a>
+          <a href="#">All 100 candidates, cycle 1392</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="note">
+    <b>These tokens are excluded from Émile's training data.</b> They are
+    labelled, displayed, and counted in the calibration scores above, but never
+    fed back into the model. A model that learns from its own launches is
+    learning from its own behaviour, and the loop would destroy it within weeks.
+    Every row carries <code>emile_launched = true</code> and the training query
+    filters on it.
+  </p>
+
+  <p class="note" style="border:0;padding-top:0;margin-top:.5rem">
+    <b>Émile holds none of what he launches.</b> No allocation, no reserve, no
+    team wallet. His capital goes into liquidity and stays there. He cannot sell
+    into his own prediction because he has nothing to sell. Launch liquidity
+    comes from a separate experiment wallet — the creator fee treasury is
+    untouched and remains reserved for Evolution 2.
+  </p>
+
+  <p class="demo">
+    DEMO DATA. Every entry on this page is placeholder content for layout review.
+    No token listed here has been deployed. Wire to <code>/api/launches</code>
+    before this section goes live.
+  </p>
+
+</section>
+</body>
+</html>

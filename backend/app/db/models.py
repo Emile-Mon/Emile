@@ -42,6 +42,7 @@ class Token(Base):
     first_seen_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     last_polled_at = Column(DateTime(timezone=True), nullable=True)
     poll_count = Column(Integer, nullable=False, default=0)
+    emile_launched = Column(Boolean, nullable=False, default=False, index=True)
 
 class DailyUniverse(Base):
     __tablename__ = "daily_universe"
@@ -130,4 +131,48 @@ class IdeaExclusion(Base):
     deployer = Column(String, nullable=False)
     deployed_at = Column(DateTime(timezone=True), nullable=False)
     block_number = Column(BigInteger, nullable=False)
+
+class LaunchStatus(str, enum.Enum):
+    preparing_launch = "preparing_launch"
+    pending_48h = "pending_48h"
+    passed = "passed"
+    stalled = "stalled"
+    skipped = "skipped"
+
+class Launch(Base):
+    __tablename__ = "launches"
+
+    launch_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    day_index = Column(Integer, nullable=False, unique=True)
+    cycle_id = Column(BigInteger, ForeignKey("idea_cycles.cycle_id"), nullable=False)
+    run_id = Column(BigInteger, ForeignKey("model_runs.id"), nullable=False)
+    candidate_id = Column(BigInteger, ForeignKey("idea_candidates.id"), nullable=False)
+
+    name = Column(String, nullable=False)
+    symbol = Column(String, nullable=False)
+    lore = Column(Text, nullable=False)
+    launch_hour = Column(SmallInteger, nullable=False)
+    rank_in_cycle = Column(Integer, nullable=False)
+
+    predicted_prob = Column(Numeric(8, 6), nullable=False)
+    prediction_sha = Column(String, nullable=False)
+    prediction_at = Column(DateTime(timezone=True), nullable=False)
+
+    status = Column(Enum(LaunchStatus, name="launch_status"), nullable=False, default=LaunchStatus.preparing_launch)
+    mint = Column(String, nullable=True, unique=True)
+    deploy_tx = Column(String, nullable=True)
+    pool_tx = Column(String, nullable=True)
+    lp_burn_tx = Column(String, nullable=True)
+    renounce_tx = Column(String, nullable=True)
+    deployed_at = Column(DateTime(timezone=True), nullable=True)
+    liquidity_wei = Column(Numeric(40, 0), nullable=True)
+
+    peak_mc = Column(Numeric(18, 2), nullable=True)
+    holders_48h = Column(Integer, nullable=True)
+    outcome = Column(String, nullable=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+    contributions = Column(JSONB, nullable=True)
+    skipped_reason = Column(Text, nullable=True)
+
 

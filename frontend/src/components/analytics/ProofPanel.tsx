@@ -184,7 +184,7 @@ export const ProofPanel: React.FC = () => {
                 onChange={(e) => handleSliderChange({ n: Number(e.target.value) })}
                 className="accent-[var(--banana)]"
               />
-              <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{n.toLocaleString()}</output>
+              <output suppressHydrationWarning className="text-right text-[11px] font-mono font-medium text-[var(--fg)]">{n.toLocaleString('en-US')}</output>
             </div>
 
             <div className="sr grid grid-cols-[105px_1fr_52px] gap-2 items-center">

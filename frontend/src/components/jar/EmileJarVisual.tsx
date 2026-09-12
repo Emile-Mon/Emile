@@ -150,7 +150,7 @@ export const EmileJarVisual: React.FC = () => {
                 onChange={(e) => setSimParams({ n: Number(e.target.value) })}
                 className="w-1/2 accent-[var(--banana)]"
               />
-              <span className="text-[var(--fg)] font-bold w-14 text-right">{n.toLocaleString()}</span>
+              <span className="text-[var(--fg)] font-bold w-14 text-right">{n.toLocaleString('en-US')}</span>
             </div>
 
             <div className="flex items-center justify-between">

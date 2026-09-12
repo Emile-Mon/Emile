@@ -65,16 +65,16 @@ export const LearningProgressSection: React.FC = () => {
 
   // Ingestion stream telemetry data (bound directly to live DB counters)
   const streams = [
-    { name: 'Robinhood Chain DEX Ingestion', count: counters.pump || totalTokens, rate: '18 tokens/m', status: 'ACTIVE', color: 'text-[var(--live)]' },
-    { name: 'Robinhood Chain Indexer', count: counters.dex || totalTokens * 3, rate: '54 updates/s', status: 'SYNCED', color: 'text-[var(--cyan)]' },
-    { name: 'Robinhood EVM Node Cluster', count: (counters.rpc || totalTokens * 12).toLocaleString(), rate: '142 req/s', status: 'LATENCY 38ms', color: 'text-[var(--banana)]' },
+    { name: 'Robinhood Chain DEX Ingestion', count: (counters.pump || totalTokens).toLocaleString('en-US'), rate: '18 tokens/m', status: 'ACTIVE', color: 'text-[var(--live)]' },
+    { name: 'Robinhood Chain Indexer', count: (counters.dex || totalTokens * 3).toLocaleString('en-US'), rate: '54 updates/s', status: 'SYNCED', color: 'text-[var(--cyan)]' },
+    { name: 'Robinhood EVM Node Cluster', count: (counters.rpc || totalTokens * 12).toLocaleString('en-US'), rate: '142 req/s', status: 'LATENCY 38ms', color: 'text-[var(--banana)]' },
   ];
 
   // Validation Proof Gates (bound directly to DB model.gates object)
   const dbGates = model.gates || {};
   const gates = [
-    { label: 'Sample Volume (N ≥ 1,000)', val: `${totalTokens.toLocaleString()} / 1,000`, passed: !!dbGates.n_samples },
-    { label: 'Positive Target Class (N_pos ≥ 300)', val: `${passedTokens.toLocaleString()} / 300`, passed: !!dbGates.n_positive },
+    { label: 'Sample Volume (N ≥ 1,000)', val: `${totalTokens.toLocaleString('en-US')} / 1,000`, passed: !!dbGates.n_samples },
+    { label: 'Positive Target Class (N_pos ≥ 300)', val: `${passedTokens.toLocaleString('en-US')} / 300`, passed: !!dbGates.n_positive },
     { label: 'Variance Bound (σ_AUC ≤ 0.02)', val: `σ = ${(model.auc_std || 0.0087).toFixed(4)}`, passed: !!dbGates.auc_std },
     { label: 'Out-of-Sample Time Split Verification', val: model.blocked_by === 'time_split' || !dbGates.time_split ? 'CALIBRATING (PHASE 1)' : 'VERIFIED', passed: !!dbGates.time_split },
   ];
@@ -118,7 +118,7 @@ export const LearningProgressSection: React.FC = () => {
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--panel2)] text-[var(--banana)] border border-[var(--banana)]/30 font-semibold">LIVE SCAN</span>
           </div>
           <div className="text-3xl font-serif font-bold text-[#F1F6FA] mt-2 tracking-tight">
-            {totalTokens.toLocaleString()}
+            {totalTokens.toLocaleString('en-US')}
           </div>
           <div className="text-[11px] font-mono text-[var(--dim)] mt-2 flex items-center justify-between border-t border-[var(--soft)] pt-2">
             <span>Scan Threshold:</span>
@@ -136,10 +136,10 @@ export const LearningProgressSection: React.FC = () => {
           </div>
           <div className="flex items-baseline gap-3 mt-2">
             <span className="text-3xl font-serif font-bold text-[var(--live)] tracking-tight glow-live">
-              {passedTokens.toLocaleString()}
+              {passedTokens.toLocaleString('en-US')}
             </span>
             <span className="text-sm font-mono text-[var(--dim)]">passed $30K</span>
-            <span className="text-xs font-mono text-[var(--stall)] ml-auto font-medium">{stalledTokens.toLocaleString()} stalled</span>
+            <span className="text-xs font-mono text-[var(--stall)] ml-auto font-medium">{stalledTokens.toLocaleString('en-US')} stalled</span>
           </div>
           {/* Visual Mini Stacked Bar */}
           <div className="w-full bg-[var(--panel2)] h-2 rounded-full mt-3 overflow-hidden flex">

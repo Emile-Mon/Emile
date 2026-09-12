@@ -192,7 +192,7 @@ export const CrtTerminal: React.FC = () => {
                 </div>
               </div>
 
-              <div className="num text-right font-mono text-[#9ED8B3]">{t.holders.toLocaleString()}</div>
+              <div className="num text-right font-mono text-[#9ED8B3]">{t.holders.toLocaleString('en-US')}</div>
 
               {/* Peak MC Column: Hidden on mobile (hide-sm), lore remains displayed */}
               <div className="num text-right font-mono text-[#9ED8B3] hide-sm">

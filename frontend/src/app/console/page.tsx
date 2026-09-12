@@ -388,15 +388,15 @@ export default function SurvivalConsolePage() {
           <div className="stats grid grid-cols-4 border-t border-[var(--rule)] bg-[var(--panel)]">
             <div className="stat p-3 px-4 border-r border-[var(--soft)]">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">seen</div>
-              <div className="stat-v text-lg font-bold text-[#EAF1F8] font-mono">{stats.all.toLocaleString()}</div>
+              <div className="stat-v text-lg font-bold text-[#EAF1F8] font-mono">{stats.all.toLocaleString('en-US')}</div>
             </div>
             <div className="stat p-3 px-4 border-r border-[var(--soft)]">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">past $20K</div>
-              <div className="stat-v text-lg font-bold text-[var(--live)] font-mono">{stats.live.toLocaleString()}</div>
+              <div className="stat-v text-lg font-bold text-[var(--live)] font-mono">{stats.live.toLocaleString('en-US')}</div>
             </div>
             <div className="stat p-3 px-4 border-r border-[var(--soft)]">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">stalled</div>
-              <div className="stat-v text-lg font-bold text-[var(--stall)] font-mono">{stats.dead.toLocaleString()}</div>
+              <div className="stat-v text-lg font-bold text-[var(--stall)] font-mono">{stats.dead.toLocaleString('en-US')}</div>
             </div>
             <div className="stat p-3 px-4">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">survival</div>
@@ -413,7 +413,7 @@ export default function SurvivalConsolePage() {
         <div className="panel-head flex items-center justify-between pb-3 border-b border-[var(--soft)] mb-4 font-mono text-xs">
           <span className="panel-title font-medium text-sm text-[#DCE6F0]">What it found</span>
           <span className="panel-note text-[var(--faint)]">
-            cycle {String(cycle).padStart(3, '0')} · {stats.all.toLocaleString()} tokens in sample
+            cycle {String(cycle).padStart(3, '0')} · {stats.all.toLocaleString('en-US')} tokens in sample
           </span>
         </div>
 
@@ -471,7 +471,7 @@ export default function SurvivalConsolePage() {
               read-out
             </div>
             <div className="note text-[var(--dim)] text-[11.5px] leading-relaxed font-mono">
-              Strongest window so far is <b className="text-[var(--fg)] font-medium">14:00–15:00 UTC</b>, at <b className="text-[var(--live)] font-medium">31.0%</b> survival against a <b className="text-[var(--fg)] font-medium">5.5%</b> baseline. Lore length correlates weakly and positively. Sample is <b className="text-[var(--fg)] font-medium">{stats.all.toLocaleString()}</b> tokens, of which <b className="text-[var(--live)] font-medium">{stats.live}</b> lived.
+              Strongest window so far is <b className="text-[var(--fg)] font-medium">14:00–15:00 UTC</b>, at <b className="text-[var(--live)] font-medium">31.0%</b> survival against a <b className="text-[var(--fg)] font-medium">5.5%</b> baseline. Lore length correlates weakly and positively. Sample is <b className="text-[var(--fg)] font-medium">{stats.all.toLocaleString('en-US')}</b> tokens, of which <b className="text-[var(--live)] font-medium">{stats.live}</b> lived.
             </div>
           </div>
         </div>

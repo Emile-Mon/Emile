@@ -6,6 +6,7 @@ import os
 from app.core.config import settings
 from app.api.endpoints import router as api_router
 from app.api.ideas_endpoints import router as ideas_router
+from app.api.launches_endpoints import router as launches_router
 from app.api.websocket import router as ws_router
 
 from contextlib import asynccontextmanager
@@ -46,6 +47,7 @@ except Exception as e:
 # Include routers
 app.include_router(api_router)
 app.include_router(ideas_router)
+app.include_router(launches_router)
 app.include_router(ws_router)
 
 @app.get("/")
