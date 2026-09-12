@@ -66,9 +66,11 @@ class Settings(BaseSettings):
     AUC_FLOOR: float = 0.50
     DELTA_CONFIDENCE: float = 0.05
 
-    # Target Token Contract Addresses (CAs)
+    # Target Token Contract Addresses (CAs) & Axiom URLs
     EMILE_TOKEN_CA: str = os.getenv("EMILE_TOKEN_CA", "0xe2e4a2404c3923990ccc1e6435dc5b6476284992")
     EMILE_BANANA_TOKEN_CA: str = os.getenv("EMILE_BANANA_TOKEN_CA", "0x3c51485b11d52f90c251e74875a8b93c81027274")
+    EMILE_AXIOM_URL: str = os.getenv("EMILE_AXIOM_URL", "https://axiom.trade/token/0xe2e4a2404c3923990ccc1e6435dc5b6476284992?chain=robinhood&chains=robinhood,bnb")
+    EMILE_BANANA_AXIOM_URL: str = os.getenv("EMILE_BANANA_AXIOM_URL", "https://axiom.trade/token/0x3c51485b11d52f90c251e74875a8b93c81027274?chain=robinhood&chains=robinhood,bnb")
 
     # Twitter / X API v2 Credentials & Auto-Post Settings
     TWITTER_API_KEY: str = os.getenv("TWITTER_API_KEY", "")
@@ -79,6 +81,7 @@ class Settings(BaseSettings):
     TWITTER_AUTO_POST_ENABLED: bool = os.getenv("TWITTER_AUTO_POST_ENABLED", "false").lower() in ("true", "1", "yes")
     TWITTER_POST_INTERVAL_HOURS: int = int(os.getenv("TWITTER_POST_INTERVAL_HOURS", "2"))
     TWITTER_MANAGED_BY_HANDLE: str = os.getenv("TWITTER_MANAGED_BY_HANDLE", "@emilelearns")
+    USE_FULL_CA: bool = os.getenv("USE_FULL_CA", "false").lower() in ("true", "1", "yes")
 
     # Xiaomi MiMo LLM Settings
     MIMO_API_KEY: str = os.getenv("MIMO_API_KEY", "")

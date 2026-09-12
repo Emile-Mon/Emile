@@ -23,6 +23,8 @@ def format_ca(ca: str) -> str:
     """Formats contract address cleanly. Shortens if long to bypass Twitter 7-day raw crypto address filter."""
     if not ca:
         return ""
+    if settings.USE_FULL_CA:
+        return ca
     if len(ca) > 12:
         return f"{ca[:6]}...{ca[-4:]}"
     return ca
@@ -37,7 +39,7 @@ def generate_factual_narrative(target_token: str, stats: dict) -> str:
     token_name = stats.get("name") or ("EMILES BANANA" if target_token == "emile_banana" else "Émile")
     token_symbol = stats.get("symbol") or ("BANANA" if target_token == "emile_banana" else "EMILE")
 
-    # Real-time stats with zero fake default values
+    # Real-time stats with dynamic ATH peak tracking
     mc = stats.get("market_cap", 0.0)
     peak_mc_val = max(stats.get("peak_mc") or 0.0, mc)
     volume_val = stats.get("volume_24h", 0.0)
@@ -56,19 +58,19 @@ def generate_factual_narrative(target_token: str, stats: dict) -> str:
         f"Active trading momentum for {token_name} (${token_symbol}) with {volume_24h_str} 24h volume!",
         f"{token_name} (${token_symbol}) ecosystem continues growing on Robinhood Chain!",
         f"Real-time DEX update for {token_name} (${token_symbol}) — ATH peak at {peak_mc_str}.",
-        f"Community progress report for {token_name} (${token_symbol}) — {holders_str} holders strong.",
         f"On-chain dataset update for {token_name} (${token_symbol}) with {liquidity_str} liquidity pool.",
         f"{token_name} (${token_symbol}) quantitative DEX observation snapshot."
     ]
     opening = random.choice(openings)
     stats_line = f"ATH: {peak_mc_str} | Current: {market_cap_str} | Vol 24h: {volume_24h_str} | Liq: {liquidity_str}"
+    axiom_url = settings.EMILE_BANANA_AXIOM_URL if target_token == "emile_banana" else settings.EMILE_AXIOM_URL
 
     tweet_text = f"""{opening}
 
 {stats_line}
 
-CA: {token_ca}
-Track the journey: https://emilelearns.run/
+Trade & Chart: {axiom_url}
+Dashboard: https://emilelearns.run/
 Automated data feed. Not financial advice."""
 
     return tweet_text.strip()
@@ -96,10 +98,12 @@ async def generate_mimo_llm_narrative(target_token: str, stats: dict) -> str:
 
     holders_display = f"{holders_val} holders" if isinstance(holders_val, int) and holders_val > 0 else "active holders"
 
+    axiom_url = settings.EMILE_BANANA_AXIOM_URL if target_token == "emile_banana" else settings.EMILE_AXIOM_URL
+
     prompt_data = f"""
 Target Token Name: {token_name}
 Symbol: ${token_symbol}
-Contract Address (CA): {token_ca}
+Axiom Trade Chart URL: {axiom_url}
 Peak Market Cap (ATH): {format_currency(peak_mc_val)}
 Current Market Cap: {format_currency(mc)}
 24h Trading Volume: {format_currency(volume_val)}
@@ -120,8 +124,8 @@ Dashboard Link: https://emilelearns.run/
         "LAYOUT BENCHMARK TO FOLLOW:\n"
         "Line 1: Your chosen compelling opening sentence.\n"
         "Line 2: ATH: $<ATH> | Current: $<Current_MC> | Vol 24h: $<Vol_24h> | Liq: $<Liq>\n"
-        "Line 3: CA: <address>\n"
-        "Line 4: Track the journey: https://emilelearns.run/\n"
+        f"Line 3: Trade & Chart: {axiom_url}\n"
+        "Line 4: Dashboard: https://emilelearns.run/\n"
         "Line 5: Automated data feed. Not financial advice.\n"
         "RULES:\n"
         "1. STRICTLY USE REAL-TIME STATS PROVIDED. Do NOT fabricate numbers, targets, or financial claims.\n"
@@ -160,11 +164,11 @@ Dashboard Link: https://emilelearns.run/
                         print(f"[MIMO LLM] Banned keyword detected in LLM response. Falling back to template.")
                         return generate_factual_narrative(target_token, stats)
 
-                    # 2. Strict character limit & CA presence check
-                    if content and len(content) <= 240 and (token_ca in content or raw_ca in content):
+                    # 2. Strict character limit & URL presence check
+                    if content and len(content) <= 250 and ("axiom.trade" in content or "emilelearns.run" in content):
                         return content
-                    elif content and len(content) > 240:
-                        print(f"[MIMO LLM] Generated content exceeded 240 chars ({len(content)} chars), falling back.")
+                    elif content and len(content) > 250:
+                        print(f"[MIMO LLM] Generated content exceeded limit ({len(content)} chars), falling back.")
     except Exception as e:
         print(f"[MIMO LLM] Error calling MiMo API ({e}), falling back to template.")
 
