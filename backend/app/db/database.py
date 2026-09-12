@@ -5,21 +5,28 @@ from app.core.config import settings
 DATABASE_URL = settings.DATABASE_URL_ASYNC
 clean_url = DATABASE_URL.split("?")[0]
 
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
+if "sqlite" in clean_url:
+    engine = create_async_engine(
+        clean_url,
+        echo=False,
+        future=True
+    )
+else:
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
 
-engine = create_async_engine(
-    clean_url, 
-    echo=False, 
-    future=True,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args={
-        "ssl": ctx,
-        "statement_cache_size": 0
-    }
-)
+    engine = create_async_engine(
+        clean_url, 
+        echo=False, 
+        future=True,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        connect_args={
+            "ssl": ctx,
+            "statement_cache_size": 0
+        }
+    )
 AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 from sqlalchemy.orm import declarative_base

@@ -131,3 +131,56 @@ class DexScreenerPoller:
 
         await db.commit()
         return updated_count
+
+
+async def fetch_live_token_details(mint_address: str) -> dict:
+    """
+    Fetches comprehensive real-time DEX market details for a single token CA from DexScreener API.
+    Returns dict with keys: market_cap, volume_24h, liquidity, price_usd, name, symbol, pair_url.
+    """
+    if not mint_address:
+        return {}
+
+    url = f"{settings.DEXSCREENER_API_BASE}/tokens/{mint_address}"
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            res = await client.get(url)
+            if res.status_code == 200:
+                data = res.json()
+                pairs = data.get("pairs") or []
+                if pairs:
+                    # Pick highest liquidity pair if multiple
+                    top_pair = max(pairs, key=lambda p: float((p.get("liquidity") or {}).get("usd") or 0.0), default=pairs[0])
+                    base_token = top_pair.get("baseToken") or {}
+                    vol = top_pair.get("volume") or {}
+                    liq = top_pair.get("liquidity") or {}
+
+                    mc = float(top_pair.get("marketCap") or top_pair.get("fdv") or 0.0)
+                    v24 = float(vol.get("h24") or 0.0)
+                    l_usd = float(liq.get("usd") or 0.0)
+                    price = float(top_pair.get("priceUsd") or 0.0)
+
+                    return {
+                        "mint": mint_address,
+                        "name": base_token.get("name") or "Token",
+                        "symbol": base_token.get("symbol") or "TOKEN",
+                        "market_cap": mc,
+                        "volume_24h": v24,
+                        "liquidity": l_usd,
+                        "price_usd": price,
+                        "pair_url": top_pair.get("url") or f"https://dexscreener.com/{settings.DEFAULT_CHAIN}/{mint_address}"
+                    }
+    except Exception as e:
+        print(f"[DEXSCREENER] Error fetching live details for {mint_address}: {e}")
+
+    # Fallback default values if offline/error
+    return {
+        "mint": mint_address,
+        "name": "Token",
+        "symbol": "TOKEN",
+        "market_cap": 0.0,
+        "volume_24h": 0.0,
+        "liquidity": 0.0,
+        "price_usd": 0.0,
+        "pair_url": f"https://dexscreener.com/{settings.DEFAULT_CHAIN}/{mint_address}"
+    }

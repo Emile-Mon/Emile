@@ -66,6 +66,25 @@ class Settings(BaseSettings):
     AUC_FLOOR: float = 0.50
     DELTA_CONFIDENCE: float = 0.05
 
+    # Target Token Contract Addresses (CAs)
+    EMILE_TOKEN_CA: str = os.getenv("EMILE_TOKEN_CA", "0xe2e4a2404c3923990ccc1e6435dc5b6476284992")
+    EMILE_BANANA_TOKEN_CA: str = os.getenv("EMILE_BANANA_TOKEN_CA", "0x3c51485b11d52f90c251e74875a8b93c81027274")
+
+    # Twitter / X API v2 Credentials & Auto-Post Settings
+    TWITTER_API_KEY: str = os.getenv("TWITTER_API_KEY", "")
+    TWITTER_API_SECRET: str = os.getenv("TWITTER_API_SECRET", "")
+    TWITTER_ACCESS_TOKEN: str = os.getenv("TWITTER_ACCESS_TOKEN", "")
+    TWITTER_ACCESS_TOKEN_SECRET: str = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "")
+    TWITTER_BEARER_TOKEN: str = os.getenv("TWITTER_BEARER_TOKEN", "")
+    TWITTER_AUTO_POST_ENABLED: bool = os.getenv("TWITTER_AUTO_POST_ENABLED", "false").lower() in ("true", "1", "yes")
+    TWITTER_POST_INTERVAL_HOURS: int = int(os.getenv("TWITTER_POST_INTERVAL_HOURS", "2"))
+    TWITTER_MANAGED_BY_HANDLE: str = os.getenv("TWITTER_MANAGED_BY_HANDLE", "@emilelearns")
+
+    # Xiaomi MiMo LLM Settings
+    MIMO_API_KEY: str = os.getenv("MIMO_API_KEY", "")
+    MIMO_BASE_URL: str = os.getenv("MIMO_BASE_URL", "https://token-plan-sgp.xiaomimimo.com/v1")
+    MIMO_MODEL: str = os.getenv("MIMO_MODEL", "mimo-v2.5-pro")
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()

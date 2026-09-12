@@ -90,3 +90,18 @@ CREATE TABLE lore_moderation_log (
     filtered_reason TEXT,                                 -- 'profanity' | 'slur' | 'url_stripped' | 'control_chars' | NULL
     filtered_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Twitter Posts table: Audit trail for auto-tweet publications
+CREATE TABLE IF NOT EXISTS twitter_posts (
+    id              BIGSERIAL PRIMARY KEY,
+    tweet_id        TEXT,
+    text            TEXT NOT NULL,
+    target_token    TEXT NOT NULL DEFAULT 'emile',
+    market_cap_usd  NUMERIC(20, 2),
+    volume_24h_usd  NUMERIC(20, 2),
+    holders_count   INTEGER,
+    trigger_type    TEXT NOT NULL DEFAULT 'recurring_2h_news',
+    status          TEXT NOT NULL DEFAULT 'dry_run',
+    posted_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    error_message   TEXT
+);

@@ -8,6 +8,7 @@ from app.api.endpoints import router as api_router
 from app.api.ideas_endpoints import router as ideas_router
 from app.api.launches_endpoints import router as launches_router
 from app.api.websocket import router as ws_router
+from app.api.twitter_endpoints import router as twitter_router
 
 from contextlib import asynccontextmanager
 
@@ -19,6 +20,11 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(start_ingest_worker_loop())
     except Exception as e:
         print(f"[MAIN] Warning: Failed to start ingest worker loop: {e}")
+    try:
+        from app.services.twitter_service import start_twitter_scheduler_loop
+        asyncio.create_task(start_twitter_scheduler_loop())
+    except Exception as e:
+        print(f"[MAIN] Warning: Failed to start twitter scheduler loop: {e}")
     yield
 
 app = FastAPI(
@@ -49,6 +55,7 @@ app.include_router(api_router)
 app.include_router(ideas_router)
 app.include_router(launches_router)
 app.include_router(ws_router)
+app.include_router(twitter_router)
 
 @app.get("/")
 async def root():

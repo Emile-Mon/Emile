@@ -175,4 +175,18 @@ class Launch(Base):
     contributions = Column(JSONB, nullable=True)
     skipped_reason = Column(Text, nullable=True)
 
+class TwitterPost(Base):
+    __tablename__ = "twitter_posts"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    tweet_id = Column(String, nullable=True)
+    text = Column(Text, nullable=False)
+    target_token = Column(String, nullable=False, default="emile")  # 'emile' | 'emile_banana'
+    market_cap_usd = Column(Numeric(20, 2), nullable=True)
+    volume_24h_usd = Column(Numeric(20, 2), nullable=True)
+    holders_count = Column(Integer, nullable=True)
+    trigger_type = Column(String, nullable=False, default="recurring_2h_news")  # 'recurring_2h_news' | 'manual_test'
+    status = Column(String, nullable=False, default="dry_run")  # 'sent' | 'dry_run' | 'failed'
+    posted_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    error_message = Column(Text, nullable=True)
 
