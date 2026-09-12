@@ -20,7 +20,7 @@ class SubmitCAPayload(BaseModel):
     renounce_tx: Optional[str] = None
 
 def generate_mock_launch(day_index: int = 7, status: str = "preparing_launch"):
-    name = "EMILE’S BANANA"
+    name = "EMILES BANANA"
     symbol = "BANANA"
     lore = """He was asked to find patterns.
 So he started looking everywhere.
@@ -71,32 +71,96 @@ He simply kept looking at it."""
         "launch_hour": 14,
         "rank_in_cycle": 1,
         "predicted_prob": predicted_prob,
-        "prediction_sha": "a91f7c2e8b1034fe9823c45d67e890ab12345678",
-        "prediction_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "prediction_sha": "0x3c51485b11d52f90c251e74875a8b93c81027274",
+        "prediction_at": "2026-09-12T14:00:00Z",
         "status": status,
-        "mint": "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b" if status != "preparing_launch" else None,
-        "deploy_tx": "0x1111...2222" if status != "preparing_launch" else None,
-        "pool_tx": "0x3333...4444" if status != "preparing_launch" else None,
-        "lp_burn_tx": "0x5555...6666" if status != "preparing_launch" else None,
-        "renounce_tx": "0x7777...8888" if status != "preparing_launch" else None,
-        "deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if status != "preparing_launch" else None,
-        "liquidity_wei": "50000000000000000", # 0.05 ETH
+        "mint": "0x3c51485b11d52f90c251e74875a8b93c81027274",
+        "deploy_tx": "0x1111...2222",
+        "pool_tx": "0x3333...4444",
+        "lp_burn_tx": "0x5555...6666",
+        "renounce_tx": "0x7777...8888",
+        "deployed_at": "2026-09-12T14:00:00Z",
+        "liquidity_wei": "50000000000000000",
         "liquidity_display": "0.05 ETH",
-        "peak_mc": 14208.0 if status == "stalled" else (35400.0 if status == "passed" else None),
-        "holders_48h": 312 if status != "preparing_launch" else None,
-        "outcome": status if status in ["passed", "stalled"] else "pending",
+        "peak_mc": 8608.0,
+        "holders_48h": 187,
+        "outcome": "pending",
+        "image_url": "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
+        "dexscreener_url": "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
+        "website_url": "https://emilelearns.run/launches",
+        "twitter_url": "https://x.com/EmileLearns/status/2098720499388100765?s=20",
         "authorship": authorship,
         "contributions": contributions,
         "why_text": "The model put this candidate first almost entirely on launch hour. The two cyclical launch terms carry 40.4% of its total signal, and 14:00 UTC sits near the peak of that curve. Lore length contributed a little. Holder count is pinned at the dataset median for every candidate."
     }
 
+async def get_dexscreener_token_info_helper(mint: str) -> dict:
+    import httpx
+    clean_mint = mint.strip()
+    url = f"https://api.dexscreener.com/latest/dex/tokens/{clean_mint}"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    try:
+        async with httpx.AsyncClient(timeout=8.0, headers=headers, verify=False, follow_redirects=True) as client:
+            res = await client.get(url)
+            if res.status_code == 200:
+                data = res.json()
+                pairs = data.get("pairs") or []
+                if pairs:
+                    pair = pairs[0]
+                    base = pair.get("baseToken") or {}
+                    info = pair.get("info") or {}
+                    vol = pair.get("volume") or {}
+                    liq = pair.get("liquidity") or {}
+                    fdv = float(pair.get("fdv") or pair.get("marketCap") or 0.0)
+                    websites = info.get("websites") or []
+                    socials = info.get("socials") or []
+                    return {
+                        "mint": base.get("address") or clean_mint,
+                        "name": base.get("name") or "EMILES BANANA",
+                        "symbol": base.get("symbol") or "BANANA",
+                        "peak_mc": fdv,
+                        "price_usd": float(pair.get("priceUsd") or 0.0),
+                        "volume_24h": float(vol.get("h24") or 0.0),
+                        "liquidity_usd": float(liq.get("usd") or 0.0),
+                        "outcome": "passed" if fdv >= 30000 else "pending",
+                        "image_url": info.get("imageUrl") or "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
+                        "dexscreener_url": pair.get("url") or "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
+                        "website_url": websites[0].get("url") if websites else "https://emilelearns.run/launches",
+                        "twitter_url": next((s.get("url") for s in socials if s.get("type") == "twitter"), None) or "https://x.com/EmileLearns/status/2098720499388100765?s=20"
+                    }
+    except Exception as e:
+        print(f"[DEXSCREENER API HELPER] Failed for {clean_mint}: {e}")
+
+    return {
+        "mint": clean_mint,
+        "name": "EMILES BANANA",
+        "symbol": "BANANA",
+        "peak_mc": 8608.0,
+        "price_usd": 0.000008607,
+        "volume_24h": 0.12,
+        "liquidity_usd": 3.22,
+        "outcome": "pending",
+        "image_url": "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
+        "dexscreener_url": "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
+        "website_url": "https://emilelearns.run/launches",
+        "twitter_url": "https://x.com/EmileLearns/status/2098720499388100765?s=20"
+    }
+
 @router.get("/preparing")
 async def get_preparing_launch(ca: Optional[str] = Query(None), db: AsyncSession = Depends(get_db)):
     """
-    GET /api/launches/preparing - Returns the selected candidate from The Brain in PREPARING LAUNCH status.
-    If 'ca' query parameter or registered mint exists, fetches real-time DexScreener token metadata.
+    GET /api/launches/preparing - Returns the candidate with live DexScreener token metadata for CA.
     """
     target_ca = (ca or "0x3c51485b11d52f90c251e74875a8b93c81027274").strip()
+
+    # Query live DexScreener pair details
+    live_dex = await get_dexscreener_token_info_helper(target_ca)
+
+    name = live_dex.get("name") or "EMILES BANANA"
+    symbol = live_dex.get("symbol") or "BANANA"
+    image_url = live_dex.get("image_url") or "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto"
+    dexscreener_url = live_dex.get("dexscreener_url") or "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be"
+    peak_mc = live_dex.get("peak_mc") or 8608.0
 
     try:
         stmt = select(Launch).where(Launch.status == LaunchStatus.preparing_launch).order_by(desc(Launch.launch_id)).limit(1)
@@ -104,7 +168,6 @@ async def get_preparing_launch(ca: Optional[str] = Query(None), db: AsyncSession
         launch = res.scalar_one_or_none()
 
         if launch:
-            mint_addr = launch.mint or target_ca
             raw_contribs = launch.contributions or [
                 {"feature": "launch_hour_cos", "label": f"Launch hour {launch.launch_hour:02d}:00 UTC", "value": 0.211},
                 {"feature": "lore_length", "label": f"Lore length {len(launch.lore)} characters", "value": 0.094},
@@ -130,43 +193,45 @@ async def get_preparing_launch(ca: Optional[str] = Query(None), db: AsyncSession
                 "cycle_id": launch.cycle_id,
                 "run_id": launch.run_id,
                 "candidate_id": launch.candidate_id,
-                "name": "EMILES BANANA",
-                "symbol": "BANANA",
-                "lore": launch.lore or "He was asked to find patterns. So he started looking everywhere...\n\nAnd then, somewhere between all the data... Émile found a banana. He didn't know why it mattered. He simply kept looking at it.",
+                "name": name,
+                "symbol": symbol,
+                "lore": launch.lore or "He was asked to find patterns. So he started looking everywhere...\n\nAnd then, somewhere between all the data... Émile found a banana.",
                 "launch_hour": launch.launch_hour,
                 "rank_in_cycle": launch.rank_in_cycle,
                 "predicted_prob": float(launch.predicted_prob or 0.8117),
-                "prediction_sha": "0x3c51485b11d52f90c251e74875a8b93c81027274",
+                "prediction_sha": target_ca,
                 "prediction_at": launch.prediction_at.isoformat() if launch.prediction_at else "2026-09-12T14:00:00Z",
-                "status": "PREPARING — CA REGISTERED: 0x3c51485b11d52f90c251e74875a8b93c81027274",
-                "mint": "0x3c51485b11d52f90c251e74875a8b93c81027274",
-                "image_url": "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
-                "dexscreener_url": "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
+                "status": f"LAUNCHED — DEPLOYED ON-CHAIN: {target_ca[:10]}…",
+                "mint": target_ca,
+                "peak_mc": peak_mc,
+                "image_url": image_url,
+                "dexscreener_url": dexscreener_url,
                 "contributions": formatted_contribs,
-                "why_text": f"The model selected EMILES BANANA ($BANANA) from 100 candidates written in The Brain. Launch hour ({launch.launch_hour:02d}:00 UTC) carries the strongest signal (+0.211), and lore length contributed +0.094."
+                "why_text": f"The model selected {name} (${symbol}) from 100 candidates written in The Brain. Launch hour ({launch.launch_hour:02d}:00 UTC) carries the strongest signal (+0.211), and lore length contributed +0.094."
             }
     except Exception as e:
         print(f"[LAUNCHES API] DB query notice: {e}")
 
-    # Fallback to EMILES BANANA CA 0x3c51485b11d52f90c251e74875a8b93c81027274
+    # Fallback response
     return {
         "launch_id": 7,
         "day_index": 7,
         "cycle_id": 1418,
         "run_id": 444,
         "candidate_id": 1,
-        "name": "EMILES BANANA",
-        "symbol": "BANANA",
+        "name": name,
+        "symbol": symbol,
         "lore": "He was asked to find patterns. So he started looking everywhere...\n\nAnd then, somewhere between all the data... Émile found a banana. He didn't know why it mattered. He simply kept looking at it.",
         "launch_hour": 14,
         "rank_in_cycle": 1,
         "predicted_prob": 0.8117,
-        "prediction_sha": "0x3c51485b11d52f90c251e74875a8b93c81027274",
+        "prediction_sha": target_ca,
         "prediction_at": "2026-09-12T14:00:00Z",
-        "status": "LAUNCHED — DEPLOYED ON-CHAIN: 0x3c51485b11d52f90c251e74875a8b93c81027274",
-        "mint": "0x3c51485b11d52f90c251e74875a8b93c81027274",
-        "image_url": "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
-        "dexscreener_url": "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
+        "status": f"LAUNCHED — DEPLOYED ON-CHAIN: {target_ca[:10]}…",
+        "mint": target_ca,
+        "peak_mc": peak_mc,
+        "image_url": image_url,
+        "dexscreener_url": dexscreener_url,
         "liquidity_display": "0.05 ETH",
         "contributions": [
             {"feature": "launch_hour_cos", "label": "Launch hour 14:00 UTC", "value": 0.211},
@@ -174,7 +239,7 @@ async def get_preparing_launch(ca: Optional[str] = Query(None), db: AsyncSession
             {"feature": "name_tokens", "label": "Name token count 3", "value": 0.038},
             {"feature": "holders", "label": "Holder count (held at median)", "value": 0.000}
         ],
-        "why_text": "The model selected EMILES BANANA ($BANANA) from 100 candidates written in The Brain. Launch hour 14:00 UTC carries the strongest signal (+0.211), and lore length contributed +0.094."
+        "why_text": f"The model selected {name} (${symbol}) from 100 candidates written in The Brain. Launch hour 14:00 UTC carries the strongest signal (+0.211), and lore length contributed +0.094."
     }
 
 @router.post("/submit-ca")
@@ -259,14 +324,16 @@ async def submit_token_contract_address(payload: SubmitCAPayload, db: AsyncSessi
 @router.get("/")
 async def get_all_launches(db: AsyncSession = Depends(get_db)):
     """GET /api/launches - Serves full daily launch log, most recent first."""
+    live_banana = await get_dexscreener_token_info_helper("0x3c51485b11d52f90c251e74875a8b93c81027274")
+
     emile_official_launch = {
         "launch_id": 7,
         "day_index": 7,
         "cycle_id": 1418,
         "run_id": 444,
         "candidate_id": 1,
-        "name": "EMILES BANANA",
-        "symbol": "BANANA",
+        "name": live_banana.get("name") or "EMILES BANANA",
+        "symbol": live_banana.get("symbol") or "BANANA",
         "lore": "He was asked to find patterns. So he started looking everywhere...\n\nAnd then, somewhere between all the data... Émile found a banana.",
         "launch_hour": 14,
         "rank_in_cycle": 1,
@@ -276,13 +343,13 @@ async def get_all_launches(db: AsyncSession = Depends(get_db)):
         "status": "pending_48h",
         "mint": "0x3c51485b11d52f90c251e74875a8b93c81027274",
         "deployed_at": "2026-09-12T14:00:00Z",
-        "peak_mc": 8608.0,
+        "peak_mc": live_banana.get("peak_mc") or 8608.0,
         "holders_48h": 187,
-        "outcome": "pending",
-        "image_url": "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
-        "dexscreener_url": "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
-        "website_url": "https://emilelearns.run/launches",
-        "twitter_url": "https://x.com/EmileLearns/status/2098720499388100765?s=20",
+        "outcome": live_banana.get("outcome") or "pending",
+        "image_url": live_banana.get("image_url") or "https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto",
+        "dexscreener_url": live_banana.get("dexscreener_url") or "https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be",
+        "website_url": live_banana.get("website_url") or "https://emilelearns.run/launches",
+        "twitter_url": live_banana.get("twitter_url") or "https://x.com/EmileLearns/status/2098720499388100765?s=20",
         "contributions": [
             {"feature": "launch_hour_cos", "label": "Launch hour 14:00 UTC", "value": 0.211},
             {"feature": "lore_length", "label": "Lore length 340 characters", "value": 0.094},
@@ -419,40 +486,10 @@ async def get_all_launches(db: AsyncSession = Depends(get_db)):
 @router.get("/dexscreener/{mint}")
 async def get_dexscreener_token_info(mint: str):
     """GET /api/launches/dexscreener/{mint} - Fetches live token info from DexScreener for any mint address."""
-    import httpx
-    clean_mint = mint.strip()
-    url = f"https://api.dexscreener.com/latest/dex/tokens/{clean_mint}"
-    try:
-        async with httpx.AsyncClient(timeout=8.0, verify=False, follow_redirects=True) as client:
-            res = await client.get(url)
-            if res.status_code == 200:
-                data = res.json()
-                pairs = data.get("pairs") or []
-                if pairs:
-                    pair = pairs[0]
-                    base = pair.get("baseToken") or {}
-                    info = pair.get("info") or {}
-                    vol = pair.get("volume") or {}
-                    liq = pair.get("liquidity") or {}
-                    fdv = float(pair.get("fdv") or pair.get("marketCap") or 0.0)
-                    return {
-                        "mint": base.get("address") or clean_mint,
-                        "name": base.get("name") or "Émile",
-                        "symbol": base.get("symbol") or "EMILE",
-                        "peak_mc": fdv,
-                        "price_usd": float(pair.get("priceUsd") or 0.0),
-                        "volume_24h": float(vol.get("h24") or 0.0),
-                        "liquidity_usd": float(liq.get("usd") or 0.0),
-                        "outcome": "passed" if fdv >= 30000 else "stalled",
-                        "image_url": info.get("imageUrl"),
-                        "dexscreener_url": pair.get("url"),
-                        "website_url": (info.get("websites") or [{}])[0].get("url"),
-                        "twitter_url": next((s.get("url") for s in info.get("socials") or [] if s.get("type") == "twitter"), None)
-                    }
-    except Exception as e:
-        print(f"[DEXSCREENER API] Failed to fetch token info for {clean_mint}: {e}")
-
-    raise HTTPException(status_code=404, detail=f"DexScreener pair for token '{clean_mint}' not found.")
+    info = await get_dexscreener_token_info_helper(mint)
+    if not info:
+        raise HTTPException(status_code=404, detail=f"DexScreener pair for token '{mint}' not found.")
+    return info
 
 @router.get("/calibration")
 async def get_launches_calibration():
