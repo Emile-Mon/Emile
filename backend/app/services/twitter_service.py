@@ -63,6 +63,8 @@ class TwitterService:
     """
     def __init__(self):
         self.api_url = "https://api.twitter.com/2/tweets"
+        self.last_posted_at_memory = None
+        self.last_target_memory = "emile_banana"
 
     async def get_next_target_token(self) -> str:
         """Determines which token is next in turn (alternating between 'emile' and 'emile_banana')."""
@@ -74,15 +76,27 @@ class TwitterService:
                     .limit(1)
                 )
                 last_target = result.scalar_one_or_none()
-                if last_target == "emile":
-                    return "emile_banana"
-                return "emile"
+                if last_target:
+                    self.last_target_memory = last_target
+                    return "emile_banana" if last_target == "emile" else "emile"
         except Exception as e:
-            print(f"[TWITTER SERVICE] DB query error in get_next_target_token (using default 'emile'): {e}")
-            return "emile"
+            print(f"[TWITTER SERVICE] DB query fallback in get_next_target_token: {e}")
+        
+        # In-memory fallback
+        next_token = "emile_banana" if self.last_target_memory == "emile" else "emile"
+        return next_token
 
     async def check_cooldown(self) -> tuple[bool, float]:
         """Checks if enough time (minimum 110 minutes) has passed since the last tweet."""
+        now = datetime.now(timezone.utc)
+        
+        # 1. In-memory check first
+        if self.last_posted_at_memory:
+            elapsed_mem = (now - self.last_posted_at_memory).total_seconds()
+            if elapsed_mem < MIN_POST_INTERVAL_SECONDS:
+                return False, MIN_POST_INTERVAL_SECONDS - elapsed_mem
+
+        # 2. Database check
         try:
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
@@ -92,21 +106,17 @@ class TwitterService:
                     .limit(1)
                 )
                 last_posted_at = result.scalar_one_or_none()
-                if not last_posted_at:
-                    return True, 0.0
-                
-                now = datetime.now(timezone.utc)
-                if last_posted_at.tzinfo is None:
-                    last_posted_at = last_posted_at.replace(tzinfo=timezone.utc)
-                
-                elapsed = (now - last_posted_at).total_seconds()
-                if elapsed < MIN_POST_INTERVAL_SECONDS:
-                    remaining = MIN_POST_INTERVAL_SECONDS - elapsed
-                    return False, remaining
-                return True, 0.0
+                if last_posted_at:
+                    if last_posted_at.tzinfo is None:
+                        last_posted_at = last_posted_at.replace(tzinfo=timezone.utc)
+                    self.last_posted_at_memory = max(self.last_posted_at_memory or last_posted_at, last_posted_at)
+                    elapsed = (now - last_posted_at).total_seconds()
+                    if elapsed < MIN_POST_INTERVAL_SECONDS:
+                        return False, MIN_POST_INTERVAL_SECONDS - elapsed
         except Exception as e:
-            print(f"[TWITTER SERVICE] DB query error in check_cooldown: {e}")
-            return True, 0.0
+            print(f"[TWITTER SERVICE] DB query fallback in check_cooldown: {e}")
+
+        return True, 0.0
 
     async def post_tweet(self, text: str, target_token: str, trigger_type: str = "recurring_2h_news", stats: dict = None) -> dict:
         """
@@ -155,6 +165,8 @@ class TwitterService:
                             data = res.json()
                             tweet_id = data.get("data", {}).get("id")
                             status_str = "sent"
+                            self.last_posted_at_memory = datetime.now(timezone.utc)
+                            self.last_target_memory = target_token
                             print(f"[TWITTER] Successfully posted tweet ID: {tweet_id}")
                             break
                         elif res.status_code in (429, 500, 502, 503, 504):

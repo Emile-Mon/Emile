@@ -22,7 +22,7 @@ def test_generate_factual_narrative_emile():
         "holders": 1420
     }
     tweet = generate_factual_narrative("emile", stats)
-    assert "0xe2e4a2404c3923990ccc1e6435dc5b6476284992" in tweet
+    assert "0xe2e4...4992" in tweet
     assert "$142.5K" in tweet
     assert "Automated data feed. Not financial advice." in tweet
     assert "🤖 Automated by" not in tweet
@@ -36,7 +36,7 @@ def test_generate_factual_narrative_banana():
         "holders": 980
     }
     tweet = generate_factual_narrative("emile_banana", stats)
-    assert "0x3c51485b11d52f90c251e74875a8b93c81027274" in tweet
+    assert "0x3c51...7274" in tweet
     assert "$89.2K" in tweet
     assert "Automated data feed. Not financial advice." in tweet
     assert "🤖 Automated by" not in tweet
