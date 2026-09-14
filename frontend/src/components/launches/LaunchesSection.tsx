@@ -12,7 +12,7 @@ export const LaunchesSection: React.FC = () => {
   const [launchesList, setLaunchesList] = useState<LaunchItemData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.emilelearns.run';
 
   const fetchLaunchesData = async () => {
     try {
