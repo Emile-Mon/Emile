@@ -19,7 +19,7 @@ class SubmitCAPayload(BaseModel):
     lp_burn_tx: Optional[str] = None
     renounce_tx: Optional[str] = None
 
-def generate_mock_launch(day_index: int = 7, status: str = "preparing_launch"):
+def generate_mock_launch(day_index: int = 1, status: str = "preparing_launch"):
     name = "EMILES BANANA"
     symbol = "BANANA"
     lore = """He was asked to find patterns.
@@ -214,8 +214,8 @@ async def get_preparing_launch(ca: Optional[str] = Query(None), db: AsyncSession
 
     # Fallback response
     return {
-        "launch_id": 7,
-        "day_index": 7,
+        "launch_id": 1,
+        "day_index": 1,
         "cycle_id": 1418,
         "run_id": 444,
         "candidate_id": 1,
@@ -390,6 +390,7 @@ async def get_all_launches(db: AsyncSession = Depends(get_db)):
                     "contributions": r.contributions or []
                 }
                 for r in rows
+                if "sherwood" not in (r.name or "").lower() and "fltchr" not in (r.symbol or "").lower()
             ]
             has_emile = any((item.get("mint") or "").lower() == "0x3c51485b11d52f90c251e74875a8b93c81027274".lower() for item in items)
             if not has_emile:
@@ -492,26 +493,86 @@ async def get_dexscreener_token_info(mint: str):
     return info
 
 @router.get("/calibration")
-async def get_launches_calibration():
-    """GET /api/launches/calibration - Returns overall Brier score and calibration stats."""
-    resolved_count = 5
-    min_resolved_for_direction = 20
+async def get_launches_calibration(db: AsyncSession = Depends(get_db)):
+    """GET /api/launches/calibration - Returns overall Brier score and calibration stats computed dynamically."""
+    try:
+        stmt = select(Launch).order_by(desc(Launch.day_index))
+        res = await db.execute(stmt)
+        rows = res.scalars().all()
+    except Exception as e:
+        print(f"[CALIBRATION API] DB query exception: {e}")
+        rows = []
 
-    direction = "insufficient data" if resolved_count < min_resolved_for_direction else "overconfident"
-    description = (
-        f"Insufficient data: {resolved_count} of {min_resolved_for_direction} resolved launches required for calibration verdict."
-        if resolved_count < min_resolved_for_direction
-        else "The model is currently overconfident, predicting more survivors than actually occur."
+    if rows:
+        all_launches = [
+            {
+                "predicted_prob": float(r.predicted_prob or 0.0),
+                "outcome": r.outcome,
+                "status": r.status.value if hasattr(r.status, "value") else str(r.status)
+            }
+            for r in rows
+        ]
+    else:
+        # Fallback to current launch log list items if DB table is empty
+        all_launches = await get_all_launches(db=db)
+
+    total_launches = len(all_launches)
+    resolved = []
+    open_launches = []
+
+    for l in all_launches:
+        status_str = str(l.get("status", "")).lower()
+        outcome_str = str(l.get("outcome", "")).lower()
+        if outcome_str in ("passed", "stalled") or status_str in ("passed", "stalled"):
+            resolved.append(l)
+        else:
+            open_launches.append(l)
+
+    resolved_count = len(resolved)
+    open_count = len(open_launches)
+    predicted_survivors = round(sum(float(l.get("predicted_prob") or 0.0) for l in all_launches), 1)
+    actual_survivors = sum(
+        1 for l in resolved
+        if str(l.get("outcome", "")).lower() == "passed" or str(l.get("status", "")).lower() == "passed"
     )
 
+    if resolved_count > 0:
+        brier_sum = 0.0
+        for l in resolved:
+            p = float(l.get("predicted_prob") or 0.0)
+            is_passed = (str(l.get("outcome", "")).lower() == "passed" or str(l.get("status", "")).lower() == "passed")
+            y = 1.0 if is_passed else 0.0
+            brier_sum += (p - y) ** 2
+        brier_score = round(brier_sum / resolved_count, 4)
+    else:
+        brier_score = 0.0
+
+    min_resolved_for_direction = 20
+
+    if resolved_count < min_resolved_for_direction:
+        direction = "insufficient data"
+        description = f"Insufficient data: {resolved_count} of {min_resolved_for_direction} resolved launches required for calibration verdict."
+    else:
+        avg_predicted = sum(float(l.get("predicted_prob") or 0.0) for l in resolved) / resolved_count
+        actual_rate = actual_survivors / resolved_count
+        if avg_predicted > actual_rate + 0.05:
+            direction = "overconfident"
+            description = "The model is currently overconfident, predicting more survivors than actually occur."
+        elif avg_predicted < actual_rate - 0.05:
+            direction = "underconfident"
+            description = "The model is currently underconfident, predicting fewer survivors than actually occur."
+        else:
+            direction = "well calibrated"
+            description = "The model predictions are well calibrated with historical survival outcomes."
+
     return {
-        "launches_total": 7,
+        "launches_total": total_launches,
         "resolved_count": resolved_count,
         "min_resolved_for_direction": min_resolved_for_direction,
-        "open_count": 2,
-        "predicted_survivors": 3.4,
-        "actual_survivors": 1,
-        "brier_score": 0.3412,
+        "open_count": open_count,
+        "predicted_survivors": predicted_survivors,
+        "actual_survivors": actual_survivors,
+        "brier_score": brier_score,
         "base_rate_brier": 0.200,
         "random_guess_brier": 0.250,
         "calibration_direction": direction,

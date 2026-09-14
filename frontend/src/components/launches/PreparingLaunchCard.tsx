@@ -47,7 +47,7 @@ interface PreparingLaunchCardProps {
 }
 
 export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }) => {
-  const dayIndex = data?.day_index || 7;
+  const dayIndex = data?.day_index || 1;
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
   const rawName = data?.name || 'EMILES BANANA';

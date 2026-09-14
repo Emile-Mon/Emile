@@ -51,7 +51,7 @@ export const LaunchesSection: React.FC = () => {
   // Section 5 Threshold calculation: Count resolved launches
   const resolvedLaunchesCount = launchesList.filter(l => l.outcome === 'passed' || l.outcome === 'stalled').length;
   const showLaunchLog = resolvedLaunchesCount >= 2;
-  const showCalibrationStrip = resolvedLaunchesCount >= 5 || (calibrationData?.resolved_count ?? 0) >= 5;
+  const showCalibrationStrip = true;
 
   // Always render candidate card (uses default candidate data if backend fetch is pending/offline)
   const hasPreparingCandidate = preparingData === undefined || Boolean(preparingData?.name || preparingData?.prediction_sha);

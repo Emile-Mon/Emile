@@ -18,12 +18,6 @@ interface CalibrationStripProps {
 
 export const CalibrationStrip: React.FC<CalibrationStripProps> = ({ data }) => {
   const resolved = data?.resolved_count ?? 0;
-  
-  // Section 5: Calibration strip and Brier score require 5 or more resolved launches.
-  // Below threshold the element is ABSENT.
-  if (resolved < 5) {
-    return null;
-  }
 
   const total = data?.launches_total || resolved;
   const openCount = data?.open_count || 0;
