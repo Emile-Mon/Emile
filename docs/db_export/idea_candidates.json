@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "cycle_id": 1,
+    "rank": 1,
+    "name": "Sherwood Index #1",
+    "lore": "A ledger that forgets nothing and forgives less.",
+    "hour": 14,
+    "score": 0.88,
+    "commitment": "d5bc056951445a9c4739f340783bc602b609a69e766d3e366f1ff8a5da7afa2c",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 2,
+    "cycle_id": 1,
+    "rank": 2,
+    "name": "Longbow Protocol #2",
+    "lore": "Counting what the forest already knew.",
+    "hour": 14,
+    "score": 0.84,
+    "commitment": "a0abb3f1c834594ab1befbffce3ab27cc719353c06742301278eca50f4114a9d",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 3,
+    "cycle_id": 1,
+    "rank": 3,
+    "name": "Fletcher Capital #3",
+    "lore": "Every arrow is a claim about the future.",
+    "hour": 14,
+    "score": 0.8,
+    "commitment": "239704a1c0616b276deb9a1d24000c9f785f428eb7aa0b1128beafa15fe8d560",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 4,
+    "cycle_id": 1,
+    "rank": 4,
+    "name": "Yeoman Chain #4",
+    "lore": "Built for the ones who check the receipts.",
+    "hour": 14,
+    "score": 0.76,
+    "commitment": "bfc533c2ca1ab84d68c62de50e7694b8dc3f7714d9731e5cb89bd19d426a9f7a",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 5,
+    "cycle_id": 1,
+    "rank": 5,
+    "name": "Robinhood Vault #5",
+    "lore": "Twelve hundred holders and one honest chart.",
+    "hour": 14,
+    "score": 0.72,
+    "commitment": "49fde994cd90411617bf360633cce47be648e2dd0f145cb8fe9346ef4ae48168",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 6,
+    "cycle_id": 1,
+    "rank": 6,
+    "name": "Sherwood Index #6",
+    "lore": "A ledger that forgets nothing and forgives less.",
+    "hour": 14,
+    "score": 0.68,
+    "commitment": "55f910c3ad5494d4dd047213e38b1d3b3a0bc0766815efd5bb203a47ddd97ace",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 7,
+    "cycle_id": 1,
+    "rank": 7,
+    "name": "Longbow Protocol #7",
+    "lore": "Counting what the forest already knew.",
+    "hour": 14,
+    "score": 0.64,
+    "commitment": "74bc3872388336d85fdad6ffeb9da3b36962bc44160a26fbc754cb07f5388c87",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 8,
+    "cycle_id": 1,
+    "rank": 8,
+    "name": "Fletcher Capital #8",
+    "lore": "Every arrow is a claim about the future.",
+    "hour": 14,
+    "score": 0.6,
+    "commitment": "01509ab9afdad95f4331bcd7f59994542abacde9753127a5575d145a4994913c",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 9,
+    "cycle_id": 1,
+    "rank": 9,
+    "name": "Yeoman Chain #9",
+    "lore": "Built for the ones who check the receipts.",
+    "hour": 14,
+    "score": 0.56,
+    "commitment": "ff45161b22f7b91f483ce0580b8c54adbb80603d53f60afadc99275dd70b8384",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  },
+  {
+    "id": 10,
+    "cycle_id": 1,
+    "rank": 10,
+    "name": "Robinhood Vault #10",
+    "lore": "Twelve hundred holders and one honest chart.",
+    "hour": 14,
+    "score": 0.52,
+    "commitment": "66bbf83dd4a5fc9445158172bafe17cdb41419e0958d9150a14e1f2ece21e869",
+    "committed_at": "2026-09-13T11:54:18.419169+00:00",
+    "image_sha": null
+  }
+]

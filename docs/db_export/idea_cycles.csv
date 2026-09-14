@@ -1,0 +1,2 @@
+cycle_id,run_id,started_at,completed_at,generator_sha,model_version,seed,median_holders,n_generated,n_rejected,n_excluded
+1,1,2026-09-13T10:54:18.419169+00:00,2026-09-13T11:54:18.419169+00:00,4f1c9ae72b10,1.5.0,4f1c9ae72b10a9b8c7d6e5f4,1168,100,14,2

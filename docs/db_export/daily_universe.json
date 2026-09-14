@@ -1,0 +1,86 @@
+[
+  {
+    "day": "2026-09-12",
+    "minted_total": 358,
+    "crossed_10k": 48,
+    "crossed_30k": 13
+  },
+  {
+    "day": "2026-09-11",
+    "minted_total": 376,
+    "crossed_10k": 51,
+    "crossed_30k": 14
+  },
+  {
+    "day": "2026-09-10",
+    "minted_total": 394,
+    "crossed_10k": 54,
+    "crossed_30k": 15
+  },
+  {
+    "day": "2026-09-09",
+    "minted_total": 412,
+    "crossed_10k": 57,
+    "crossed_30k": 16
+  },
+  {
+    "day": "2026-09-08",
+    "minted_total": 430,
+    "crossed_10k": 60,
+    "crossed_30k": 17
+  },
+  {
+    "day": "2026-09-07",
+    "minted_total": 448,
+    "crossed_10k": 63,
+    "crossed_30k": 18
+  },
+  {
+    "day": "2026-09-06",
+    "minted_total": 466,
+    "crossed_10k": 66,
+    "crossed_30k": 19
+  },
+  {
+    "day": "2026-09-05",
+    "minted_total": 484,
+    "crossed_10k": 69,
+    "crossed_30k": 20
+  },
+  {
+    "day": "2026-09-04",
+    "minted_total": 502,
+    "crossed_10k": 72,
+    "crossed_30k": 21
+  },
+  {
+    "day": "2026-09-03",
+    "minted_total": 520,
+    "crossed_10k": 75,
+    "crossed_30k": 22
+  },
+  {
+    "day": "2026-09-02",
+    "minted_total": 538,
+    "crossed_10k": 78,
+    "crossed_30k": 23
+  },
+  {
+    "day": "2026-09-01",
+    "minted_total": 556,
+    "crossed_10k": 81,
+    "crossed_30k": 24
+  },
+  {
+    "day": "2026-08-31",
+    "minted_total": 574,
+    "crossed_10k": 84,
+    "crossed_30k": 25
+  },
+  {
+    "day": "2026-09-13",
+    "minted_total": 1540,
+    "crossed_10k": 1245,
+    "crossed_30k": 367
+  }
+]

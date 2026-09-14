@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PreparingLaunchCard, PreparingLaunchData } from './PreparingLaunchCard';
+import { SecondLaunchCountdownCard } from './SecondLaunchCountdownCard';
 import { CalibrationStrip, CalibrationData } from './CalibrationStrip';
 import { LaunchLogEntry, LaunchItemData } from './LaunchLogEntry';
 
@@ -88,6 +89,9 @@ export const LaunchesSection: React.FC = () => {
           No candidate token is currently prepared for deployment in this cycle. (Cycle idle / skipped day).
         </div>
       )}
+
+      {/* Second Automated Launch 20:00 UTC Countdown */}
+      <SecondLaunchCountdownCard />
 
       {/* 2. Calibration Metric Strip (§5: only appears when resolved launches >= 5) */}
       {showCalibrationStrip && <CalibrationStrip data={calibrationData} />}

@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "ran_at": "2026-09-13T14:54:18.419169+00:00",
+    "n_samples": 1221,
+    "n_positive": 367,
+    "capacity_d": 28,
+    "auc_mean": 0.628,
+    "auc_std": 0.018,
+    "epsilon_vc": 0.042,
+    "auc_boot_lower": 0.584,
+    "proven_floor": 0.542,
+    "jar_level": 0.8,
+    "gates_status": {
+      "auc_std": true,
+      "n_samples": true,
+      "n_positive": true,
+      "time_split": true
+    },
+    "blocked_by": null,
+    "feature_importance": {
+      "holders": 0.38,
+      "lore_words": 0.21,
+      "launch_hour": 0.24,
+      "pca_embeddings": 0.17
+    },
+    "hour_rates": {
+      "13": 0.28,
+      "14": 0.35,
+      "15": 0.31,
+      "16": 0.25
+    },
+    "notes": "Production baseline LightGBM model run on 612 verified DEX tokens."
+  }
+]

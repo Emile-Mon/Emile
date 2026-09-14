@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "tweet_id": "1768492048593820485",
+    "text": "\u26a1 EMILE AUTOMATED UPDATE \u26a1\n\nJar level is currently at 80.0% (PASS). Launch #007 Sherwood Index preparing for Robinhood Chain deployment.",
+    "target_token": "emile",
+    "market_cap_usd": 345000.0,
+    "volume_24h_usd": 82100.0,
+    "holders_count": 1450,
+    "trigger_type": "recurring_2h_news",
+    "status": "sent",
+    "posted_at": "2026-09-13T13:54:18.419169+00:00",
+    "error_message": null
+  }
+]

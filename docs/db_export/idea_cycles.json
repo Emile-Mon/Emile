@@ -1,0 +1,15 @@
+[
+  {
+    "cycle_id": 1,
+    "run_id": 1,
+    "started_at": "2026-09-13T10:54:18.419169+00:00",
+    "completed_at": "2026-09-13T11:54:18.419169+00:00",
+    "generator_sha": "4f1c9ae72b10",
+    "model_version": "1.5.0",
+    "seed": "4f1c9ae72b10a9b8c7d6e5f4",
+    "median_holders": 1168,
+    "n_generated": 100,
+    "n_rejected": 14,
+    "n_excluded": 2
+  }
+]

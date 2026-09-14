@@ -73,7 +73,9 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
             }
             for t in tokens
         ]
-    except Exception:
+    except Exception as e:
+        import traceback
+        print(f"[API ERROR] get_app_state failed: {e}\n{traceback.format_exc()}", flush=True)
         # Fallback snapshot if database is uninitialized
         above_10k, passed_30k, stalled, pending, median_holders = 0, 0, 0, 0, 0
         token_list = []

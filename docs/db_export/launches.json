@@ -1,0 +1,47 @@
+[
+  {
+    "launch_id": 1,
+    "day_index": 7,
+    "cycle_id": 1,
+    "run_id": 1,
+    "candidate_id": 1,
+    "name": "Sherwood Index #1",
+    "symbol": "FLTCHR",
+    "lore": "A ledger that forgets nothing and forgives less.",
+    "launch_hour": 14,
+    "rank_in_cycle": 1,
+    "predicted_prob": 0.8117,
+    "prediction_sha": "6afdd0999957af2c",
+    "prediction_at": "2026-09-13T12:54:18.419169+00:00",
+    "status": "preparing_launch",
+    "mint": null,
+    "deploy_tx": null,
+    "pool_tx": null,
+    "lp_burn_tx": null,
+    "renounce_tx": null,
+    "deployed_at": null,
+    "liquidity_wei": null,
+    "peak_mc": null,
+    "holders_48h": null,
+    "outcome": null,
+    "resolved_at": null,
+    "contributions": [
+      {
+        "label": "Launch hour 14:00 UTC",
+        "value": 0.211,
+        "feature": "launch_hour_cos"
+      },
+      {
+        "label": "Lore length 48 characters",
+        "value": 0.094,
+        "feature": "lore_length"
+      },
+      {
+        "label": "Name token count 3",
+        "value": 0.038,
+        "feature": "name_tokens"
+      }
+    ],
+    "skipped_reason": null
+  }
+]

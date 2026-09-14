@@ -1,0 +1,2 @@
+id,ran_at,n_samples,n_positive,capacity_d,auc_mean,auc_std,epsilon_vc,auc_boot_lower,proven_floor,jar_level,gates_status,blocked_by,feature_importance,hour_rates,notes
+1,2026-09-13T14:54:18.419169+00:00,1221,367,28,0.628,0.018,0.042,0.584,0.542,0.8,"{""auc_std"": true, ""n_samples"": true, ""n_positive"": true, ""time_split"": true}",,"{""holders"": 0.38, ""lore_words"": 0.21, ""launch_hour"": 0.24, ""pca_embeddings"": 0.17}","{""13"": 0.28, ""14"": 0.35, ""15"": 0.31, ""16"": 0.25}",Production baseline LightGBM model run on 612 verified DEX tokens.
