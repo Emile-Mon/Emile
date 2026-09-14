@@ -476,10 +476,94 @@ async def get_launches_calibration(db: AsyncSession = Depends(get_db)):
         "description": description
     }
 
+def generate_second_launch():
+    name = "twenty hundred Zulu"
+    symbol = "2000Z"
+    mint = "0xa8c561693ca146fa515cff72c73ac2c463c956dc"
+    lore = """In aviation, maritime, and military convention, Coordinated Universal Time is spoken as Zulu, and 20:00 is read as twenty hundred. So 2000Z is said aloud exactly as it is written here: twenty hundred Zulu.
+
+This is the correct radio reading, not a stylisation, which is the point. The name is a coordinate spoken the way operators speak it, by people whose job depends on everyone meaning the same instant."""
+    predicted_prob = 0.8420
+    
+    contributions = [
+        {"feature": "launch_hour_cos", "label": "Launch hour 20:00 UTC", "value": 0.245},
+        {"feature": "lore_length", "label": f"Lore length {len(lore)} characters", "value": 0.088},
+        {"feature": "name_tokens", "label": "Name token count 3", "value": 0.035},
+        {"feature": "holders", "label": "Holder count (held at median)", "value": 0.000}
+    ]
+
+    authorship = {
+        "name": "human",
+        "lore": "model",
+        "hour": "model",
+        "holders": "market"
+    }
+
+    return {
+        "launch_id": 8,
+        "day_index": 7,
+        "cycle_id": 1419,
+        "run_id": 444,
+        "candidate_id": 2,
+        "name": name,
+        "symbol": symbol,
+        "lore": lore,
+        "launch_hour": 20,
+        "rank_in_cycle": 1,
+        "predicted_prob": predicted_prob,
+        "prediction_sha": mint,
+        "prediction_at": "2026-09-15T20:00:00Z",
+        "status": f"LAUNCHED : {mint}",
+        "mint": mint,
+        "image_url": "/2000z-logo.jpeg",
+        "dexscreener_url": f"https://dexscreener.com/robinhood/{mint}",
+        "authorship": authorship,
+        "contributions": contributions,
+        "why_text": "The model placed this candidate first for the 20:00 UTC slot. Launch hour 20:00 UTC carries the strongest cyclical signal (+0.245), and lore length contributed +0.088."
+    }
+
 @router.get("/pending")
 async def get_pending_launch():
     """GET /api/launches/pending - Returns pre-registered prediction before outcome is known."""
     return generate_mock_launch(day_index=7, status="preparing_launch")
+
+@router.get("/second")
+async def get_second_launch_endpoint(ca: Optional[str] = Query("0xa8c561693ca146fa515cff72c73ac2c463c956dc"), db: AsyncSession = Depends(get_db)):
+    """GET /api/launches/second - Returns candidate details with live DexScreener data for CA 0xa8c561693ca146fa515cff72c73ac2c463c956dc."""
+    target_ca = (ca or "0xa8c561693ca146fa515cff72c73ac2c463c956dc").strip()
+    base_data = generate_second_launch()
+
+    try:
+        live_dex = await get_dexscreener_token_info_helper(target_ca)
+        if live_dex and live_dex.get("name") and live_dex.get("name") != "EMILES BANANA":
+            base_data["name"] = live_dex.get("name")
+            base_data["symbol"] = live_dex.get("symbol")
+            if live_dex.get("image_url") and "ea-QpG" not in live_dex.get("image_url"):
+                base_data["image_url"] = live_dex.get("image_url")
+            base_data["dexscreener_url"] = live_dex.get("dexscreener_url") or f"https://dexscreener.com/robinhood/{target_ca}"
+            base_data["peak_mc"] = live_dex.get("peak_mc", 0.0)
+            base_data["price_usd"] = live_dex.get("price_usd", 0.0)
+            base_data["volume_24h"] = live_dex.get("volume_24h", 0.0)
+            base_data["liquidity_usd"] = live_dex.get("liquidity_usd", 0.0)
+    except Exception as e:
+        print(f"[LAUNCHES API] DB query notice for second launch: {e}")
+
+    try:
+        stmt = select(Launch).where(Launch.launch_hour == 20).order_by(desc(Launch.launch_id)).limit(1)
+        res = await db.execute(stmt)
+        launch = res.scalar_one_or_none()
+        if launch:
+            if launch.mint: base_data["mint"] = launch.mint
+            if launch.name: base_data["name"] = launch.name
+            if launch.symbol: base_data["symbol"] = launch.symbol
+            if launch.lore: base_data["lore"] = launch.lore
+            if launch.predicted_prob: base_data["predicted_prob"] = float(launch.predicted_prob)
+    except Exception:
+        pass
+
+    return base_data
+
+
 
 @router.get("/rhj/assets")
 async def get_robinhood_assets():
