@@ -390,7 +390,7 @@ async def get_all_launches(db: AsyncSession = Depends(get_db)):
                     "contributions": r.contributions or []
                 }
                 for r in rows
-                if "sherwood" not in (r.name or "").lower() and "fltchr" not in (r.symbol or "").lower()
+                if not any(k in (r.name or "").lower() for k in ["sherwood", "fletcher", "quiver"]) and not any(k in (r.symbol or "").lower() for k in ["fltchr", "qvfrd"])
             ]
             has_emile = any((item.get("mint") or "").lower() == "0x3c51485b11d52f90c251e74875a8b93c81027274".lower() for item in items)
             if not has_emile:
@@ -399,90 +399,7 @@ async def get_all_launches(db: AsyncSession = Depends(get_db)):
     except Exception:
         pass
 
-    return [
-        generate_mock_launch(day_index=7, status="preparing_launch"),
-        {
-            "launch_id": 8,
-            "day_index": 8,
-            "cycle_id": 1420,
-            "run_id": 448,
-            "candidate_id": 1,
-            "name": "Émile",
-            "symbol": "EMILE",
-            "lore": "An autonomous agent observing Robinhood Chain token survival.",
-            "launch_hour": 14,
-            "rank_in_cycle": 1,
-            "predicted_prob": 0.8950,
-            "prediction_sha": "0xe2e4a2404c3923990ccc1e6435dc5b6476284992",
-            "prediction_at": "2026-09-12T14:00:00Z",
-            "status": "passed",
-            "mint": "0xe2e4a2404c3923990ccc1e6435dc5b6476284992",
-            "deployed_at": "2026-09-12T14:00:00Z",
-            "peak_mc": 150214.0,
-            "holders_48h": 1406,
-            "outcome": "passed",
-            "image_url": "https://cdn.dexscreener.com/cms/images/z9IBxDABJkZVxS8c?width=800&height=800&quality=95&format=auto",
-            "dexscreener_url": "https://dexscreener.com/robinhood/0x6b049df5497bb4382d7575fdaf82db43d8df1f718a172f057c3860b00f542e7c",
-            "website_url": "https://emilelearns.run/",
-            "twitter_url": "https://x.com/EmileLearns",
-            "contributions": [
-                {"feature": "launch_hour_cos", "label": "Launch hour 14:00 UTC", "value": 0.245},
-                {"feature": "lore_length", "label": "Lore length 61 characters", "value": 0.112},
-                {"feature": "name_tokens", "label": "Name token count 1", "value": 0.058}
-            ]
-        },
-        {
-            "launch_id": 6,
-            "day_index": 6,
-            "cycle_id": 1392,
-            "run_id": 431,
-            "candidate_id": 12,
-            "name": "Fletcher",
-            "symbol": "FLTCH",
-            "lore": "Every arrow is a claim about the future. Most of them miss.",
-            "launch_hour": 9,
-            "rank_in_cycle": 1,
-            "predicted_prob": 0.7742,
-            "prediction_sha": "f1c2d3e4f5a6b7c8",
-            "prediction_at": "2026-09-10T08:58:00Z",
-            "status": "stalled",
-            "mint": "0x8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
-            "deployed_at": "2026-09-10T09:00:00Z",
-            "peak_mc": 14208.0,
-            "holders_48h": 312,
-            "outcome": "stalled",
-            "contributions": [
-                {"feature": "launch_hour_cos", "label": "Launch hour 09:00 UTC", "value": 0.186},
-                {"feature": "lore_length", "label": "Lore length 58 characters", "value": 0.071},
-                {"feature": "name_tokens", "label": "Name token count 1", "value": -0.012}
-            ]
-        },
-        {
-            "launch_id": 5,
-            "day_index": 5,
-            "cycle_id": 1368,
-            "run_id": 418,
-            "candidate_id": 5,
-            "name": "Quiver Fund",
-            "symbol": "QVFRD",
-            "lore": "A slower road, measured by proof.",
-            "launch_hour": 16,
-            "rank_in_cycle": 1,
-            "predicted_prob": 0.6420,
-            "prediction_sha": "b2c3d4e5f6a7b8c9",
-            "prediction_at": "2026-09-09T15:58:00Z",
-            "status": "passed",
-            "mint": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-            "deployed_at": "2026-09-09T16:00:00Z",
-            "peak_mc": 42100.0,
-            "holders_48h": 589,
-            "outcome": "passed",
-            "contributions": [
-                {"feature": "launch_hour_cos", "label": "Launch hour 16:00 UTC", "value": 0.155},
-                {"feature": "lore_length", "label": "Lore length 35 characters", "value": 0.042}
-            ]
-        }
-    ]
+    return [emile_official_launch]
 
 @router.get("/dexscreener/{mint}")
 async def get_dexscreener_token_info(mint: str):
