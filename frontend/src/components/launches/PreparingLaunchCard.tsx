@@ -54,6 +54,9 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const symbol = data?.symbol || 'BANANA';
   const mint = data?.mint || '0x3c51485b11d52f90c251e74875a8b93c81027274';
 
+  const defaultImg = (data as any)?.image_url || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto';
+  const defaultDex = (data as any)?.dexscreener_url || `https://dexscreener.com/robinhood/${mint}`;
+
   const [liveData, setLiveData] = useState<{
     name: string;
     symbol: string;
@@ -67,12 +70,12 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   }>({
     name: rawName,
     symbol: symbol,
-    priceUsd: (data as any)?.price_usd || '0.000008607',
-    marketCap: data?.peak_mc || 8608,
+    priceUsd: (data as any)?.price_usd !== undefined ? (data as any).price_usd : '0.000008607',
+    marketCap: data?.peak_mc !== undefined ? data.peak_mc : 8608,
     liquidityUsd: 3.22,
     volume24h: 0.12,
-    imageUrl: (data as any)?.image_url || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto',
-    dexUrl: (data as any)?.dexscreener_url || `https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be`,
+    imageUrl: defaultImg,
+    dexUrl: defaultDex,
     isLive: false,
   });
 
@@ -87,14 +90,14 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
           const pair = (json.pairs || [])[0];
           if (pair && isMounted) {
             setLiveData({
-              name: pair.baseToken?.name || 'EMILES BANANA',
-              symbol: pair.baseToken?.symbol || 'BANANA',
+              name: pair.baseToken?.name || rawName,
+              symbol: pair.baseToken?.symbol || symbol,
               priceUsd: pair.priceUsd || '0.000008607',
-              marketCap: pair.fdv || pair.marketCap || 8608,
+              marketCap: pair.fdv || pair.marketCap || data?.peak_mc || 8608,
               liquidityUsd: pair.liquidity?.usd || 3.22,
               volume24h: pair.volume?.h24 || 0.12,
-              imageUrl: pair.info?.imageUrl || 'https://cdn.dexscreener.com/cms/images/ea-QpG_fZoNTNbJ5?width=800&height=800&quality=95&format=auto',
-              dexUrl: pair.url || `https://dexscreener.com/robinhood/0x2b04423015209b35c2bb6cca3ed0fd6864520ea47bf6f8b53ad339a4e393a8be`,
+              imageUrl: pair.info?.imageUrl || defaultImg,
+              dexUrl: pair.url || defaultDex,
               isLive: true,
             });
           }
@@ -103,6 +106,7 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
         console.warn('DexScreener direct client fetch notice:', err);
       }
     };
+
 
     fetchDexScreener();
     const interval = setInterval(fetchDexScreener, 15000);
