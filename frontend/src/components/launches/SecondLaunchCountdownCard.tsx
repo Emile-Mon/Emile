@@ -6,7 +6,7 @@ import { PreparingLaunchCard, PreparingLaunchData } from './PreparingLaunchCard'
 export const SecondLaunchCountdownCard: React.FC = () => {
   const zuluData: PreparingLaunchData = {
     launch_id: 8,
-    day_index: 1,
+    day_index: 2,
     cycle_id: 1419,
     run_id: 444,
     candidate_id: 2,

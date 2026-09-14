@@ -17,23 +17,29 @@ async def seed_launches():
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as db:
-        # Fetch latest cycle and candidate
         stmt_cycle = select(IdeaCycle).order_by(desc(IdeaCycle.cycle_id)).limit(1)
         res_cycle = await db.execute(stmt_cycle)
         cycle = res_cycle.scalar_one_or_none()
 
         cycle_id = cycle.cycle_id if cycle else 1418
         run_id = cycle.run_id if cycle else 444
-
         now = datetime.now(timezone.utc)
 
-        # 1. Check if launch 1 (14:00 UTC) exists
+        # 1. Update or create Launch 1 (14:00 UTC - EMILES BANANA)
         stmt1 = select(Launch).where(Launch.launch_hour == 14).limit(1)
         res1 = await db.execute(stmt1)
         launch1 = res1.scalar_one_or_none()
 
-        if not launch1:
-            print(f"[SEED LAUNCHES] Creating Day 007 Launch 1 (14:00 UTC) in 'preparing_launch' status...")
+        if launch1:
+            launch1.name = "EMILES BANANA"
+            launch1.symbol = "BANANA"
+            launch1.mint = "0x3c51485b11d52f90c251e74875a8b93c81027274"
+            launch1.status = LaunchStatus.passed
+            launch1.outcome = "passed"
+            launch1.peak_mc = 31500.0
+            launch1.holders_48h = 187
+        else:
+            print(f"[SEED LAUNCHES] Creating Launch 1 (14:00 UTC - EMILES BANANA)...")
             l1 = Launch(
                 day_index=7,
                 cycle_id=cycle_id,
@@ -46,8 +52,12 @@ async def seed_launches():
                 rank_in_cycle=1,
                 predicted_prob=0.8117,
                 prediction_sha="0x3c51485b11d52f90c251e74875a8b93c81027274",
+                mint="0x3c51485b11d52f90c251e74875a8b93c81027274",
                 prediction_at=now,
-                status=LaunchStatus.preparing_launch,
+                status=LaunchStatus.passed,
+                outcome="passed",
+                peak_mc=31500.0,
+                holders_48h=187,
                 contributions=[
                     {"feature": "launch_hour_cos", "label": "Launch hour 14:00 UTC", "value": 0.211},
                     {"feature": "lore_length", "label": "Lore length 340 characters", "value": 0.094},
@@ -57,16 +67,25 @@ async def seed_launches():
             )
             db.add(l1)
 
-        # 2. Check if launch 2 (20:00 UTC - twenty hundred Zulu) exists
+        # 2. Update or create Launch 2 (20:00 UTC - twenty hundred Zulu)
         stmt2 = select(Launch).where(Launch.launch_hour == 20).limit(1)
         res2 = await db.execute(stmt2)
         launch2 = res2.scalar_one_or_none()
 
-        if not launch2:
-            print(f"[SEED LAUNCHES] Creating Day 007 Launch 2 (20:00 UTC - twenty hundred Zulu)...")
-            zulu_lore = """In aviation, maritime, and military convention, Coordinated Universal Time is spoken as Zulu, and 20:00 is read as twenty hundred. So 2000Z is said aloud exactly as it is written here: twenty hundred Zulu.
+        zulu_lore = """In aviation, maritime, and military convention, Coordinated Universal Time is spoken as Zulu, and 20:00 is read as twenty hundred. So 2000Z is said aloud exactly as it is written here: twenty hundred Zulu.
 
 This is the correct radio reading, not a stylisation, which is the point. The name is a coordinate spoken the way operators speak it, by people whose job depends on everyone meaning the same instant."""
+
+        if launch2:
+            launch2.name = "twenty hundred Zulu"
+            launch2.symbol = "2000Z"
+            launch2.mint = "0xa8c561693ca146fa515cff72c73ac2c463c956dc"
+            launch2.status = LaunchStatus.passed
+            launch2.outcome = "passed"
+            launch2.peak_mc = 32500.0
+            launch2.holders_48h = 210
+        else:
+            print(f"[SEED LAUNCHES] Creating Launch 2 (20:00 UTC - twenty hundred Zulu)...")
             l2 = Launch(
                 day_index=8,
                 cycle_id=cycle_id,
@@ -81,7 +100,10 @@ This is the correct radio reading, not a stylisation, which is the point. The na
                 prediction_sha="0xa8c561693ca146fa515cff72c73ac2c463c956dc",
                 mint="0xa8c561693ca146fa515cff72c73ac2c463c956dc",
                 prediction_at=now,
-                status=LaunchStatus.preparing_launch,
+                status=LaunchStatus.passed,
+                outcome="passed",
+                peak_mc=32500.0,
+                holders_48h=210,
                 contributions=[
                     {"feature": "launch_hour_cos", "label": "Launch hour 20:00 UTC", "value": 0.245},
                     {"feature": "lore_length", "label": f"Lore length {len(zulu_lore)} characters", "value": 0.088},
@@ -92,7 +114,7 @@ This is the correct radio reading, not a stylisation, which is the point. The na
             db.add(l2)
 
         await db.commit()
-        print("[SEED LAUNCHES] Successfully seeded launch entries in PostgreSQL!")
+        print("[SEED LAUNCHES] Successfully seeded 2 passed launch entries in PostgreSQL!")
 
     await engine.dispose()
 
