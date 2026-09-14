@@ -412,27 +412,7 @@ async def get_dexscreener_token_info(mint: str):
 @router.get("/calibration")
 async def get_launches_calibration(db: AsyncSession = Depends(get_db)):
     """GET /api/launches/calibration - Returns overall Brier score and calibration stats computed dynamically."""
-    try:
-        stmt = select(Launch).order_by(desc(Launch.day_index))
-        res = await db.execute(stmt)
-        rows = res.scalars().all()
-    except Exception as e:
-        print(f"[CALIBRATION API] DB query exception: {e}")
-        rows = []
-
-    if rows:
-        all_launches = [
-            {
-                "predicted_prob": float(r.predicted_prob or 0.0),
-                "outcome": r.outcome,
-                "status": r.status.value if hasattr(r.status, "value") else str(r.status)
-            }
-            for r in rows
-        ]
-    else:
-        # Fallback to current launch log list items if DB table is empty
-        all_launches = await get_all_launches(db=db)
-
+    all_launches = await get_all_launches(db=db)
     total_launches = len(all_launches)
     resolved = []
     open_launches = []
