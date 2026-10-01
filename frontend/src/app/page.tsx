@@ -7,6 +7,8 @@ import { CrtTerminal } from '@/components/crt/CrtTerminal';
 import { StatsStrip } from '@/components/analytics/StatsStrip';
 import { LearningProgressSection } from '@/components/analytics/LearningProgressSection';
 import { ProofPanel } from '@/components/analytics/ProofPanel';
+import { FormulaStrip } from '@/components/math/FormulaStrip';
+import { EQ } from '@/config/equations';
 import { FooterBar } from '@/components/layout/FooterBar';
 import { useEmileDatabase } from '@/hooks/useEmileDatabase';
 
@@ -23,6 +25,7 @@ export default function HomePage() {
       <StatsStrip />
       <LearningProgressSection />
       <ProofPanel />
+      <FormulaStrip title="What decides the hourglass" eqs={[EQ.floor, EQ.gates, EQ.level]} />
       <FooterBar />
     </div>
   );

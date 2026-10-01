@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     TWITTER_BEARER_TOKEN: str = os.getenv("TWITTER_BEARER_TOKEN", "")
     TWITTER_AUTO_POST_ENABLED: bool = os.getenv("TWITTER_AUTO_POST_ENABLED", "false").lower() in ("true", "1", "yes")
     TWITTER_POST_INTERVAL_HOURS: int = int(os.getenv("TWITTER_POST_INTERVAL_HOURS", "2"))
-    TWITTER_MANAGED_BY_HANDLE: str = os.getenv("TWITTER_MANAGED_BY_HANDLE", "@emilelearns")
+    TWITTER_MANAGED_BY_HANDLE: str = os.getenv("TWITTER_MANAGED_BY_HANDLE", "@EpochLabsHQ")
     USE_FULL_CA: bool = os.getenv("USE_FULL_CA", "false").lower() in ("true", "1", "yes")
 
     # Xiaomi MiMo LLM Settings

@@ -50,7 +50,7 @@ export const PreparingLaunchCard: React.FC<PreparingLaunchCardProps> = ({ data }
   const dayIndex = data?.day_index || 1;
   const cycleId = data?.cycle_id || 1418;
   const runId = data?.run_id || 444;
-  const rawName = data?.name || 'EMILES BANANA';
+  const rawName = data?.name || 'EPOCH BANANA';
   const symbol = data?.symbol || 'BANANA';
   const mint = data?.mint || '0x3c51485b11d52f90c251e74875a8b93c81027274';
 
@@ -129,7 +129,7 @@ So he started looking everywhere.
 28 signals were extracted.
 Holder retention. Launch cycles. Seasonality. Lore length.
 
-Émile watched them all.
+Epoch Labs watched them all.
 
 He learned that numbers mattered.
 He learned that timing mattered.
@@ -137,7 +137,7 @@ He learned that holders mattered.
 
 And then, somewhere between all the data…
 
-Émile found a banana.
+Epoch Labs found a signal.
 
 He didn’t know why it mattered.
 
@@ -235,7 +235,7 @@ He simply kept looking at it.`;
               className="w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border-2 border-[var(--banana)] shadow-md shrink-0"
             />
             <div>
-              <h3 className="tname font-serif text-2xl md:text-3xl font-semibold text-[var(--fg-hi)] m-0 leading-tight">
+              <h3 className="tname font-sans font-semibold text-2xl md:text-3xl text-[var(--fg-hi)] m-0 leading-tight">
                 {name} <span className="tick text-[var(--banana)] text-sm font-mono ml-2">${tokenSymbol}</span>
               </h3>
               {/* Section 3: Authorship Disclosure Line */}
@@ -270,7 +270,7 @@ He simply kept looking at it.`;
             <div className="text-[0.62rem] font-mono tracking-widest text-[var(--banana)] uppercase mb-2 font-semibold flex items-center gap-1.5">
               <span>✦ CANDIDATE LORE & MEMORY LOG</span>
             </div>
-            <div className="space-y-2.5 font-serif text-[0.94rem] leading-relaxed">
+            <div className="space-y-2.5 font-sans font-semibold text-[0.94rem] leading-relaxed">
               {lore.split(/\n\s*\n/).filter(Boolean).map((paragraph, idx) => {
                 const isPunchline = paragraph.toLowerCase().includes('banana') || paragraph.toLowerCase().includes('looking at it');
                 return (
@@ -292,7 +292,7 @@ He simply kept looking at it.`;
             <span>rank <b className="text-[var(--fg)] font-medium">{rankInCycle} of 100</b></span>
             <span>launch hour <b className="text-[var(--fg)] font-medium">{String(launchHour).padStart(2, '0')}:00 UTC</b></span>
             <span>liquidity <b className="text-[var(--fg)] font-medium">${Number(liveData.liquidityUsd).toLocaleString('en-US')} (0.05 ETH)</b></span>
-            <span>émile holds <b className="text-[var(--fg)] font-medium">0</b></span>
+            <span>epoch labs holds <b className="text-[var(--fg)] font-medium">0</b></span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -315,7 +315,7 @@ He simply kept looking at it.`;
           <div className="lab text-[0.62rem] tracking-widest text-[var(--dim)] uppercase mb-1">
             PREDICTED SURVIVAL
           </div>
-          <div className="big font-serif text-3xl md:text-4xl font-bold text-[var(--banana)] leading-none tabular-nums">
+          <div className="big font-sans font-semibold text-3xl md:text-4xl text-[var(--banana)] leading-none tabular-nums">
             {predictedProb.toFixed(4)}
           </div>
 

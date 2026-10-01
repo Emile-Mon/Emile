@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HeaderBar } from '@/components/layout/HeaderBar';
 import { FooterBar } from '@/components/layout/FooterBar';
+import { LEARNING_BLOCKS } from '@/config/pipelineCode';
+import { highlightCode } from '@/components/ui/codeHighlight';
+import { FormulaStrip } from '@/components/math/FormulaStrip';
+import { EQ } from '@/config/equations';
 
 interface TokenFeedItem {
   id: number | string;
@@ -13,83 +17,11 @@ interface TokenFeedItem {
   launched_at?: string;
   marketCap: number;
   survived: boolean;
+  pending?: boolean; // not yet labelled (labels land 48h after launch)
 }
 
-const BLOCKS = [
-  {
-    stage: 'ingest',
-    src: `# pull everything launched since the last cursor — winners and losers
-new = dexscreener.latest_boosts(chain="robinhood", limit=500)
-mc  = dexscreener.pairs(chain="robinhood", tokens=new.mint)
-
-df = new.join(mc, on="mint")
-df["launch_hour"] = df.created_at.dt.tz_convert("UTC").dt.hour
-df["age_h"]       = (now() - df.created_at).dt.total_seconds() / 3600
-
-# only label a token once it has had a full day to prove itself
-ready = df[df.age_h >= 24]
-ready["survived"] = ready.peak_mc >= 20_000
-store.upsert(ready)`
-  },
-  {
-    stage: 'features',
-    src: `# three signals, nothing more. keep it honest.
-X = pd.DataFrame(index=df.index)
-
-X["hour_sin"] = np.sin(2*np.pi * df.launch_hour / 24)
-X["hour_cos"] = np.cos(2*np.pi * df.launch_hour / 24)
-
-X["lore_words"]   = df.lore.str.split().str.len()
-X["lore_empty"]   = df.lore.str.strip().eq("").astype(int)
-X["name_tokens"]  = df.name.str.split().str.len()
-
-emb = encoder.encode(df.lore.tolist(), batch_size=64)
-X = np.hstack([X.values, PCA(24).fit_transform(emb)])`
-  },
-  {
-    stage: 'training',
-    src: `# survivors are ~5% of the sample, so weight them properly
-y = df.survived.astype(int)
-
-clf = LGBMClassifier(
-    n_estimators=400,
-    learning_rate=0.03,
-    class_weight="balanced",
-    min_child_samples=40,
-)
-
-cv = StratifiedKFold(5, shuffle=True, random_state=7)
-auc = cross_val_score(clf, X, y, cv=cv, scoring="roc_auc")
-log(f"roc_auc {auc.mean():.3f} +/- {auc.std():.3f}")`
-  },
-  {
-    stage: 'evaluating',
-    src: `# a coin flip scores 0.500. anything near that means we learned nothing.
-if auc.mean() < 0.56:
-    log("signal too weak to publish — holding last conclusion")
-else:
-    clf.fit(X, y)
-    imp = pd.Series(clf.feature_importances_, index=cols)
-    publish(imp.sort_values(ascending=False).head(12))
-
-baseline = y.mean()
-log(f"base rate {baseline:.3%} across {len(y):,} tokens")`
-  },
-  {
-    stage: 'conclusions',
-    src: `# survival rate per launch hour, with a floor on sample size
-by_hour = (df.groupby("launch_hour")
-             .agg(n=("survived","size"), rate=("survived","mean"))
-             .query("n >= 30")
-             .sort_values("rate", ascending=False))
-
-lift = lore_terms(df).query("n_total >= 25")
-lift["lift"] = lift.rate_survived / baseline
-
-publish_findings(hours=by_hour, terms=lift.nlargest(6, "lift"))
-cursor = df.created_at.max()`
-  }
-];
+// Real learning-pipeline code, file path shown as the first line.
+const BLOCKS = LEARNING_BLOCKS.map((b) => ({ stage: b.stage, src: `# backend/app/${b.file}\n${b.src}` }));
 
 const A = ['Quantum', 'Retro', 'Silent', 'Golden', 'Midnight', 'Feral', 'Holy', 'Broke', 'Cosmic', 'Tiny', 'Angry', 'Wet', 'Ancient', 'Neon', 'Humble', 'Vacant', 'Loyal', 'Crooked'];
 const B = ['Capybara', 'Hamster', 'Toaster', 'Monk', 'Pigeon', 'Frog', 'Goose', 'Wizard', 'Janitor', 'Shrimp', 'Owl', 'Mule', 'Cat', 'Sloth', 'Priest', 'Crab', 'Dentist', 'Moth'];
@@ -113,22 +45,7 @@ const LORE = [
 const HOUR_BIAS: Record<number, number> = { 13: 2.6, 14: 3.1, 15: 2.9, 16: 2.2, 17: 1.7, 2: 0.35, 3: 0.3, 4: 0.4, 5: 0.5 };
 const GOOD_WORDS = ['community', 'patience', 'honest', 'friends', 'legend', 'rescued'];
 
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const TOK = /(#[^\n]*)|("(?:[^"\\]|\\.)*")|\b(import|from|if|else|elif|for|in|return|def|not|and|or|as|True|False|None)\b|\b(\d[\d_.]*)\b/g;
-
-function hl(src: string) {
-  let out = '', last = 0, m: RegExpExecArray | null;
-  TOK.lastIndex = 0;
-  while ((m = TOK.exec(src)) !== null) {
-    out += esc(src.slice(last, m.index));
-    if (m[1]) out += '<span class="text-[var(--faint)] italic">' + esc(m[1]) + '</span>';
-    else if (m[2]) out += '<span class="text-[var(--live)]">' + esc(m[2]) + '</span>';
-    else if (m[3]) out += '<span class="text-[var(--violet)]">' + esc(m[3]) + '</span>';
-    else out += '<span class="text-[var(--cyan)]">' + esc(m[4]) + '</span>';
-    last = m.index + m[0].length;
-  }
-  return out + esc(src.slice(last));
-}
+const hl = highlightCode;
 
 let idCounter = 4100;
 
@@ -158,6 +75,7 @@ export default function SurvivalConsolePage() {
 
   const [blockIndex, setBlockIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
+  const codeRef = useRef<HTMLDivElement>(null);
 
   const hourAll = useRef(new Array(24).fill(0));
   const hourWin = useRef(new Array(24).fill(0));
@@ -192,7 +110,8 @@ export default function SurvivalConsolePage() {
             hour: t.launch_hour ?? (new Date(t.launched_at || Date.now()).getUTCHours()),
             launched_at: t.launched_at,
             marketCap: t.peak_mc || 10500,
-            survived: t.status === 'passed' || t.peak_mc >= 30000
+            survived: t.status === 'passed' || t.peak_mc >= 30000,
+            pending: t.status === 'pending' && t.peak_mc < 30000
           }));
 
           setTokens(formattedTokens);
@@ -229,7 +148,8 @@ export default function SurvivalConsolePage() {
               lore: raw.lore || 'No lore description.',
               hour: raw.hour ?? new Date().getUTCHours(),
               marketCap: raw.peak_mc || 10500,
-              survived: isSurvived
+              survived: isSurvived,
+              pending: raw.status === 'pending' && !isSurvived
             };
 
             setTokens((prev) => {
@@ -291,6 +211,18 @@ export default function SurvivalConsolePage() {
   const currentBlock = BLOCKS[blockIndex];
   const typedCode = currentBlock.src.slice(0, charIndex);
 
+  // Follow the cursor as the code types out, unless the reader has scrolled up.
+  const followCode = useRef(true);
+  const onCodeScroll = () => {
+    const el = codeRef.current;
+    if (el) followCode.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  };
+  useEffect(() => {
+    const el = codeRef.current;
+    if (charIndex === 0) followCode.current = true;
+    if (el && followCode.current) el.scrollTop = el.scrollHeight;
+  }, [charIndex]);
+
   // Hourly survival histogram
   const hourRates = hourAll.current.map((tot, h) => (tot >= 1 ? hourWin.current[h] / tot : 0.05));
   const maxRate = Math.max(0.001, ...hourRates);
@@ -302,7 +234,7 @@ export default function SurvivalConsolePage() {
       {/* Top Header Banner */}
       <div className="top flex items-baseline justify-between p-4 px-6 border-b border-[var(--rule)] bg-[var(--panel)] flex-wrap gap-4">
         <div>
-          <div className="brand-console flex items-center font-bold text-lg text-[#EAF1F8] font-mono">
+          <div className="brand-console flex items-center font-bold text-lg text-[var(--fg-hi)] font-mono">
             <span className="dot w-2 h-2 rounded-full bg-[var(--live)] mr-2.25 inline-block animate-pulse" />
             Survival Console
           </div>
@@ -322,18 +254,18 @@ export default function SurvivalConsolePage() {
         {/* Left Column: Live Ingest Feed */}
         <div className="col flex flex-col border-r border-[var(--rule)] min-h-[420px]">
           <div className="panel-head flex items-center justify-between p-3 px-4 border-b border-[var(--soft)] bg-[var(--panel)] font-mono text-xs">
-            <span className="font-medium text-[#DCE6F0]">Ingest Feed</span>
+            <span className="font-medium text-[var(--fg)]">Ingest Feed</span>
             <span className="text-[var(--faint)]">robinhood chain · dexscreener</span>
           </div>
           <div className="feed flex-1 overflow-y-auto max-h-[500px] bg-[var(--panel2)] p-2 font-mono text-xs divide-y divide-[var(--soft)]">
             {tokens.map((t) => (
-              <div key={t.id} className={`row flex items-start gap-3 p-2.5 rounded transition-colors ${t.survived ? 'bg-[rgba(52,211,153,0.05)]' : ''}`}>
+              <div key={t.id} className={`row flex items-start gap-3 p-2.5 rounded transition-colors ${t.survived ? 'bg-[var(--live)]/5' : ''}`}>
                 <div className={`mark font-bold ${t.survived ? 'text-[var(--live)]' : 'text-[var(--faint)]'}`}>
                   {t.survived ? '●' : '·'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="tk-name font-medium text-[#E4ECF4]">{t.name}</span>
+                    <span className="tk-name font-medium text-[var(--fg)]">{t.name}</span>
                     <a 
                       href={`https://dexscreener.com/robinhood/${t.id}`} 
                       target="_blank" 
@@ -349,7 +281,7 @@ export default function SurvivalConsolePage() {
                   </div>
                 </div>
                 <div className="tk-meta text-right shrink-0">
-                  <div className={`font-semibold ${t.survived ? 'text-[var(--live)]' : 'text-[var(--stall)]'}`}>
+                  <div className={`font-semibold ${t.survived ? 'text-[var(--live)]' : t.pending ? 'text-[var(--banana)]' : 'text-[var(--stall)]'}`}>
                     {fmtMC(t.marketCap)}
                   </div>
                   <div className="text-[10px] text-[var(--faint)]">
@@ -374,12 +306,12 @@ export default function SurvivalConsolePage() {
         {/* Right Column: Code Stream & Stats Cards */}
         <div className="col flex flex-col min-h-[420px]">
           <div className="panel-head flex items-center justify-between p-3 px-4 border-b border-[var(--soft)] bg-[var(--panel)] font-mono text-xs">
-            <span className="font-medium text-[#DCE6F0]">Learning Pipeline</span>
+            <span className="font-medium text-[var(--fg)]">Learning Pipeline</span>
             <span className="text-[var(--banana)]">{currentBlock.stage}</span>
           </div>
 
           {/* Typing Code Terminal */}
-          <div className="code-wrap flex-1 p-4 bg-[#0B1119] font-mono text-xs leading-relaxed text-[#9FB2C4] overflow-hidden relative min-h-[300px]">
+          <div ref={codeRef} onScroll={onCodeScroll} className="code-wrap flex-1 p-4 bg-[var(--panel2)] font-mono text-[11.5px] leading-relaxed text-[var(--fg)] overflow-y-auto relative h-[340px] flex-none">
             <div dangerouslySetInnerHTML={{ __html: hl(typedCode) }} className="whitespace-pre-wrap word-break" />
             <span className="inline-block w-2 h-4 bg-[var(--banana)] ml-1 animate-pulse align-middle" />
           </div>
@@ -388,7 +320,7 @@ export default function SurvivalConsolePage() {
           <div className="stats grid grid-cols-4 border-t border-[var(--rule)] bg-[var(--panel)]">
             <div className="stat p-3 px-4 border-r border-[var(--soft)]">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">seen</div>
-              <div className="stat-v text-lg font-bold text-[#EAF1F8] font-mono">{stats.all.toLocaleString('en-US')}</div>
+              <div className="stat-v text-lg font-bold text-[var(--fg-hi)] font-mono">{stats.all.toLocaleString('en-US')}</div>
             </div>
             <div className="stat p-3 px-4 border-r border-[var(--soft)]">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">past $20K</div>
@@ -411,7 +343,7 @@ export default function SurvivalConsolePage() {
       {/* Findings Section */}
       <div className="findings bg-[var(--panel)] p-6">
         <div className="panel-head flex items-center justify-between pb-3 border-b border-[var(--soft)] mb-4 font-mono text-xs">
-          <span className="panel-title font-medium text-sm text-[#DCE6F0]">What it found</span>
+          <span className="panel-title font-medium text-sm text-[var(--fg)]">What it found</span>
           <span className="panel-note text-[var(--faint)]">
             cycle {String(cycle).padStart(3, '0')} · {stats.all.toLocaleString('en-US')} tokens in sample
           </span>
@@ -477,6 +409,7 @@ export default function SurvivalConsolePage() {
         </div>
       </div>
 
+      <FormulaStrip title="What the console is computing" eqs={[EQ.label, EQ.features, EQ.hourRate, EQ.lift]} />
       <FooterBar />
     </div>
   );

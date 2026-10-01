@@ -39,9 +39,9 @@ export function useEmileDatabase() {
             lore: t.lore || 'No lore description provided.',
             lore_withheld: t.lore_withheld || false,
             logo: t.logo,
-            holders: t.holders || 120,
+            holders: t.holders ? t.holders : null, // 0 or null = not sampled yet (sampled at 48h)
             peak_mc: t.peak_mc || 10500,
-            status: ((t.status === 'passed' || (t.peak_mc && t.peak_mc >= 30000)) ? 'passed' : 'stalled') as 'passed' | 'stalled' | 'pending',
+            status: ((t.status === 'passed' || (t.peak_mc && t.peak_mc >= 30000)) ? 'passed' : t.status === 'stalled' ? 'stalled' : 'pending') as 'passed' | 'stalled' | 'pending',
             hour: t.hour ?? t.launch_hour ?? (t.launched_at ? new Date(t.launched_at).getUTCHours() : 4),
             launched_at: t.launched_at
           }));
@@ -59,7 +59,7 @@ export function useEmileDatabase() {
               dex: totalTokensInDB,
               rpc: totalTokensInDB
             },
-            holdersList: [counters.median_holders || 120],
+            holdersList: counters.median_holders ? [counters.median_holders] : [],
             tokens: formattedTokens,
             simState: {
               n: totalTokensInDB,
@@ -110,9 +110,9 @@ export function useEmileDatabase() {
               name: raw.name || 'Robinhood Chain Token',
               symbol: raw.symbol || (raw.mint ? raw.mint.slice(0, 6).toUpperCase() : 'SOL'),
               lore: raw.lore || 'No lore description provided.',
-              holders: raw.holders || 120,
+              holders: raw.holders ? raw.holders : null,
               peak_mc: raw.peak_mc || 10500,
-              status: ((raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000)) ? 'passed' : 'stalled') as 'passed' | 'stalled' | 'pending',
+              status: ((raw.status === 'passed' || (raw.peak_mc && raw.peak_mc >= 30000)) ? 'passed' : raw.status === 'stalled' ? 'stalled' : 'pending') as 'passed' | 'stalled' | 'pending',
               hour: raw.hour ?? new Date().getUTCHours(),
               launched_at: raw.launched_at || new Date().toISOString()
             };

@@ -7,7 +7,7 @@ export interface TokenItem {
   lore: string | null;
   lore_withheld?: boolean;
   logo?: string;
-  holders: number;
+  holders: number | null; // null until sampled at the 48h label
   peak_mc: number;
   status: 'passed' | 'stalled' | 'pending';
   hour: number;
@@ -120,14 +120,15 @@ export const useEmileStore = create<EmileState>((set, get) => ({
       const filtered = state.tokens.filter(t => t.mint !== item.mint);
       const newTokens = [item, ...filtered].slice(0, 50); // Cap DOM at 50 rows
       const isPassed = item.status === 'passed';
+      const isStalled = item.status === 'stalled';
 
       const newTally = isExisting ? state.tally : {
         all: state.tally.all + 1,
         pass: state.tally.pass + (isPassed ? 1 : 0),
-        stall: state.tally.stall + (!isPassed ? 1 : 0)
+        stall: state.tally.stall + (isStalled ? 1 : 0)
       };
 
-      const newHolders = [...state.holdersList, item.holders].slice(-4000);
+      const newHolders = item.holders == null ? state.holdersList : [...state.holdersList, item.holders].slice(-4000);
       const newCounters = isExisting ? state.counters : {
         pump: state.counters.pump + 1,
         dex: state.counters.dex + 1,

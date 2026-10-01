@@ -36,8 +36,8 @@ def generate_factual_narrative(target_token: str, stats: dict) -> str:
     """
     raw_ca = stats.get("mint", "")
     token_ca = format_ca(raw_ca)
-    token_name = stats.get("name") or ("EMILES BANANA" if target_token == "emile_banana" else "Émile")
-    token_symbol = stats.get("symbol") or ("BANANA" if target_token == "emile_banana" else "EMILE")
+    token_name = stats.get("name") or ("EPOCH BANANA" if target_token == "emile_banana" else "Epoch Labs")
+    token_symbol = stats.get("symbol") or ("BANANA" if target_token == "emile_banana" else "EPOCH")
 
     # Real-time stats with dynamic ATH peak tracking
     mc = stats.get("market_cap", 0.0)
@@ -87,8 +87,8 @@ async def generate_mimo_llm_narrative(target_token: str, stats: dict) -> str:
 
     raw_ca = stats.get("mint", "")
     token_ca = format_ca(raw_ca)
-    token_name = stats.get("name") or ("EMILES BANANA" if target_token == "emile_banana" else "Émile")
-    token_symbol = stats.get("symbol") or ("BANANA" if target_token == "emile_banana" else "EMILE")
+    token_name = stats.get("name") or ("EPOCH BANANA" if target_token == "emile_banana" else "Epoch Labs")
+    token_symbol = stats.get("symbol") or ("BANANA" if target_token == "emile_banana" else "EPOCH")
 
     mc = stats.get("market_cap", 0.0)
     peak_mc_val = max(stats.get("peak_mc") or 0.0, mc)

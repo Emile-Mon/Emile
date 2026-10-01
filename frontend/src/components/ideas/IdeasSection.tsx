@@ -72,17 +72,17 @@ export const IdeasSection: React.FC = () => {
       {/* Kicker & Title */}
       <div className="mb-6">
         <p className="kicker text-[0.68rem] tracking-[0.18em] text-[var(--dim)] uppercase mb-2 font-mono">
-          ÉMILE 1.5 : AUTONOMOUS IDEA GENERATION
+          EPOCH LABS 1.5 : AUTONOMOUS IDEA GENERATION
         </p>
-        <h2 className="font-serif font-semibold text-2xl md:text-3xl leading-tight text-[var(--fg-hi)] tracking-tight mb-3">
-          One hundred ideas an hour, and the argument he has with himself
+        <h2 className="font-sans font-semibold text-2xl md:text-3xl leading-tight text-[var(--fg-hi)] tracking-tight mb-3">
+          One hundred ideas an hour, and the argument it has with itself
         </h2>
         <p className="intro max-w-[66ch] text-[var(--fg)] text-sm leading-relaxed">
-          Every cycle Émile writes 100 candidate tokens (a name, a piece of lore, and a launch hour) and scores each one with the model he trained that hour.{' '}
+          Every cycle Epoch Labs writes 100 candidate tokens (a name, a piece of lore, and a launch hour) and scores each one with the model it trained that hour.{' '}
           <strong className="text-[var(--fg-hi)] font-medium">
             All one hundred are published, including the leader.
           </strong>{' '}
-          Each carries the hash it was committed under at generation time, so the record of what Émile wrote and when is verifiable by anyone, and cannot be rewritten after the fact.
+          Each carries the hash it was committed under at generation time, so the record of what Epoch Labs wrote and when is verifiable by anyone, and cannot be rewritten after the fact.
         </p>
       </div>
 
@@ -130,7 +130,7 @@ export const IdeasSection: React.FC = () => {
 
       {/* Explanatory Footnote Note */}
       <div className="note border-t border-[var(--rule)] pt-4 text-[0.74rem] text-[var(--dim)] max-w-[78ch] leading-relaxed font-mono">
-        Every candidate is committed as <code>sha256(name | lore | hour | run_id)</code> and written to an append-only log the moment it is generated, before it is displayed. The log is the record of what Émile wrote and when. Two things follow from it: a name he never committed cannot be launched, and if a candidate appears on chain under someone else's deployer before Émile launches it, the timestamps settle who wrote it first. Anything already deployed by another address is dropped from the next cycle automatically: Émile launches his own idea or none.
+        Every candidate is committed as <code>sha256(name | lore | hour | run_id)</code> and written to an append-only log the moment it is generated, before it is displayed. The log is the record of what Epoch Labs wrote and when. Two things follow from it: a name it never committed cannot be launched, and if a candidate appears on chain under someone else's deployer before Epoch Labs launches it, the timestamps settle who wrote it first. Anything already deployed by another address is dropped from the next cycle automatically: Epoch Labs launches his own idea or none.
       </div>
     </section>
   );

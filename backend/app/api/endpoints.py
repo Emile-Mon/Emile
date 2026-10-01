@@ -79,7 +79,7 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
                 "logo": t["image_url"],
                 "launched_at": t["launched_at"].isoformat() if hasattr(t["launched_at"], "isoformat") else str(t["launched_at"]),
                 "launch_hour": t["launch_hour"],
-                "holders": t["holders"] or 0,
+                "holders": t["holders"],  # None until sampled at the 48h label
                 "peak_mc": float(t["peak_mc"]) if t["peak_mc"] is not None else 0.0,
                 "status": t["status"]
             }
@@ -206,5 +206,5 @@ async def download_public_dataset(db: AsyncSession = Depends(get_db)):
     return Response(
         content=csv_content.encode("utf-8"),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=emile_dataset.csv"}
+        headers={"Content-Disposition": "attachment; filename=epochlabs_dataset.csv"}
     )

@@ -66,14 +66,14 @@ export const LaunchesSection: React.FC = () => {
       {/* Kicker & Title (§7: Header reads ÉMILE DAILY with no version number) */}
       <div className="mb-6">
         <p className="kicker text-[0.68rem] tracking-[0.18em] text-[var(--dim)] uppercase mb-2 font-mono font-bold">
-          ÉMILE DAILY
+          EPOCH LABS DAILY
         </p>
-        <h2 className="font-serif font-semibold text-2xl md:text-3xl leading-tight text-[var(--fg-hi)] tracking-tight mb-3">
-          One token a day, and the prediction he made before deploying it
+        <h2 className="font-sans font-semibold text-2xl md:text-3xl leading-tight text-[var(--fg-hi)] tracking-tight mb-3">
+          One token a day, and the prediction it made before deploying it
         </h2>
         <p className="intro max-w-[66ch] text-[var(--fg)] text-sm leading-relaxed">
-          Each day Émile selects one candidate from the hundred he wrote that cycle in{' '}
-          <a href="/brain" className="text-[var(--banana)] hover:underline font-semibold">The Brain</a>, publishes the survival probability his model assigns to it, and presents it for launch.{' '}
+          Each day Epoch Labs selects one candidate from the hundred it wrote that cycle in{' '}
+          <a href="/brain" className="text-[var(--banana)] hover:underline font-semibold">The Brain</a>, publishes the survival probability its model assigns to it, and presents it for launch.{' '}
           <strong className="text-[var(--fg-hi)] font-medium">
             The prediction is on the record before the outcome exists.
           </strong>{' '}
@@ -112,11 +112,11 @@ export const LaunchesSection: React.FC = () => {
 
       {/* Standing Notes (§6: In --fg rather than --dim, contrast verified at rendered size) */}
       <div className="note border-t border-[var(--rule)] pt-4 text-[0.76rem] text-[var(--fg)] max-w-[78ch] leading-relaxed font-mono">
-        <b className="text-[var(--fg-hi)]">These tokens are excluded from Émile's training data.</b> They are labelled, displayed, and counted in the calibration scores once resolved, but never fed back into the model. A model that learns from its own launches is learning from its own behaviour, and the loop would destroy it within weeks. Every row carries <code>emile_launched = true</code> and the training query filters on it.
+        <b className="text-[var(--fg-hi)]">These tokens are excluded from Epoch Labs' training data.</b> They are labelled, displayed, and counted in the calibration scores once resolved, but never fed back into the model. A model that learns from its own launches is learning from its own behaviour, and the loop would destroy it within weeks. Every row carries <code>emile_launched = true</code> and the training query filters on it.
       </div>
 
       <div className="note border-0 pt-1 mt-2 text-[0.76rem] text-[var(--fg)] max-w-[78ch] leading-relaxed font-mono">
-        <b className="text-[var(--fg-hi)]">Émile holds none of what he launches.</b> No allocation, no reserve, no team wallet. His capital goes into liquidity and stays there. He cannot sell into his own prediction because he has nothing to sell. Launch liquidity comes from a separate experiment wallet — the creator fee treasury is untouched and remains reserved for Evolution 2.
+        <b className="text-[var(--fg-hi)]">Epoch Labs holds none of what it launches.</b> No allocation, no reserve, no team wallet. Its capital goes into liquidity and stays there. It cannot sell into its own prediction because it has nothing to sell. Launch liquidity comes from a separate experiment wallet — the creator fee treasury is untouched and remains reserved for Evolution 2.
       </div>
     </section>
   );

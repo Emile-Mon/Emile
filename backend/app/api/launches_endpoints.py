@@ -20,7 +20,7 @@ class SubmitCAPayload(BaseModel):
     renounce_tx: Optional[str] = None
 
 def generate_mock_launch(day_index: int = 1, status: str = "preparing_launch"):
-    name = "EMILES BANANA"
+    name = "EPOCH BANANA"
     symbol = "BANANA"
     lore = """He was asked to find patterns.
 So he started looking everywhere.
@@ -30,7 +30,7 @@ So he started looking everywhere.
 28 signals were extracted.
 Holder retention. Launch cycles. Seasonality. Lore length.
 
-Émile watched them all.
+Epoch Labs watched them all.
 
 He learned that numbers mattered.
 He learned that timing mattered.
@@ -38,7 +38,7 @@ He learned that holders mattered.
 
 And then, somewhere between all the data…
 
-Émile found a banana.
+Epoch Labs found a banana.
 
 He didn’t know why it mattered.
 
@@ -116,7 +116,7 @@ async def get_dexscreener_token_info_helper(mint: str) -> dict:
                     socials = info.get("socials") or []
                     return {
                         "mint": base.get("address") or clean_mint,
-                        "name": base.get("name") or "EMILES BANANA",
+                        "name": base.get("name") or "EPOCH BANANA",
                         "symbol": base.get("symbol") or "BANANA",
                         "peak_mc": fdv,
                         "price_usd": float(pair.get("priceUsd") or 0.0),

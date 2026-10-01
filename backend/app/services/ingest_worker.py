@@ -209,7 +209,7 @@ async def start_ingest_worker_loop():
                                 "name": token_name,
                                 "symbol": token_symbol,
                                 "lore": lore_disp,
-                                "holders": 120,
+                                "holders": None,  # sampled once at the 48h label, unknown before that
                                 "peak_mc": current_mc,
                                 "status": assigned_status,
                                 "hour": raw.launched_at.hour

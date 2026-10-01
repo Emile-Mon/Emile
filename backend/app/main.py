@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Émile — Autonomous agent observing Robinhood Chain token survival",
+    description="Epoch Labs — Autonomous agent observing Robinhood Chain token survival",
     lifespan=lifespan
 )
 

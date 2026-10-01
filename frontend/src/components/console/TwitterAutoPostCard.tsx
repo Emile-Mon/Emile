@@ -157,7 +157,7 @@ export function TwitterAutoPostCard() {
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Alternating 100% factual on-chain data updates for Émile and Émile Banana tokens every 2 hours.
+            Alternating 100% factual on-chain data updates for Epoch Labs and Epoch Labs Banana tokens every 2 hours.
           </p>
         </div>
 
@@ -191,14 +191,14 @@ export function TwitterAutoPostCard() {
       {showGuide && (
         <div className="mt-4 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 space-y-3 animate-fadeIn">
           <h4 className="font-bold text-amber-400 text-sm flex items-center gap-2">
-            ⚙️ How to Activate Native "Automated by @emilelearns" Badge on X.com
+            ⚙️ How to Activate Native "Automated by @EpochLabsHQ" Badge on X.com
           </h4>
           <ol className="list-decimal list-inside space-y-1.5 text-slate-400">
-            <li>Log in to X.com / Twitter app using your bot account (<code className="text-white bg-slate-800 px-1.5 py-0.5 rounded">@emilelearns</code>).</li>
+            <li>Log in to X.com / Twitter app using your bot account (<code className="text-white bg-slate-800 px-1.5 py-0.5 rounded">@EpochLabsHQ</code>).</li>
             <li>Go to <strong className="text-slate-200">Settings & privacy</strong> → <strong className="text-slate-200">Your account</strong> → <strong className="text-slate-200">Account information</strong>.</li>
             <li>Click on <strong className="text-slate-200">Automation / Automated Account</strong>.</li>
             <li>Select your developer handle or managing account as the manager.</li>
-            <li>Once saved, X automatically renders <span className="text-sky-400">🤖 Automated by @emilelearns</span> under the account header on every tweet!</li>
+            <li>Once saved, X automatically renders <span className="text-sky-400">🤖 Automated by @EpochLabsHQ</span> under the account header on every tweet!</li>
           </ol>
           <p className="text-[11px] text-slate-500 italic">
             * Note: The badge is rendered natively by X platform UI. You do not need to type it in your tweet body.
@@ -322,12 +322,12 @@ export function TwitterAutoPostCard() {
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold text-white text-sm">Émile</span>
                     <span className="text-sky-400 text-xs">✓</span>
-                    <span className="text-slate-500 text-xs">@emilelearns</span>
+                    <span className="text-slate-500 text-xs">@EpochLabsHQ</span>
                   </div>
                   {/* Official X Native Automated Account Badge Subtitle */}
                   <div className="flex items-center gap-1 text-[11px] text-sky-400/90 font-medium">
                     <span>🤖 Automated by</span>
-                    <span className="underline">{status?.managed_by_handle || '@emilelearns'}</span>
+                    <span className="underline">{status?.managed_by_handle || '@EpochLabsHQ'}</span>
                   </div>
                 </div>
               </div>

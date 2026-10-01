@@ -1,77 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useEmileStore, TokenItem } from '@/store/useEmileStore';
+import { LIVE_BLOCKS } from '@/config/pipelineCode';
+import { highlightCode } from '@/components/ui/codeHighlight';
 
-const BLOCKS = [
-  {
-    stage: 'ingest · robinhood chain',
-    src: `# token scan from robinhood chain DEX pool
-new = dexscreener.latest_boosts(chain="robinhood", limit=500)
-keep = new[new.peak_mc >= 10_000]          # the gate
-log(f"{len(new)} seen, {len(keep)} above the line")`
-  },
-  {
-    stage: 'pricing · dexscreener',
-    src: `# peak cap, never the current cap — a token that touched
-# 25K and fell back to 8K still crossed the gate
-pairs = dexscreener.pairs(chain="robinhood", tokens=keep.mint)
-keep = keep.join(pairs[["peak_mc","liq","image_url"]], on="mint")`
-  },
-  {
-    stage: 'holders · rpc',
-    src: `# the only feature that needs the chain itself
-accs = rpc.get_program_accounts(TOKEN_PROGRAM, filters=[
-    {"dataSize": 165},
-    {"memcmp": {"offset": 0, "bytes": mint}},
-])
-keep["holders"] = sum(1 for a in accs if a.amount > 0)`
-  },
-  {
-    stage: 'features',
-    src: `X = pd.DataFrame(index=df.index)
-X["hour_sin"] = np.sin(2*np.pi * df.launch_hour / 24)
-X["hour_cos"] = np.cos(2*np.pi * df.launch_hour / 24)
-X["holders"]  = np.log1p(df.holders)
-X["lore_len"] = df.lore.str.split().str.len()
-X = np.hstack([X.values, PCA(24).fit_transform(encode(df.lore))])`
-  },
-  {
-    stage: 'training',
-    src: `y = (df.peak_mc >= 30_000).astype(int)
-clf = LGBMClassifier(n_estimators=400, learning_rate=0.03,
-                     class_weight="balanced", min_child_samples=40)
-auc = cross_val_score(clf, X, y, cv=StratifiedKFold(5), scoring="roc_auc")
-log(f"roc_auc {auc.mean():.3f} +/- {auc.std():.3f}")`
-  },
-  {
-    stage: 'the jar',
-    src: `eps   = sqrt((d*(log(2*n/d)+1) + log(4/delta)) / n)
-floor = auc.mean() - eps
-
-if floor >= 0.60:
-    jar.fill(); agent.unlock("launch")
-else:
-    log(f"floor {floor:.3f} — not yet. keep reading.")`
-  }
-];
-
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const TOK = /(#[^\n]*)|("(?:[^"\\]|\\.)*")|\b(import|from|if|else|for|in|return|def|not|and|or|as|True|False|None|sum)\b|\b(\d[\d_.]*)\b/g;
-
-function hl(src: string): string {
-  let out = '', last = 0, m: RegExpExecArray | null;
-  TOK.lastIndex = 0;
-  while ((m = TOK.exec(src)) !== null) {
-    out += esc(src.slice(last, m.index));
-    if (m[1])      out += '<span class="c">' + esc(m[1]) + '</span>';
-    else if (m[2]) out += '<span class="s">' + esc(m[2]) + '</span>';
-    else if (m[3]) out += '<span class="k">' + esc(m[3]) + '</span>';
-    else          out += '<span class="n">' + esc(m[4]) + '</span>';
-    last = m.index + m[0].length;
-  }
-  return out + esc(src.slice(last));
-}
+// Real ingestion code, file path shown as the first line.
+const BLOCKS = LIVE_BLOCKS.map((b) => ({ stage: b.stage, src: `# backend/app/${b.file}\n${b.src}` }));
+const hl = highlightCode;
 
 const fmtMC = (v: number) => '$' + (v / 1000).toFixed(v >= 100000 ? 0 : 1) + 'K';
 
@@ -103,6 +39,7 @@ export const CrtTerminal: React.FC = () => {
   const [blockIdx, setBlockIdx] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const codeRef = useRef<HTMLDivElement>(null);
 
   // Live code typing loop
   useEffect(() => {
@@ -111,7 +48,7 @@ export const CrtTerminal: React.FC = () => {
 
     if (charIdx < b.src.length) {
       const timer = setTimeout(() => {
-        setCharIdx((prev) => prev + 2);
+        setCharIdx((prev) => prev + 3);
       }, 18);
       return () => clearTimeout(timer);
     } else {
@@ -127,22 +64,28 @@ export const CrtTerminal: React.FC = () => {
 
   const currentCodeSrc = BLOCKS[blockIdx].src.slice(0, charIdx);
 
+  // Keep the cursor in view as the real code (longer than the panel) types out.
+  useEffect(() => {
+    const el = codeRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [charIdx]);
+
   return (
     <div className="screen min-h-[520px] rounded-r-lg border-l border-[var(--rule)]">
       {/* Terminal Top Bar */}
-      <div className="scr-bar flex items-center gap-3 px-4 py-2.5 border-b border-[#14261C] bg-[#09120D] text-xs relative z-2">
+      <div className="scr-bar flex items-center gap-3 px-4 py-2.5 border-b border-[var(--rule)] bg-[var(--panel2)] text-xs relative z-2">
         <div className="flex items-center gap-1.5">
           <span className={`lamp w-2 h-2 rounded-full ${isConnected ? 'bg-[var(--live)] lamp-active' : 'bg-[var(--stall)]'}`} />
-          <span className="t text-[#9ED8B3] font-mono font-medium">epoch labs — live</span>
+          <span className="t text-[var(--live)] font-mono font-medium">epoch labs — live</span>
         </div>
 
-        <span className="r ml-auto text-[#4E755D] font-mono text-[11px] bg-[#0E1F16] px-2.5 py-0.5 rounded border border-[#163625]">
+        <span className="r ml-auto text-[var(--dim)] font-mono text-[11px] bg-[var(--soft)] px-2.5 py-0.5 rounded border border-[var(--rule)]">
           {stage}
         </span>
 
         <button 
           onClick={() => setIsPaused(!isPaused)} 
-          className="ml-1 px-2.5 py-1 text-[10.5px] font-mono bg-[#0E1F16] border border-[#1C452E] text-[#9ED8B3] hover:text-[var(--banana)] hover:border-[var(--banana)] transition-all rounded cursor-pointer"
+          className="ml-1 px-2.5 py-1 text-[10.5px] font-mono bg-[var(--soft)] border border-[var(--border-strong)] text-[var(--live)] hover:text-[var(--banana)] hover:border-[var(--banana)] transition-all rounded cursor-pointer"
         >
           {isPaused ? '▶ Resume' : '⏸ Pause'}
         </button>
@@ -150,15 +93,16 @@ export const CrtTerminal: React.FC = () => {
 
       {/* Code Stream Display */}
       <div 
-        className="code flex-1 min-h-[236px] max-h-[236px] overflow-hidden p-3.5 px-4.5 font-mono text-xs leading-relaxed white-space-pre-wrap color-[#A4CBB1] relative z-2"
+        ref={codeRef}
+        className="code flex-1 min-h-[236px] max-h-[236px] overflow-hidden p-3.5 px-4.5 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words text-[var(--fg)] relative z-2"
         dangerouslySetInnerHTML={{ __html: hl(currentCodeSrc) + '<span class="cur"></span>' }}
       />
 
       {/* Source Counters Bar */}
-      <div className="pull flex gap-4 px-4.5 py-2 border-t border-b border-[#14261C] bg-[#09120D] text-[11px] text-[#4E7360] font-mono relative z-2">
-        <span>robinhood chain <b className="text-[#A7E2BD] font-medium ml-1">{counters.pump}</b> pulled</span>
-        <span>dexscreener <b className="text-[#A7E2BD] font-medium ml-1">{counters.dex}</b> priced</span>
-        <span>rpc <b className="text-[#A7E2BD] font-medium ml-1">{counters.rpc}</b> holder counts</span>
+      <div className="pull flex gap-4 px-4.5 py-2 border-t border-b border-[var(--rule)] bg-[var(--panel2)] text-[11px] text-[var(--dim)] font-mono relative z-2">
+        <span>robinhood chain <b className="text-[var(--live)] font-medium ml-1">{counters.pump}</b> pulled</span>
+        <span>dexscreener <b className="text-[var(--live)] font-medium ml-1">{counters.dex}</b> priced</span>
+        <span>rpc <b className="text-[var(--live)] font-medium ml-1">{counters.rpc}</b> holder counts</span>
       </div>
 
       {/* Realtime Token Feed Table */}
@@ -167,17 +111,17 @@ export const CrtTerminal: React.FC = () => {
           {tokens.map((t, idx) => (
             <div 
               key={t.mint + idx} 
-              className="trow trow-new grid grid-cols-[22px_1.35fr_62px_74px] sm:grid-cols-[22px_1.35fr_62px_62px_74px] gap-2.5 items-center px-4.5 py-1.75 border-b border-[#0E1B15] text-[11.5px]"
+              className="trow trow-new grid grid-cols-[22px_1.35fr_62px_74px] sm:grid-cols-[22px_1.35fr_62px_62px_74px] gap-2.5 items-center px-4.5 py-1.75 border-b border-[var(--soft)] text-[11.5px]"
             >
               <div 
-                className="lg w-5 h-5 rounded-full grid place-items-center text-[8.5px] font-bold text-[#060D09] shadow-sm"
+                className="lg w-5 h-5 rounded-full grid place-items-center text-[8.5px] font-bold text-[var(--ink)] shadow-sm"
                 style={{ backgroundColor: `hsl(${t.hue || 38} 65% 58%)` }}
               >
                 {t.symbol.slice(0, 2)}
               </div>
 
               <div className="min-w-0">
-                <span className="nm text-[#E3F2E9] font-medium">{t.name}</span>
+                <span className="nm text-[var(--fg-hi)] font-medium">{t.name}</span>
                 <a 
                   href={`https://dexscreener.com/robinhood/${t.mint}`} 
                   target="_blank" 
@@ -187,26 +131,35 @@ export const CrtTerminal: React.FC = () => {
                 >
                   ${t.symbol} ↗
                 </a>
-                <div className="lore text-[#5A826D] text-[10px] truncate mt-0.25">
+                <div className="lore text-[var(--dim)] text-[10px] truncate mt-0.25">
                   {t.lore_withheld ? '[lore withheld]' : t.lore}
                 </div>
               </div>
 
-              <div className="num text-right font-mono text-[#9ED8B3]">{t.holders.toLocaleString('en-US')}</div>
+              <div
+                className={`num text-right font-mono ${t.holders == null ? 'text-[var(--faint)]' : 'text-[var(--live)]'}`}
+                title={t.holders == null ? 'Holders are sampled once, 48h after launch' : undefined}
+              >
+                {t.holders == null ? '—' : t.holders.toLocaleString('en-US')}
+              </div>
 
               {/* Peak MC Column: Hidden on mobile (hide-sm), lore remains displayed */}
-              <div className="num text-right font-mono text-[#9ED8B3] hide-sm">
+              <div className="num text-right font-mono text-[var(--live)] hide-sm">
                 {fmtMC(t.peak_mc)}
-                <div className="tt text-[#41614E] text-[9.5px] mt-0.25">{formatTimestamp(t)}</div>
+                <div className="tt text-[var(--faint)] text-[9.5px] mt-0.25">{formatTimestamp(t)}</div>
               </div>
 
               <div className="text-right">
-                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
-                  t.status === 'passed' 
-                    ? 'bg-[rgba(52,211,153,0.12)] text-[var(--live)] border border-[rgba(52,211,153,0.3)] glow-live' 
-                    : 'bg-[rgba(248,113,113,0.1)] text-[var(--stall)] border border-[rgba(248,113,113,0.25)]'
-                }`}>
-                  {t.status === 'passed' ? '● 30K+' : '· stalled'}
+                <span className={`inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
+                  t.status === 'passed'
+                    ? 'bg-[var(--live)]/12 text-[var(--live)] border border-[var(--live)]/30'
+                    : t.status === 'stalled'
+                      ? 'bg-[var(--stall)]/10 text-[var(--stall)] border border-[var(--stall)]/25'
+                      : 'bg-[var(--banana)]/10 text-[var(--banana)] border border-[var(--banana)]/25'
+                }`}
+                  title={t.status === 'pending' ? 'Labelled 48h after launch' : undefined}
+                >
+                  {t.status === 'passed' ? '● 30K+' : t.status === 'stalled' ? '· stalled' : '◦ pending'}
                 </span>
               </div>
             </div>

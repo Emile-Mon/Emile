@@ -60,7 +60,7 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
                 className="w-9 h-9 rounded-md object-cover border border-[var(--banana)]/50 shrink-0"
               />
             )}
-            <h4 className="tname font-serif text-xl font-normal text-[var(--fg-hi)] m-0 leading-snug">
+            <h4 className="tname font-sans font-semibold text-xl font-normal text-[var(--fg-hi)] m-0 leading-snug">
               {data.name} <span className="tick text-[var(--banana)] text-xs font-mono ml-1.5">${data.symbol || data.name.replace(/[^a-zA-Z]/g, '').slice(0, 5).toUpperCase()}</span>
             </h4>
           </div>
@@ -98,7 +98,7 @@ export const LaunchLogEntry: React.FC<LaunchLogEntryProps> = ({ data }) => {
           <div className="lab text-[0.62rem] tracking-widest text-[var(--dim)] uppercase mb-1">
             PREDICTED SURVIVAL
           </div>
-          <div className="big font-serif text-2xl font-semibold text-[var(--banana)] leading-none tabular-nums">
+          <div className="big font-sans font-semibold text-2xl text-[var(--banana)] leading-none tabular-nums">
             {data.predicted_prob.toFixed(4)}
           </div>
           <p className="note text-[0.64rem] text-[var(--dim)] mt-2 leading-relaxed">

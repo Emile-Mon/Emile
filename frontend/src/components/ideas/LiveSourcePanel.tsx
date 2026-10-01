@@ -11,7 +11,7 @@ export const LiveSourcePanel: React.FC<LiveSourcePanelProps> = ({
   sha = '4f1c9ae72b10',
   sourceCode
 }) => {
-  const defaultSource = sourceCode || `# emile/ideas.py - runs once per model retrain
+  const defaultSource = sourceCode || `# epochlabs/ideas.py - runs once per model retrain
 import random
 import hashlib
 from dataclasses import dataclass
@@ -46,7 +46,7 @@ def generate_cycle(run_id: int, model, n: int = 100) -> list[Candidate]:
             continue
         seen.add(name.casefold())
 
-        # holders held at dataset median so features emile controls move
+        # holders held at dataset median so features epochlabs controls move
         x = featurise(name, lore, hour, holders=MEDIAN_HOLDERS)
         score = float(model.predict_proba(x)[0][1])
 
@@ -92,7 +92,7 @@ def generate_cycle(run_id: int, model, n: int = 100) -> list[Candidate]:
         <span>GENERATOR : LIVE SOURCE</span>
         <span className="sha text-[var(--banana-lo)] font-mono">sha {sha.slice(0, 8)}</span>
       </div>
-      <pre className="p-4 text-[0.72rem] leading-[1.75] overflow-y-auto font-mono text-[#9FB3C8] whitespace-pre-wrap break-words flex-1 scrollbar-thin">
+      <pre className="p-4 text-[0.72rem] leading-[1.75] overflow-y-auto font-mono text-[var(--dim)] whitespace-pre-wrap break-words flex-1 scrollbar-thin">
         {displayedText}
         {isTyping && <span className="inline-block w-[0.55em] h-[1em] bg-[var(--banana)] align-[-0.15em] animate-pulse ml-0.5" />}
       </pre>

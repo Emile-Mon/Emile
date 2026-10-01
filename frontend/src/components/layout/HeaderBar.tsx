@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { EMILE_CONTRACT_ADDRESS } from '@/config/constants';
 
 interface HeaderBarProps {
   phaseText?: string;
@@ -11,21 +10,12 @@ interface HeaderBarProps {
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · learning' }) => {
   const pathname = usePathname();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyCA = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(EMILE_CONTRACT_ADDRESS);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   const navLinks = [
     { name: 'Hero', href: '/' },
     { name: 'Console', href: '/console' },
     { name: 'Brain', href: '/brain' },
-    { name: 'Launches', href: '/launches' },
+    { name: 'The Math', href: '/math' },
+    // Launches is hidden from the nav for now; the /launches route still works.
     { name: 'About', href: '/about' },
   ];
 
@@ -43,7 +33,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
             className="w-14 h-14 md:w-18 md:h-18 rounded-xl border border-[var(--banana)]/60 shadow-lg object-contain bg-black/40 group-hover:scale-105 transition-transform p-1" 
           />
           <div className="flex flex-col">
-            <span className="font-serif font-bold text-2xl md:text-3xl tracking-tight text-[#F0F5FA] group-hover:text-[var(--banana)] transition-colors leading-tight">
+            <span className="font-sans font-semibold text-2xl md:text-3xl tracking-tight text-[var(--fg-hi)] group-hover:text-[var(--banana)] transition-colors leading-tight">
               Epoch Labs
             </span>
             <span className="text-xs md:text-sm font-mono text-[var(--banana)]/90 tracking-widest uppercase mt-1 font-semibold">
@@ -52,7 +42,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
           </div>
         </Link>
         <div className="sub text-[var(--dim)] text-xs md:text-sm max-w-[50ch] leading-relaxed truncate md:whitespace-normal">
-          Epoch Labs has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
+          Epoch Labs has been at this desk since day one, reading every Robinhood Chain token that clears $10K. The hourglass only turns when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
         </div>
       </div>
 
@@ -65,7 +55,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
           let tabStyle = 'text-[var(--dim)] hover:text-[var(--fg)] hover:bg-white/5 border border-transparent';
           if (isActive) {
             tabStyle = isLaunches
-              ? 'bg-[var(--banana)]/15 text-[var(--banana)] border border-[var(--banana)] shadow-[0_0_12px_rgba(242,201,76,0.35)] font-semibold'
+              ? 'bg-[var(--banana)]/15 text-[var(--banana)] border border-[var(--banana)] font-semibold'
               : 'bg-[var(--rule)] text-[var(--banana)] border border-[var(--banana-lo)]/40 shadow-sm';
           }
 
@@ -90,32 +80,21 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
         })}
       </nav>
 
-      {/* Right Column: GitHub & X Redirects & $EMILE Badge */}
+      {/* Right Column: X Link & $EPC Badge */}
       <div className="topright flex items-center justify-end gap-3 shrink-0">
         <a
-          href="https://github.com/Emile-Mon/Emile"
+          href="https://x.com/EpochLabsHQ"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center p-2.5 rounded-lg bg-[var(--panel2)] border border-[var(--soft)] text-[var(--dim)] hover:text-[#F0F5FA] hover:border-[var(--banana)] hover:bg-white/5 transition-all duration-200 shadow-sm"
-          title="Émile GitHub Repository"
-        >
-          <svg className="w-4 h-4 fill-current text-[var(--banana)]" viewBox="0 0 24 24">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-          </svg>
-        </a>
-        <a
-          href="https://x.com/emilelearns?s=11"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center p-2.5 rounded-lg bg-[var(--panel2)] border border-[var(--soft)] text-[var(--dim)] hover:text-[#F0F5FA] hover:border-[var(--banana)] hover:bg-white/5 transition-all duration-200 shadow-sm"
-          title="Follow Émile on X (@emilelearns)"
+          className="inline-flex items-center justify-center p-2.5 rounded-lg bg-[var(--panel2)] border border-[var(--soft)] text-[var(--dim)] hover:text-[var(--fg-hi)] hover:border-[var(--banana)] hover:bg-white/5 transition-all duration-200 shadow-sm"
+          title="Follow Epoch Labs on X (@EpochLabsHQ)"
         >
           <svg className="w-4 h-4 fill-current text-[var(--banana)]" viewBox="0 0 24 24">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
         </a>
         <div className="text-right shrink-0 min-w-[90px] hidden sm:block">
-          <div className="sym text-[var(--banana)] font-serif text-base font-semibold glow-banana leading-none">$EMILE</div>
+          <div className="sym text-[var(--banana)] font-sans font-semibold text-base leading-none">$EPC</div>
           <div className="phase text-[var(--faint)] text-[10.5px] mt-1 font-mono uppercase tracking-wider leading-none">{phaseText}</div>
         </div>
       </div>

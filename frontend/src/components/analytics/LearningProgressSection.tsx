@@ -90,8 +90,8 @@ export const LearningProgressSection: React.FC = () => {
               Learning Progress & Telemetry
             </span>
           </div>
-          <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#F1F6FA] tracking-tight mt-1">
-            Émile Model Training & Data Ingestion
+          <h2 className="font-sans font-semibold text-2xl md:text-3xl text-[var(--fg-hi)] tracking-tight mt-1">
+            Epoch Labs Model Training & Data Ingestion
           </h2>
           <p className="text-xs md:text-sm text-[var(--dim)] mt-1 max-w-[70ch]">
             Real-time aggregate data collected across Robinhood Chain. Machine learning weights update continuously as token market caps cross established evaluation thresholds.
@@ -101,10 +101,10 @@ export const LearningProgressSection: React.FC = () => {
         <div className="flex items-center gap-3 self-start md:self-auto">
           <div className="px-3.5 py-1.5 rounded-lg bg-[var(--panel)] border border-[var(--rule)] font-mono text-xs text-[var(--fg)] flex items-center gap-2">
             <span className="text-[var(--faint)]">PHASE:</span>
-            <span className="text-[var(--banana)] font-bold glow-banana">1 · INGESTION</span>
+            <span className="text-[var(--banana)] font-bold">1 · INGESTION</span>
           </div>
-          <div className="px-3.5 py-1.5 rounded-lg bg-[rgba(52,211,153,0.1)] border border-[var(--live)]/40 font-mono text-xs text-[var(--live)] font-bold">
-            JAR LEVEL {jarPct}%
+          <div className="px-3.5 py-1.5 rounded-lg bg-[var(--live)]/10 border border-[var(--live)]/40 font-mono text-xs text-[var(--live)] font-bold">
+            SAND LEVEL {jarPct}%
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@ export const LearningProgressSection: React.FC = () => {
             <span className="text-[10.5px] font-mono text-[var(--dim)] uppercase tracking-wider">Total Tokens Collected</span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--panel2)] text-[var(--banana)] border border-[var(--banana)]/30 font-semibold">LIVE SCAN</span>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#F1F6FA] mt-2 tracking-tight">
+          <div className="text-3xl font-sans font-semibold text-[var(--fg-hi)] mt-2 tracking-tight">
             {totalTokens.toLocaleString('en-US')}
           </div>
           <div className="text-[11px] font-mono text-[var(--dim)] mt-2 flex items-center justify-between border-t border-[var(--soft)] pt-2">
@@ -130,12 +130,12 @@ export const LearningProgressSection: React.FC = () => {
         <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)] hover:border-[var(--live)]/50 transition-all duration-200">
           <div className="flex justify-between items-start">
             <span className="text-[10.5px] font-mono text-[var(--dim)] uppercase tracking-wider">Class Distribution</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[rgba(52,211,153,0.15)] text-[var(--live)] font-semibold">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--live)]/15 text-[var(--live)] font-semibold">
               {winRate}% Win Rate
             </span>
           </div>
           <div className="flex items-baseline gap-3 mt-2">
-            <span className="text-3xl font-serif font-bold text-[var(--live)] tracking-tight glow-live">
+            <span className="text-3xl font-sans font-semibold text-[var(--live)] tracking-tight">
               {passedTokens.toLocaleString('en-US')}
             </span>
             <span className="text-sm font-mono text-[var(--dim)]">passed $30K</span>
@@ -152,10 +152,10 @@ export const LearningProgressSection: React.FC = () => {
         <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)] hover:border-[var(--cyan)]/50 transition-all duration-200">
           <div className="flex justify-between items-start">
             <span className="text-[10.5px] font-mono text-[var(--dim)] uppercase tracking-wider">Model Accuracy & VC Floor</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[rgba(56,189,248,0.15)] text-[var(--cyan)] font-semibold">ROC-AUC</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--cyan)]/15 text-[var(--cyan)] font-semibold">ROC-AUC</span>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-serif font-bold text-[var(--cyan)] tracking-tight glow-cyan">
+            <span className="text-3xl font-sans font-semibold text-[var(--cyan)] tracking-tight">
               {auc.toFixed(4)}
             </span>
             <span className="text-xs font-mono text-[var(--dim)]">Measured</span>
@@ -170,9 +170,9 @@ export const LearningProgressSection: React.FC = () => {
         <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)] hover:border-[var(--violet)]/50 transition-all duration-200">
           <div className="flex justify-between items-start">
             <span className="text-[10.5px] font-mono text-[var(--dim)] uppercase tracking-wider">Feature Dimension Vector</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[rgba(167,139,250,0.15)] text-[var(--violet)] font-semibold">d = {featureDim}</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--violet)]/15 text-[var(--violet)] font-semibold">d = {featureDim}</span>
           </div>
-          <div className="text-3xl font-serif font-bold text-[var(--violet)] mt-2 tracking-tight">
+          <div className="text-3xl font-sans font-semibold text-[var(--violet)] mt-2 tracking-tight">
             {featureDim} Signal Parameters
           </div>
           <div className="text-[11px] font-mono text-[var(--dim)] mt-2 flex items-center justify-between border-t border-[var(--soft)] pt-2">
@@ -191,13 +191,13 @@ export const LearningProgressSection: React.FC = () => {
           <div className="p-5 rounded-xl bg-[var(--panel)] border border-[var(--rule)] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-mono text-xs uppercase tracking-wider text-[#DCE6F0] font-semibold flex items-center gap-2">
+                <h3 className="font-mono text-xs uppercase tracking-wider text-[var(--fg)] font-semibold flex items-center gap-2">
                   <svg className="w-3.5 h-3.5 text-[var(--live)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   Active Data Streams & Ingestion Pipeline
                 </h3>
-                <span className="text-[10px] font-mono text-[var(--live)] bg-[rgba(52,211,153,0.1)] px-2 py-0.5 rounded border border-[var(--live)]/30">STREAMING</span>
+                <span className="text-[10px] font-mono text-[var(--live)] bg-[var(--live)]/10 px-2 py-0.5 rounded border border-[var(--live)]/30">STREAMING</span>
               </div>
               <p className="text-[11.5px] text-[var(--dim)] mb-4">
                 Continuous ingestion monitoring live Robinhood Chain EVM transactions, decentralized exchange pairs, and contract deployments.
@@ -225,7 +225,7 @@ export const LearningProgressSection: React.FC = () => {
 
           {/* Validation Gates Matrix */}
           <div className="p-5 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
-            <h3 className="font-mono text-xs uppercase tracking-wider text-[#DCE6F0] font-semibold mb-3 flex items-center gap-2">
+            <h3 className="font-mono text-xs uppercase tracking-wider text-[var(--fg)] font-semibold mb-3 flex items-center gap-2">
               <svg className="w-3.5 h-3.5 text-[var(--banana)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -240,8 +240,8 @@ export const LearningProgressSection: React.FC = () => {
                     <span className="text-xs font-mono font-medium text-[var(--fg)]">{g.val}</span>
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                       g.passed 
-                        ? 'bg-[rgba(52,211,153,0.15)] text-[var(--live)] border border-[var(--live)]/40' 
-                        : 'bg-[rgba(242,201,76,0.15)] text-[var(--banana)] border border-[var(--banana)]/40 animate-pulse'
+                        ? 'bg-[var(--live)]/15 text-[var(--live)] border border-[var(--live)]/40' 
+                        : 'bg-[var(--banana)]/15 text-[var(--banana)] border border-[var(--banana)]/40 animate-pulse'
                     }`}>
                       {g.passed ? '✓ PASSED' : '● IN PROGRESS'}
                     </span>
@@ -256,7 +256,7 @@ export const LearningProgressSection: React.FC = () => {
         <div className="lg:col-span-6 p-5 md:p-6 rounded-xl bg-[var(--panel)] border border-[var(--rule)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-mono text-xs uppercase tracking-wider text-[#DCE6F0] font-semibold flex items-center gap-2">
+              <h3 className="font-mono text-xs uppercase tracking-wider text-[var(--fg)] font-semibold flex items-center gap-2">
                 <svg className="w-3.5 h-3.5 text-[var(--violet)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 30v-6m0 -6V4m0 6v-6m0 6H3m8 0h8" />
                 </svg>
@@ -265,7 +265,7 @@ export const LearningProgressSection: React.FC = () => {
               <span className="text-[10.5px] font-mono text-[var(--violet)] font-semibold">28 FEATURES TRACKED</span>
             </div>
             <p className="text-[11.5px] text-[var(--dim)] mb-5">
-              The relative impact of extracted data signals calculated by Émile's training algorithm to distinguish tokens reaching &gt;$30K from stalled ones.
+              The relative impact of extracted data signals calculated by Epoch Labs' training algorithm to distinguish tokens reaching &gt;$30K from stalled ones.
             </p>
 
             <div className="space-y-4">
@@ -299,14 +299,14 @@ export const LearningProgressSection: React.FC = () => {
           <div className="mt-6 p-4 rounded-xl bg-[var(--panel2)] border border-[var(--rule)] flex items-center justify-between gap-4">
             <div>
               <div className="text-[10.5px] font-mono text-[var(--banana)] uppercase tracking-wider font-bold">
-                Jar Completion Progress
+                Hourglass Completion Progress
               </div>
               <div className="text-xs text-[var(--dim)] mt-0.5">
                 Vapnik–Chervonenkis proof floor <b className="text-[var(--fg)]">{vcFloor.toFixed(4)}</b> vs Target <b className="text-[var(--banana)]">0.600</b>
               </div>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-xl font-mono font-bold text-[var(--banana)] glow-banana">
+              <div className="text-xl font-mono font-bold text-[var(--banana)]">
                 {jarPct}%
               </div>
               <div className="text-[9.5px] font-mono text-[var(--live)] uppercase font-semibold">

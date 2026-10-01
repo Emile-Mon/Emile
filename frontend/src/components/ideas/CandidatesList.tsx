@@ -44,7 +44,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               key={`${c.name}-${i}`}
               className={`row grid grid-cols-[2.4rem_1fr_auto] gap-3 p-3 px-4 border-b border-[var(--rule)] items-start transition-colors duration-150 ${
                 isLead
-                  ? 'bg-[#E9C24B]/5 border-l-2 border-l-[var(--banana)]'
+                  ? 'bg-[var(--banana)]/5 border-l-2 border-l-[var(--banana)]'
                   : 'hover:bg-white/[0.02]'
               }`}
             >
@@ -64,7 +64,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 <button
                   type="button"
                   onClick={() => toggleCommitment(c.commitment)}
-                  className="cm text-[0.6rem] text-[#3E4C5A] hover:text-[var(--banana-lo)] transition-colors mt-1 block font-mono text-left"
+                  className="cm text-[0.6rem] text-[var(--faint)] hover:text-[var(--banana-lo)] transition-colors mt-1 block font-mono text-left"
                   title="Click to view full sha256 commitment hash"
                 >
                   commit {isExpanded ? c.commitment : `${c.commitment.slice(0, 16)}…`}

@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { Hourglass } from '@/components/ui/Hourglass';
+import { Tex } from '@/components/ui/Tex';
 import { useEmileStore } from '@/store/useEmileStore';
 import { IconPlay, IconPause, IconFastForward, IconReset } from '@/components/ui/CustomIcons';
 
@@ -34,6 +36,11 @@ export const ProofPanel: React.FC = () => {
   const displayAuc = hasUserInteracted ? auc : (model.auc || auc);
   const displayEps = hasUserInteracted ? e : (model.epsilon_vc || e);
   const displayFloor = hasUserInteracted ? lb : (model.proven_floor || lb);
+  const displayN = hasUserInteracted ? n : (model.n || n);
+  const displayD = hasUserInteracted ? d : (model.d || d);
+  // Recompute from the shown n and d so the substituted formula is arithmetically consistent.
+  const shownEps = epsilon(displayN, displayD);
+  const epsTex = shownEps >= 1 ? '1.000' : shownEps.toFixed(3);
 
   const isReady = jarPct >= 100.0;
 
@@ -69,93 +76,80 @@ export const ProofPanel: React.FC = () => {
   };
 
   return (
-    <div className="proof border-t border-[var(--rule)] bg-[var(--panel)]">
+    <div className="proof tex-diagonal border-t border-[var(--rule)] bg-[var(--panel)]">
       {/* Panel Header */}
       <div className="flex items-center justify-between p-4 px-6 border-b border-[var(--soft)] font-mono text-xs">
-        <span className="font-medium text-sm text-[#DCE6F0]">Vapnik–Chervonenkis Proof & Capacity System</span>
+        <span className="font-medium text-sm text-[var(--fg)]">Vapnik–Chervonenkis Proof & Capacity System</span>
         <span className={`px-2.5 py-0.5 rounded text-[11px] font-mono border ${
           isReady
-            ? 'border-[var(--banana)] text-[var(--banana)] bg-[rgba(242,201,76,0.1)] font-bold'
+            ? 'border-[var(--banana)] text-[var(--banana)] bg-[var(--banana)]/10 font-bold'
             : 'border-[var(--soft)] text-[var(--dim)]'
         }`}>
-          {isReady ? 'TARGET AUC 0.60 REACHED (100%)' : `JAR LEVEL: ${jarPct.toFixed(1)}%`}
+          {isReady ? 'TARGET AUC 0.60 REACHED (100%)' : `SAND LEVEL: ${jarPct.toFixed(1)}%`}
         </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-        {/* Left Column: Visual Animated Jar Graphic */}
-        <div className="lg:col-span-3 p-5 border-r border-[var(--soft)] flex flex-col items-center justify-center bg-[var(--panel2)] relative">
-          <div className="text-[10px] font-mono text-[var(--faint)] uppercase mb-2 tracking-wider">
-            Jar Capacity Visual
+        {/* Left Column: Visual Animated Hourglass */}
+        <div className="lg:col-span-3 p-5 border-r border-[var(--soft)] flex flex-col items-center justify-center bg-[var(--panel2)] relative overflow-hidden">
+          {/* Instrument corner brackets */}
+          <span className="absolute top-3 left-3 w-3 h-3 border-t border-l border-[var(--border-strong)]" />
+          <span className="absolute top-3 right-3 w-3 h-3 border-t border-r border-[var(--border-strong)]" />
+          <span className="absolute bottom-3 left-3 w-3 h-3 border-b border-l border-[var(--border-strong)]" />
+          <span className="absolute bottom-3 right-3 w-3 h-3 border-b border-r border-[var(--border-strong)]" />
+
+          <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--dim)] uppercase mb-1 tracking-[0.16em]">
+            <span className={`w-1.5 h-1.5 rounded-full ${jarPct >= 100 ? 'bg-[var(--live)]' : 'bg-[var(--banana)] lamp-active'}`} />
+            Epoch Labs Hourglass
           </div>
 
-          {/* SVG Glass Jar Graphic */}
-          <div className="relative w-44 h-64 flex items-center justify-center">
-            {/* Glass Container Shell */}
-            <div className="absolute inset-0 border-4 border-white/20 rounded-b-3xl rounded-t-lg bg-black/50 backdrop-blur-md shadow-[0_0_25px_rgba(0,0,0,0.6)] overflow-hidden">
-              
-              {/* Target Line marker (0.60 AUC / 100%) */}
-              <div className="absolute top-[12%] left-0 right-0 border-b-2 border-dashed border-[var(--live)] z-20 flex justify-between items-center px-1.5">
-                <span className="text-[8.5px] font-mono text-[var(--live)] bg-black/80 px-1 rounded">AUC 0.60</span>
-                <span className="text-[8.5px] font-mono text-[var(--live)] bg-black/80 px-1 rounded">100%</span>
-              </div>
+          {/* Hourglass Graphic: sand fallen = progress toward AUC 0.60 */}
+          <div className="relative w-48 h-[264px]">
+            <Hourglass pct={jarPct} className="w-full h-full" />
+          </div>
 
-              {/* Baseline Line marker (0.50 AUC / 0%) */}
-              <div className="absolute bottom-[6%] left-0 right-0 border-b border-dashed border-white/30 z-20 flex justify-between items-center px-1.5">
-                <span className="text-[8.5px] font-mono text-white/50 bg-black/80 px-1 rounded">AUC 0.50</span>
-                <span className="text-[8.5px] font-mono text-white/50 bg-black/80 px-1 rounded">0%</span>
-              </div>
-
-              {/* Dynamic Liquid Level (Filled according to Jar Level %) */}
-              <div 
-                className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out bg-gradient-to-t from-[var(--banana-lo)] via-[var(--banana)] to-[var(--live)] opacity-85 shadow-[0_0_15px_rgba(242,201,76,0.5)]"
-                style={{ height: `${Math.max(4, Math.min(96, jarPct))}%` }}
-              >
-                {/* Surface Liquid Glow */}
-                <div className="w-full h-1.5 bg-white/70 shadow-[0_0_8px_white] animate-pulse" />
-              </div>
-
-              {/* Jar Level Badge Center Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-                <div className="px-3 py-1.5 rounded-xl bg-black/80 border border-[var(--banana)] text-center shadow-xl backdrop-blur-md">
-                  <div className="text-[9px] font-mono text-[var(--dim)] uppercase font-semibold">JAR LEVEL</div>
-                  <div className="text-lg font-serif font-bold text-[var(--banana)] glow-banana tabular-nums">
-                    {jarPct.toFixed(1)}%
-                  </div>
-                </div>
-              </div>
-
-              {/* Reflection */}
-              <div className="absolute top-0 left-1.5 w-2.5 h-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none z-30" />
+          <div className="mt-1 text-center">
+            <div className="text-[9.5px] font-mono text-[var(--faint)] uppercase tracking-[0.16em]">Sand Level</div>
+            <div className={`text-4xl font-sans font-semibold tabular-nums tracking-tight leading-none mt-1 ${jarPct >= 100 ? 'text-[var(--live)]' : 'text-[var(--banana)]'}`}>
+              {jarPct.toFixed(1)}<span className="text-xl text-[var(--dim)] ml-0.5">%</span>
             </div>
-
-            {/* Jar Lid Cap */}
-            <div className="absolute -top-3.5 w-32 h-4.5 bg-gradient-to-r from-gray-700 via-gray-400 to-gray-700 rounded-t-md border-b border-black shadow z-30" />
           </div>
 
-          <div className="text-center font-mono text-[11px] mt-3">
-            <span className="text-[var(--dim)]">Proven Floor: </span>
-            <b className="text-[var(--banana)] font-bold">{displayFloor.toFixed(3)}</b>
+          <div className="w-full mt-4 grid grid-cols-2 gap-px bg-[var(--rule)] border border-[var(--rule)] rounded-md overflow-hidden text-[10px] font-mono">
+            <div className="bg-[var(--panel)] px-2.5 py-1.5">
+              <div className="text-[var(--faint)] uppercase">Proven Floor</div>
+              <div className="text-[var(--banana)] text-[12px] font-medium tabular-nums">{displayFloor.toFixed(3)}</div>
+            </div>
+            <div className="bg-[var(--panel)] px-2.5 py-1.5 text-right">
+              <div className="text-[var(--faint)] uppercase">Target</div>
+              <div className="text-[var(--live)] text-[12px] font-medium tabular-nums">0.600</div>
+            </div>
           </div>
         </div>
 
         {/* Middle Column: Theory Explanation & Formula */}
-        <div className="lg:col-span-4 p-5 md:p-6 border-r border-[var(--soft)] flex flex-col justify-between">
+        <div className="theme-light tex-paper lg:col-span-4 p-5 md:p-6 border-r border-[var(--soft)] flex flex-col justify-between">
           <div>
-            <div className="font-serif font-bold text-xl text-[#F0F5FA] tracking-tight">
-              Why the jar fills slowly
+            <div className="font-sans font-semibold text-xl text-[var(--fg-hi)] tracking-tight">
+              Why the hourglass runs slowly
             </div>
             <div className="pp text-[var(--dim)] text-[12px] mt-2 leading-relaxed">
               A model can look good by luck on a small sample. Vapnik–Chervonenkis theory puts a number on that luck: with <b className="text-[var(--fg)] font-medium">n</b> tokens and a model of capacity <b className="text-[var(--fg)] font-medium">d</b>, the true score can sit below the measured one by at most ε, with 95% confidence.
             </div>
 
-            <div className="formula bg-[var(--panel2)] border border-[var(--rule)] rounded-lg p-3.5 text-center text-xs text-[#E2EBF5] my-4 shadow-inner">
-              <span className="eps text-[var(--violet)] font-bold glow-violet">ε</span> = <span className="rad border-t border-[var(--dim)] pt-0.75 px-1.5 -ml-0.5">√<span className="frac inline-block align-middle text-center mx-0.5"><span className="nu block px-1.5 pb-0.5 border-b border-[var(--dim)] text-[11px]">d(ln <span className="vv text-[var(--banana)] font-medium">2n</span>/d + 1) + ln 4/δ</span><span className="de block pt-0.5 text-[11px]">n</span></span></span>
+            <div className="formula math-formula bg-[var(--panel)] border border-[var(--rule)] rounded-lg p-3.5 my-4 text-[var(--fg-hi)] overflow-x-auto">
+              <Tex block>{String.raw`\varepsilon = \sqrt{\frac{d\left(\ln\frac{2n}{d}+1\right)+\ln\frac{4}{\delta}}{n}}`}</Tex>
+              <div className="border-t border-dashed border-[var(--rule)] mt-3 pt-3 text-[var(--fg)]">
+                <Tex block>{String.raw`\varepsilon = \sqrt{\frac{${displayD}\left(\ln\frac{2\cdot ${displayN}}{${displayD}}+1\right)+\ln 80}{${displayN}}} = \mathbf{${epsTex}}`}</Tex>
+              </div>
+              <div className="border-t border-dashed border-[var(--rule)] mt-3 pt-3">
+                <Tex block>{String.raw`\overline{\mathrm{AUC}} - \varepsilon = ${displayAuc.toFixed(3)} - ${epsTex} = ${(displayAuc - Math.min(1, shownEps)).toFixed(3)}`}</Tex>
+              </div>
             </div>
           </div>
 
           <div className="pp text-[var(--dim)] text-[11.5px] leading-relaxed">
-            Émile fills the jar with <b className="text-[var(--fg)] font-medium">AUC − ε</b>, never with the raw score. Good model, thin sample: jar stays empty. That is the point.
+            Epoch Labs lets sand fall with <b className="text-[var(--fg)] font-medium">AUC − ε</b>, never with the raw score. Good model, thin sample: the sand stays on top. That is the point.
           </div>
         </div>
 
@@ -164,15 +158,15 @@ export const ProofPanel: React.FC = () => {
           <div className="ros grid grid-cols-3 border border-[var(--soft)] rounded-lg overflow-hidden shadow-sm">
             <div className="ro p-3 px-3 bg-[var(--panel2)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">measured AUC</div>
-              <div className="ro-v font-serif text-lg font-bold text-[var(--live)] tracking-tight glow-live">{displayAuc.toFixed(3)}</div>
+              <div className="ro-v font-sans font-semibold text-lg text-[var(--live)] tracking-tight">{displayAuc.toFixed(3)}</div>
             </div>
             <div className="ro p-3 px-3 bg-[var(--panel2)] border-l border-[var(--soft)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">penalty ε</div>
-              <div className="ro-v font-serif text-lg font-bold text-[var(--violet)] tracking-tight">{displayEps >= 1 ? '—' : displayEps.toFixed(3)}</div>
+              <div className="ro-v font-sans font-semibold text-lg text-[var(--violet)] tracking-tight">{displayEps >= 1 ? '—' : displayEps.toFixed(3)}</div>
             </div>
             <div className="ro p-3 px-3 bg-[var(--panel2)] border-l border-[var(--soft)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">proven floor</div>
-              <div className="ro-v font-serif text-lg font-bold text-[var(--banana)] tracking-tight glow-banana">{displayFloor.toFixed(3)}</div>
+              <div className="ro-v font-sans font-semibold text-lg text-[var(--banana)] tracking-tight">{displayFloor.toFixed(3)}</div>
             </div>
           </div>
 
@@ -227,12 +221,12 @@ export const ProofPanel: React.FC = () => {
           {/* Verdict Line */}
           <div className={`verdict mt-3 p-3 rounded-lg border text-[11px] leading-relaxed transition-all duration-300 ${
             isReady 
-              ? 'border-[var(--banana)] text-[var(--banana)] bg-[rgba(242,201,76,0.06)] shadow-sm' 
+              ? 'border-[var(--banana)] text-[var(--banana)] bg-[var(--banana)]/6 shadow-sm' 
               : 'border-[var(--soft)] text-[var(--dim)] bg-[var(--panel2)]'
           }`}>
             {isReady ? (
               <>
-                Jar full (100%). The proven floor sits at <b className="text-[var(--banana-hi)] font-semibold">{lb.toFixed(3)}</b>, clear of 0.600. Émile has earned the launch!
+                Hourglass complete (100%). The proven floor sits at <b className="text-[var(--banana-hi)] font-semibold">{lb.toFixed(3)}</b>, clear of 0.600. Epoch Labs has earned the launch!
               </>
             ) : (
               <>
@@ -245,14 +239,14 @@ export const ProofPanel: React.FC = () => {
           <div className="btnrow flex gap-2 flex-wrap mt-3">
             <button 
               onClick={syncWithLiveDB}
-              className="btn inline-flex items-center gap-1 bg-[rgba(158,216,179,0.12)] border border-[#9ED8B3] text-[#9ED8B3] font-bold text-[10.5px] px-3 py-1.5 rounded-md font-mono cursor-pointer hover:bg-[#9ED8B3] hover:text-[#080E14] transition-all duration-200"
+              className="btn inline-flex items-center gap-1 bg-[var(--live)]/12 border border-[var(--live)] text-[var(--live)] font-bold text-[10.5px] px-3 py-1.5 rounded-md font-mono cursor-pointer hover:bg-[var(--live)] hover:text-[var(--panel)] transition-all duration-200"
             >
               <span>Sync Live DB ({tally.all || simState.n || 2346})</span>
             </button>
 
             <button 
               onClick={fillToTarget}
-              className="btn inline-flex items-center gap-1 bg-[var(--banana)] text-[var(--ink)] font-bold text-[10.5px] px-3 py-1.5 rounded-md font-mono cursor-pointer hover:bg-[#F2C94C] transition-colors shadow-sm"
+              className="btn inline-flex items-center gap-1 bg-[var(--banana)] text-[var(--ink)] font-bold text-[10.5px] px-3 py-1.5 rounded-md font-mono cursor-pointer hover:bg-[var(--banana)] transition-colors shadow-sm"
             >
               <IconFastForward className="w-3 h-3 text-[var(--ink)]" />
               <span>Fill to Target AUC 0.60</span>

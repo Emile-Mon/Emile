@@ -1,57 +1,100 @@
 @import "tailwindcss";
 
 :root {
-  /* Rich Dark Color System */
-  --ink: #06090D;
-  --panel: #0D131B;
-  --panel2: #090D13;
-  --panel-glass: rgba(13, 19, 27, 0.75);
-  --rule: #1B2635;
-  --soft: #141D29;
-  --crt: #050B08;
+  /* Brand palette — three core colors */
+  --brand-brown: #332311;
+  --brand-amber: #E99F30;
+  --brand-cream: #FEFAF0;
 
-  /* Typography Colors */
-  --fg: #D4E0EE;
-  --dim: #718497;
-  --faint: #3D4B59;
+  /* Surfaces: shades of brown */
+  --background: #2A1C0D;
+  --surface: var(--brand-brown);
+  --surface-raised: #3F2C17;
+  --muted: #3A2814;
+  --border: rgb(254 250 240 / .10);
+  --border-strong: rgb(254 250 240 / .18);
+  --grid-line: rgb(254 250 240 / .035);
 
-  /* Brand Accents */
-  --banana: #F2C94C;
-  --banana-hi: #FFE885;
-  --banana-lo: #C49A18;
-  --banana-glow: rgba(242, 201, 76, 0.25);
+  /* Text: tints of cream */
+  --foreground: #F2EBDC;
+  --muted-foreground: #B3A48C;
+
+  /* Accent: amber */
+  --primary: var(--brand-amber);
+  --accent: var(--brand-amber);
+  --ring: rgb(233 159 48 / .5);
+  --radius: .5rem;
+  --ease-instrument: cubic-bezier(.22, 1, .36, 1);
+
+  /* App tokens mapped onto the palette */
+  --ink: var(--background);
+  --panel: var(--surface);
+  --panel2: #2F2010;
+  --panel-glass: rgb(51 35 17 / .85);
+  --rule: var(--border);
+  --soft: rgb(254 250 240 / .06);
+  --crt: #231707;
+
+  --fg: var(--foreground);
+  --fg-hi: var(--brand-cream);
+  --dim: var(--muted-foreground);
+  --faint: #7E6B52;
+
+  --banana: var(--brand-amber);
+  --banana-hi: #F5C26F;
+  --banana-lo: #B8761B;
+  --banana-glow: rgb(233 159 48 / .18);
 
   --fur: #7C6046;
   --fur-hi: #A8845E;
   --fur-face: #D9BD9B;
 
-  /* Neon Status Signals */
-  --live: #34D399;
-  --live-glow: rgba(52, 211, 153, 0.3);
-  --stall: #F87171;
-  --stall-glow: rgba(248, 113, 113, 0.25);
-  --violet: #A78BFA;
-  --cyan: #38BDF8;
+  /* Status + chart hues, kept warm so they sit inside the palette */
+  --live: #C6CF7E;
+  --live-glow: rgb(198 207 126 / .2);
+  --green: var(--live);
+  --stall: #E2704E;
+  --stall-glow: rgb(226 112 78 / .2);
+  --violet: #D79A78;
+  --cyan: #F0D4A0;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
 * {
   box-sizing: border-box;
 }
 
+::selection {
+  background: rgb(233 159 48 / .3);
+}
+
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--ink);
+  background-color: var(--ink);
   color: var(--fg);
-  font-family: 'JetBrains Mono', monospace, ui-monospace;
-  font-size: 13px;
-  line-height: 1.55;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.03) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(167, 139, 250, 0.03) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(242, 201, 76, 0.02) 0px, transparent 50%);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
   background-attachment: fixed;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.025em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .wrap {
@@ -59,7 +102,7 @@ html, body {
   margin: 0 auto;
   border-left: 1px solid var(--soft);
   border-right: 1px solid var(--soft);
-  box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+
 }
 
 /* Glassmorphism Cards */
@@ -72,22 +115,20 @@ html, body {
 
 /* Header Typography */
 .wordmark {
-  font-family: var(--font-fraunces, 'Fraunces', serif);
-  font-weight: 800;
-  font-size: 30px;
+  font-family: var(--font-inter), ui-sans-serif, sans-serif;
+  font-weight: 600;
+  font-size: 28px;
   letter-spacing: -.03em;
-  background: linear-gradient(135deg, #FFFFFF 0%, #C8D6E5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--fg-hi);
   line-height: 1;
 }
 
 .brand-console {
-  font-family: var(--font-space-grotesk, 'Space Grotesk', sans-serif);
-  font-weight: 700;
+  font-family: var(--font-inter), ui-sans-serif, sans-serif;
+  font-weight: 600;
   font-size: 20px;
   letter-spacing: -.02em;
-  color: #F1F6FA;
+  color: var(--fg-hi);
 }
 
 /* CRT Screen Effect & CRT Phosphor Flicker */
@@ -98,7 +139,7 @@ html, body {
   background: var(--crt);
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+  
 }
 
 .screen::after {
@@ -106,7 +147,7 @@ html, body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(180deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
   z-index: 10;
 }
 
@@ -115,22 +156,21 @@ html, body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.04), transparent 75%);
+  background: none;
   z-index: 9;
 }
 
 /* Code Syntax Highlighter Token Colors */
-.k { color: var(--violet); text-shadow: 0 0 8px rgba(167, 139, 250, 0.3); }
-.s { color: var(--live); text-shadow: 0 0 8px rgba(52, 211, 153, 0.3); }
-.n { color: var(--cyan); text-shadow: 0 0 8px rgba(56, 189, 248, 0.3); }
-.c { color: #486351; font-style: italic; }
+.k { color: var(--violet); }
+.s { color: var(--live); }
+.n { color: var(--cyan); }
+.c { color: var(--faint); font-style: italic; }
 
 .cur {
   display: inline-block;
   width: 7px;
   height: 14px;
   background: var(--banana);
-  box-shadow: 0 0 8px var(--banana);
   vertical-align: -2px;
   animation: blink 1s steps(1) infinite;
 }
@@ -155,11 +195,11 @@ html, body {
 }
 
 .trow:hover {
-  background-color: rgba(27, 38, 53, 0.4);
+  background-color: var(--soft);
 }
 
 .trow-new {
-  animation: slideRow 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideRow 0.32s var(--ease-instrument);
 }
 
 @keyframes slideRow {
@@ -178,7 +218,7 @@ input[type=range] {
 }
 
 input[type=range]:focus-visible {
-  outline: 2px solid var(--banana);
+  outline: 2px solid var(--ring);
   outline-offset: 5px;
 }
 
@@ -189,7 +229,6 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--banana);
   border: 2px solid var(--ink);
-  box-shadow: 0 0 10px var(--banana-glow);
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -200,16 +239,16 @@ input[type=range]::-webkit-slider-thumb:hover {
 
 /* Metric glow effects */
 .glow-live {
-  text-shadow: 0 0 16px rgba(52, 211, 153, 0.4);
+  text-shadow: none;
 }
 .glow-stall {
-  text-shadow: 0 0 16px rgba(248, 113, 113, 0.4);
+  text-shadow: none;
 }
 .glow-banana {
-  text-shadow: 0 0 16px rgba(242, 201, 76, 0.4);
+  text-shadow: none;
 }
 .glow-cyan {
-  text-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+  text-shadow: none;
 }
 
 /* Mobile responsive rules */
@@ -231,3 +270,134 @@ input[type=range]::-webkit-slider-thumb:hover {
     display: none !important;
   }
 }
+
+/* ---------- Light (amber) sections ---------- */
+/* Re-points the app tokens so any component inside renders brown-on-amber. */
+.theme-light {
+  --ink: var(--brand-amber);
+  --panel: #F2B457;
+  --panel2: #DF9426;
+  --panel-glass: rgb(233 159 48 / .9);
+  --rule: rgb(51 35 17 / .2);
+  --border-strong: rgb(51 35 17 / .32);
+  --soft: rgb(51 35 17 / .12);
+  --grid-line: rgb(51 35 17 / .07);
+
+  --fg: #3A2710;
+  --fg-hi: var(--brand-brown);
+  --dim: #563A14;
+  --faint: #664316;
+
+  --banana: #5A3405;
+  --banana-hi: var(--brand-cream);
+  --banana-lo: #3D2408;
+  --live: #2E4710;
+  --stall: #8C2A12;
+  --cyan: #4A3410;
+  --violet: #6B2E1A;
+
+  background-color: var(--brand-amber);
+  color: var(--fg);
+}
+
+/* ---------- Background textures ---------- */
+/* Cards and panels get a faint top light + dot grain instead of a flat fill. */
+[class*="bg-[var(--panel)]"],
+[class*="bg-[var(--panel2)]"] {
+  background-image:
+    linear-gradient(180deg, rgb(254 250 240 / .035), transparent 45%),
+    radial-gradient(rgb(254 250 240 / .045) 1px, transparent 1px);
+  background-size: 100% 100%, 12px 12px;
+}
+
+.theme-light [class*="bg-[var(--panel)]"],
+.theme-light [class*="bg-[var(--panel2)]"] {
+  background-image:
+    linear-gradient(180deg, rgb(254 250 240 / .22), transparent 50%),
+    radial-gradient(rgb(51 35 17 / .08) 1px, transparent 1px);
+  background-size: 100% 100%, 12px 12px;
+}
+
+/* Section-level backdrops */
+.tex-paper {
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, rgb(233 159 48 / .14), transparent 55%),
+    radial-gradient(80% 60% at 0% 100%, rgb(233 159 48 / .08), transparent 60%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+.theme-light.tex-paper {
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, rgb(254 250 240 / .28), transparent 55%),
+    radial-gradient(80% 60% at 0% 100%, rgb(51 35 17 / .10), transparent 60%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+.tex-diagonal {
+  background-image:
+    radial-gradient(90% 120% at 0% 0%, rgb(233 159 48 / .10), transparent 60%),
+    repeating-linear-gradient(135deg, rgb(254 250 240 / .025) 0 1px, transparent 1px 10px);
+}
+
+/* ---------- Math ---------- */
+.katex { font-size: 1.05em; color: inherit; }
+.math-formula .katex-display { margin: 0; text-align: left; }
+.math-formula .katex-display > .katex { text-align: left; }
+.math-formula::-webkit-scrollbar { height: 4px; }
+
+/* Textbook-style equation rows */
+.math-row .katex { font-size: 1.32em; }
+.math-hero .katex { font-size: 1.62em; }
+.math-hero .katex-display { margin: 0; }
+@media (min-width: 768px) {
+  .math-row .math-formula .katex-display,
+  .math-row .math-formula .katex-display > .katex { text-align: center; }
+}
+/* Roman numerals and equation numbers share KaTeX's serif so the page reads as one typeset document */
+.font-serif { font-family: KaTeX_Main, 'Times New Roman', serif; }
+.math-formula { overflow-y: hidden; padding-block: 6px; }
+
+/* ---------- Scrollbars: amber thumb on a brown track ---------- */
+html {
+  scrollbar-color: var(--brand-amber) var(--background);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-amber) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb {
+  background: var(--brand-amber);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: #F5C26F; background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+/* On amber sections the amber thumb would vanish: switch it to brown */
+.theme-light, .theme-light * { scrollbar-color: var(--brand-brown) transparent; }
+.theme-light ::-webkit-scrollbar-thumb { background: var(--brand-brown); background-clip: padding-box; }
+
+/* Formula strips on individual pages */
+.math-strip .katex { font-size: 1.12em; }
+.math-strip .katex-display { margin: 0; }
+
+/* Drifting symbols behind the /math hero */
+.math-glyph {
+  opacity: .07;
+  animation: glyph-drift 9s ease-in-out infinite;
+}
+@keyframes glyph-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(-4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .math-glyph { animation: none; }
+}
+html { scroll-behavior: smooth; }
