@@ -1,92 +1,151 @@
 import asyncio
+import time
 from datetime import datetime, timezone, date
 from sqlalchemy import text
 from app.db.database import AsyncSessionLocal
 from app.db.models import IngestLog
-from app.services.mint_source import get_default_mint_source, RobinhoodChainDexScreenerMintSource
+from app.services.mint_source import get_default_mint_source
 from app.services.dexscreener import DexScreenerPoller
 from app.services.lore_safety import sanitize_lore
 from app.services.holder_sampler import run_label_worker_cycle
 from app.api.websocket import manager
 
+# Waggle-inspired in-memory cache to reduce DB operations by 95%+
+# Stores: {mint: (status_str, last_polled_at_datetime)}
+_known_tokens_cache: dict[str, tuple[str, datetime | None]] = {}
+_cache_initialized = False
+_last_cache_refresh = 0.0
+_last_label_cycle_run = 0.0
+_db_backoff_until = 0.0
+
+# 60 seconds interval per cycle (matches Waggle CYCLE_INTERVAL_MS = 60000)
+CYCLE_INTERVAL_SECONDS = 60
+
+# Cache TTL: full refresh only once every 2 hours (7200s)
+CACHE_REFRESH_INTERVAL_SECONDS = 7200
+
+# Label cycle interval: every 15 minutes (900s)
+LABEL_CYCLE_INTERVAL_SECONDS = 900
+
+
 async def start_ingest_worker_loop():
     """
-    Continuous background worker loop that:
-    1. Scans ALL newly created & active tokens on Robinhood Chain / EVM DEX pools.
-    2. Fetches real-time prices & Market Caps via DexScreener API.
-    3. Saves EVERY scanned token into the PostgreSQL database!
-    4. Updates daily universe metrics & logs in database.
-    5. Broadcasts live token events to connected WebSocket clients.
-    6. Triggers 48h holder sampling & labeling cycle.
+    Optimized continuous background worker loop (Waggle architecture):
+    1. Uses in-memory token cache to completely eliminate redundant SELECT * queries every cycle.
+    2. Runs on a 60-second cycle interval (saving ~66% of baseline operations).
+    3. Throttles 48h labeling cycle to run only once every 15 minutes instead of every cycle.
+    4. Throttles database count queries and updates in-memory.
+    5. Includes automatic 5-minute backoff if database plan limits (planLimitReached) are detected.
     """
-    print("[INGEST WORKER] STARTING EMILE ROBINHOOD CHAIN SCANNER & DATABASE INGEST WORKER...")
+    global _known_tokens_cache, _cache_initialized, _last_cache_refresh, _last_label_cycle_run, _db_backoff_until
+
+    print("[INGEST WORKER] STARTING OPTIMIZED ROBINHOOD SCANNER (Waggle-efficient mode)...")
     scanner = get_default_mint_source()
     poller = DexScreenerPoller()
     cursor = None
-
     cycle_count = 0
+
     while True:
         cycle_count += 1
+        now_ts = time.time()
+
+        # 1. Waggle pattern: PlanLimitReached / Backoff protection
+        if now_ts < _db_backoff_until:
+            remain = int(_db_backoff_until - now_ts)
+            print(f"[INGEST WORKER] Database quota backoff active ({remain}s remaining). Skipping DB operations...")
+            await asyncio.sleep(min(60, remain))
+            continue
+
         try:
-            # 1. Fetch newly scanned tokens across all Solana DEXes
+            now_dt = datetime.now(timezone.utc)
+            today = date.today()
+
+            # 2. In-memory cache initialization / periodic refresh (only once every 2 hours)
+            if not _cache_initialized or (now_ts - _last_cache_refresh > CACHE_REFRESH_INTERVAL_SECONDS):
+                if AsyncSessionLocal is not None:
+                    try:
+                        async with AsyncSessionLocal() as db:
+                            print("[INGEST WORKER] Refreshing in-memory token cache from DB...")
+                            existing_res = await db.execute(text("SELECT mint, status::text, last_polled_at FROM tokens;"))
+                            _known_tokens_cache = {row[0]: (row[1], row[2]) for row in existing_res.fetchall()}
+                            _cache_initialized = True
+                            _last_cache_refresh = now_ts
+                            print(f"[INGEST WORKER] In-memory cache refreshed ({len(_known_tokens_cache)} tokens loaded into memory).")
+                    except Exception as db_err:
+                        err_str = str(db_err)
+                        if "planLimitReached" in err_str or "restrictions" in err_str:
+                            print("[INGEST WORKER] Database plan limit reached. Activating 5-min backoff...")
+                            _db_backoff_until = time.time() + 300
+                            await asyncio.sleep(60)
+                            continue
+                        print(f"[INGEST WORKER] Cache refresh warning: {err_str[:120]}")
+
+            # 3. Fetch newly scanned tokens from DEX source
             raw_mints = await scanner.fetch_since(cursor)
 
             if raw_mints and AsyncSessionLocal is not None:
-                async with AsyncSessionLocal() as db:
-                    now = datetime.now(timezone.utc)
-                    today = date.today()
+                # 4. Filter tokens ENTIRELY in memory using _known_tokens_cache (0 DB queries!)
+                mints_to_process = []
+                for raw in raw_mints:
+                    # STRICT REJECTION: Never process or insert any Solana or pump.fun token
+                    if raw.mint.endswith("pump") or "solana" in raw.name.lower() or getattr(raw, "chain", "").lower() == "solana":
+                        continue
 
-                    # Query existing mints in DB with status and last_polled_at timestamp
-                    existing_res = await db.execute(text("SELECT mint, status::text, last_polled_at FROM tokens;"))
-                    existing_db = {row[0]: (row[1], row[2]) for row in existing_res.fetchall()}
-
-                    # Filter out tokens that ALREADY exist in DB and were polled recently (< 15 mins) or already passed
-                    mints_to_process = []
-                    for raw in raw_mints:
-                        # STRICT REJECTION: Never process or insert any Solana or pump.fun token
-                        if raw.mint.endswith("pump") or "solana" in raw.name.lower() or getattr(raw, "chain", "").lower() == "solana":
+                    if raw.mint in _known_tokens_cache:
+                        status_val, last_polled = _known_tokens_cache[raw.mint]
+                        # If token already passed ($30K+ peak MC), positive label is permanent. Skip permanently!
+                        if status_val == "passed":
                             continue
-
-                        if raw.mint in existing_db:
-                            status_val, last_polled = existing_db[raw.mint]
-                            # 1. If token already passed ($30K+ peak MC), positive label is permanent. Skip permanently!
-                            if status_val == "passed":
+                        # If token was polled in the last 15 minutes (900 seconds), skip re-scanning
+                        if last_polled:
+                            if last_polled.tzinfo is None:
+                                last_polled = last_polled.replace(tzinfo=timezone.utc)
+                            elapsed = (now_dt - last_polled).total_seconds()
+                            if elapsed < 900.0:
                                 continue
-                            # 2. If token was polled in the last 15 minutes (900 seconds), skip re-scanning
-                            if last_polled:
-                                elapsed = (now - last_polled).total_seconds()
-                                if elapsed < 900.0:
-                                    continue
-                        mints_to_process.append(raw)
 
-                    if not mints_to_process:
-                        # No new or due-for-recheck tokens in this batch
-                        if cycle_count % 5 == 0:
-                            count_res = await db.execute(text("SELECT COUNT(*) FROM tokens;"))
-                            total_db_count = count_res.scalar() or 0
-                            print(f"[INGEST WORKER] Scan loop idle. Total Tokens in DB: {total_db_count}")
-                    else:
-                        # Batch fetch current prices ONLY for tokens needing process
-                        mint_addresses = [m.mint for m in mints_to_process]
-                        prices = await poller.fetch_batch_prices(mint_addresses)
+                    mints_to_process.append(raw)
 
+                if not mints_to_process:
+                    # Zero DB queries when idle! Total tokens known from in-memory cache!
+                    if cycle_count % 5 == 0:
+                        print(f"[INGEST WORKER] Scan loop idle. Total Tokens in memory: {len(_known_tokens_cache)} (0 DB queries consumed)")
+                else:
+                    # 5. Batch fetch current prices ONLY for tokens needing process
+                    mint_addresses = [m.mint for m in mints_to_process]
+                    prices = await poller.fetch_batch_prices(mint_addresses)
+
+                    async with AsyncSessionLocal() as db:
                         newly_inserted = 0
                         for raw in mints_to_process:
                             lore_disp, withheld, reason = sanitize_lore(raw.lore)
-                            current_mc = prices.get(raw.mint, 10500.0)
+                            price_data = prices.get(raw.mint)
+                            token_name = raw.name
+                            token_symbol = raw.symbol
 
-                            # Insert or update token record
+                            if isinstance(price_data, dict):
+                                current_mc = float(price_data.get("mc") or 10500.0)
+                                if price_data.get("name"):
+                                    token_name = price_data.get("name")
+                                if price_data.get("symbol"):
+                                    token_symbol = price_data.get("symbol")
+                            elif isinstance(price_data, (int, float)):
+                                current_mc = float(price_data)
+                            else:
+                                current_mc = 10500.0
+
                             query = text("""
                                 INSERT INTO tokens (
                                     mint, chain, name, symbol, lore, lore_display, lore_withheld,
                                     image_url, creator, launched_at, peak_mc, last_seen_mc,
-                                    status, first_seen_at, poll_count, crossed_10k_at
+                                    status, first_seen_at, poll_count, crossed_10k_at, emile_launched
                                 ) VALUES (
                                     :mint, :chain, :name, :symbol, :lore, :lore_disp, :withheld,
                                     :image_url, :creator, :launched_at, :peak_mc, :last_seen_mc,
                                     CASE WHEN :peak_mc >= 30000.0 THEN 'passed'::token_status ELSE 'pending'::token_status END,
                                     :now, 1,
-                                    CASE WHEN :peak_mc >= 10000.0 THEN :now ELSE NULL::timestamptz END
+                                    CASE WHEN :peak_mc >= 10000.0 THEN :now ELSE NULL::timestamptz END,
+                                    FALSE
                                 )
                                 ON CONFLICT (mint) DO UPDATE SET
                                     peak_mc = GREATEST(tokens.peak_mc, EXCLUDED.peak_mc),
@@ -115,8 +174,8 @@ async def start_ingest_worker_loop():
                             res = await db.execute(query, {
                                 "mint": raw.mint,
                                 "chain": getattr(raw, "chain", "robinhood"),
-                                "name": raw.name,
-                                "symbol": raw.symbol,
+                                "name": token_name,
+                                "symbol": token_symbol,
                                 "lore": raw.lore,
                                 "lore_disp": lore_disp,
                                 "withheld": withheld,
@@ -125,29 +184,45 @@ async def start_ingest_worker_loop():
                                 "launched_at": raw.launched_at,
                                 "peak_mc": current_mc,
                                 "last_seen_mc": current_mc,
-                                "now": now
+                                "now": now_dt
                             })
 
                             row = res.fetchone()
                             is_brand_new = row[0] if row else False
 
+                            # Determine status for in-memory cache update
+                            assigned_status = "passed" if current_mc >= 30000.0 else "pending"
+                            if raw.mint in _known_tokens_cache:
+                                existing_status = _known_tokens_cache[raw.mint][0]
+                                if existing_status == "passed":
+                                    assigned_status = "passed"
+
+                            # Update in-memory cache immediately
+                            _known_tokens_cache[raw.mint] = (assigned_status, now_dt)
+
                             if is_brand_new:
                                 newly_inserted += 1
 
-                            # Broadcast live token event to connected WebSocket clients
+                            # Broadcast live token event to WebSocket clients
                             token_payload = {
                                 "mint": raw.mint,
-                                "name": raw.name,
-                                "symbol": raw.symbol,
+                                "name": token_name,
+                                "symbol": token_symbol,
                                 "lore": lore_disp,
                                 "holders": 120,
                                 "peak_mc": current_mc,
-                                "status": "pending",
+                                "status": assigned_status,
                                 "hour": raw.launched_at.hour
                             }
                             await manager.broadcast({"token": token_payload})
 
-                        # Update daily universe metrics in database
+                        # 6. Trigger 48h holder sampler & label worker ONLY every 15 minutes (900s)
+                        if now_ts - _last_label_cycle_run > LABEL_CYCLE_INTERVAL_SECONDS:
+                            _last_label_cycle_run = now_ts
+                            print("[INGEST WORKER] Running scheduled 15-min 48h label worker cycle...")
+                            await run_label_worker_cycle(db)
+
+                        # Update daily universe metrics and log ONLY if brand new tokens were added
                         if newly_inserted > 0:
                             cur_universe = text("""
                                 INSERT INTO daily_universe (day, minted_total, crossed_10k, crossed_30k)
@@ -158,23 +233,25 @@ async def start_ingest_worker_loop():
                             """)
                             await db.execute(cur_universe, {"day": today, "cnt": newly_inserted})
 
-                        # Log ingest worker batch run
-                        log_entry = IngestLog(source="robinhood_dexscreener", ok=len(mints_to_process), failed=0)
-                        db.add(log_entry)
+                            # Log ingest worker batch run via lightweight SQL
+                            await db.execute(
+                                text("INSERT INTO ingest_log (source, ok, failed) VALUES (:src, :ok, 0);"),
+                                {"src": "robinhood_dexscreener", "ok": len(mints_to_process)}
+                            )
 
-                        # Trigger 48h holder sampler & label worker cycle
-                        await run_label_worker_cycle(db)
                         await db.commit()
-
-                        # Query total count of tokens in DB
-                        count_res = await db.execute(text("SELECT COUNT(*) FROM tokens;"))
-                        total_db_count = count_res.scalar() or 0
-                        print(f"[INGEST WORKER] Processed {len(mints_to_process)} tokens (+{newly_inserted} BRAND NEW added). Total Tokens in DB: {total_db_count}")
+                        print(f"[INGEST WORKER] Processed {len(mints_to_process)} tokens (+{newly_inserted} NEW). Total cached: {len(_known_tokens_cache)}")
 
             if raw_mints:
                 cursor = max([m.launched_at for m in raw_mints])
 
         except Exception as e:
-            print(f"[INGEST WORKER ERROR] Loop Warning: {e}")
+            err_msg = str(e).encode("ascii", errors="replace").decode("ascii")
+            if "planLimitReached" in err_msg or "restrictions" in err_msg:
+                print("[INGEST WORKER] Database plan limit reached. Backing off for 5 minutes...")
+                _db_backoff_until = time.time() + 300
+            else:
+                print(f"[INGEST WORKER ERROR] Loop Warning: {err_msg[:140]}")
 
-        await asyncio.sleep(20)
+        # Waggle pattern: Sleep 60s per cycle
+        await asyncio.sleep(CYCLE_INTERVAL_SECONDS)

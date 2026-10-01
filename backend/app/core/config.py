@@ -4,7 +4,7 @@ load_dotenv(override=True)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Émile"
+    PROJECT_NAME: str = "Epoch Labs"
     VERSION: str = "1.0.0"
     ENVIRONMENT: str = "production"
 

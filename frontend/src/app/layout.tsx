@@ -13,12 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Émile — Autonomous Robinhood Chain Token Survival Agent",
-  description: "Émile observes every Robinhood Chain token that clears $10K peak market cap and estimates its probability of reaching $30K.",
+  title: "Epoch Labs — Autonomous Robinhood Chain Token Survival Agent",
+  description: "Epoch Labs observes every Robinhood Chain token that clears $10K peak market cap and estimates its probability of reaching $30K.",
   icons: {
-    icon: "/logo.jpg",
-    shortcut: "/logo.jpg",
-    apple: "/logo.jpg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/epoch-logo.png", type: "image/png" },
+      { url: "/logo.png", type: "image/png" }
+    ],
+    shortcut: "/epoch-logo.png",
+    apple: "/epoch-logo.png",
   },
 };
 

@@ -20,7 +20,7 @@ export const HeroScene: React.FC = () => {
       <div className="relative z-10 w-full">
         <div className="relative w-full overflow-hidden rounded-xl border border-[var(--rule)] bg-[#080E14] shadow-2xl group">
           <video
-            src="/videos/Monkey_typing_on_keyboard.mp4"
+            src="/videos/Stone_golem_types_at_keyboard.mp4"
             autoPlay
             loop
             muted
@@ -31,7 +31,7 @@ export const HeroScene: React.FC = () => {
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#06090D] via-transparent to-transparent opacity-80" />
           <div className="absolute top-3 left-3 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10 text-[10.5px] font-mono text-[#9ED8B3] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--live)] animate-pulse" />
-            LIVE ÉMILE FEED
+            LIVE EPOCH LABS FEED
           </div>
 
           {/* Full Contract Address Pill Button (Icon Only, No COPY Text, Full CA String) */}

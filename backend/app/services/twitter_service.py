@@ -65,9 +65,13 @@ class TwitterService:
         self.api_url = "https://api.twitter.com/2/tweets"
         self.last_posted_at_memory = None
         self.last_target_memory = "emile_banana"
+        self.api_backoff_until = 0.0
 
     async def get_next_target_token(self) -> str:
         """Determines which token is next in turn (alternating between 'emile' and 'emile_banana')."""
+        if self.last_target_memory:
+            return "emile_banana" if self.last_target_memory == "emile" else "emile"
+
         try:
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
@@ -87,21 +91,26 @@ class TwitterService:
         return next_token
 
     async def check_cooldown(self) -> tuple[bool, float]:
-        """Checks if enough time (minimum 110 minutes) has passed since the last tweet."""
+        """Checks if enough time (minimum 110 minutes) has passed since the last tweet or attempt."""
         now = datetime.now(timezone.utc)
+        now_ts = time.time()
+
+        # 0. API Credit / Error Backoff check (zero DB queries!)
+        if now_ts < self.api_backoff_until:
+            rem = self.api_backoff_until - now_ts
+            return False, rem
         
-        # 1. In-memory check first
+        # 1. In-memory check first (zero DB queries!)
         if self.last_posted_at_memory:
             elapsed_mem = (now - self.last_posted_at_memory).total_seconds()
             if elapsed_mem < MIN_POST_INTERVAL_SECONDS:
                 return False, MIN_POST_INTERVAL_SECONDS - elapsed_mem
 
-        # 2. Database check
+        # 2. Database check (only on startup if in-memory is unset)
         try:
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
                     select(TwitterPost.posted_at)
-                    .where(TwitterPost.status.in_(["sent", "dry_run"]))
                     .order_by(desc(TwitterPost.posted_at))
                     .limit(1)
                 )
@@ -178,6 +187,10 @@ class TwitterService:
                             error_msg = f"HTTP {res.status_code}: {res.text}"
                             status_str = "failed"
                             print(f"[TWITTER] Error posting tweet: {error_msg}")
+                            if res.status_code in (401, 402):
+                                # Credits depleted / unauthorized: backoff for 2 hours to save DB ops!
+                                self.api_backoff_until = time.time() + 7200
+                                print("[TWITTER] API credits depleted (402/401). Backing off for 2 hours to conserve DB operations...")
                             break
                 except Exception as e:
                     retries += 1
@@ -189,6 +202,10 @@ class TwitterService:
                     await asyncio.sleep((2 ** retries) + 1.0)
         else:
             print(f"[TWITTER] Dry-Run Mode Active — Tweet payload logged to DB without posting.")
+
+        # Always update in-memory timestamp so we don't immediately retry and hammer the DB
+        self.last_posted_at_memory = datetime.now(timezone.utc)
+        self.last_target_memory = target_token
 
         # Record audit trail in database with fallback if DB connection fails
         now_iso = datetime.now(timezone.utc).isoformat()

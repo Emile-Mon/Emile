@@ -38,13 +38,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
           className="wordmark inline-flex items-center gap-3.5 p-2 px-3.5 md:p-2.5 md:px-4 bg-[var(--panel2)] rounded-2xl transition-all duration-200 group shrink-0"
         >
           <img 
-            src="/logo.jpg" 
-            alt="Émile Logo" 
-            className="w-14 h-14 md:w-18 md:h-18 rounded-xl border border-[var(--banana)]/60 shadow-lg object-cover group-hover:scale-105 transition-transform" 
+            src="/epoch-logo.png" 
+            alt="Epoch Labs Logo" 
+            className="w-14 h-14 md:w-18 md:h-18 rounded-xl border border-[var(--banana)]/60 shadow-lg object-contain bg-black/40 group-hover:scale-105 transition-transform p-1" 
           />
           <div className="flex flex-col">
             <span className="font-serif font-bold text-2xl md:text-3xl tracking-tight text-[#F0F5FA] group-hover:text-[var(--banana)] transition-colors leading-tight">
-              Émile
+              Epoch Labs
             </span>
             <span className="text-xs md:text-sm font-mono text-[var(--banana)]/90 tracking-widest uppercase mt-1 font-semibold">
               Robinhood Agent
@@ -52,7 +52,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
           </div>
         </Link>
         <div className="sub text-[var(--dim)] text-xs md:text-sm max-w-[50ch] leading-relaxed truncate md:whitespace-normal">
-          Émile has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
+          Epoch Labs has been at this desk since day one, reading every Robinhood Chain token that clears $10K. A banana goes in the jar only when the evidence is <em className="text-[var(--banana)] not-italic font-medium">provably</em> good enough.
         </div>
       </div>
 

@@ -8,7 +8,13 @@ from app.db.database import get_db
 from app.db.models import Token, ModelRun, TokenStatus
 from app.core.config import settings
 
+import time
 router = APIRouter(prefix="/api")
+
+# In-memory response cache for state snapshot (TTL 15 seconds)
+_cached_state_data = None
+_cached_state_timestamp = 0.0
+STATE_CACHE_TTL_SECONDS = 15.0
 
 @router.get("/state")
 async def get_app_state(db: AsyncSession = Depends(get_db)):
@@ -17,7 +23,13 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
     - Latest 100 tokens
     - Global counters (above 10k, passed 30k, stalled, median holders)
     - Latest model run
+    Uses 15s in-memory cache to eliminate redundant DB hits from frequent page views.
     """
+    global _cached_state_data, _cached_state_timestamp
+    now_ts = time.time()
+    if _cached_state_data is not None and (now_ts - _cached_state_timestamp < STATE_CACHE_TTL_SECONDS):
+        return _cached_state_data
+
     try:
         stmt_all = text("SELECT mint, COALESCE(chain, 'robinhood') as chain, name, symbol, lore, lore_display, lore_withheld, image_url, creator, launched_at, launch_hour_utc as launch_hour, holders, peak_mc, status::text FROM tokens WHERE status::text != 'excluded' ORDER BY first_seen_at DESC;")
         res_all = await db.execute(stmt_all)
@@ -90,7 +102,7 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
             "feature_importance": {}
         }
 
-    return {
+    response_payload = {
         "counters": {
             "above_10k": above_10k,
             "passed_30k": passed_30k,
@@ -101,6 +113,9 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
         "latest_model": model_data,
         "tokens": token_list
     }
+    _cached_state_data = response_payload
+    _cached_state_timestamp = time.time()
+    return response_payload
 
 @router.get("/model/history")
 async def get_model_history(days: int = 30, db: AsyncSession = Depends(get_db)):
