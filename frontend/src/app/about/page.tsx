@@ -6,6 +6,7 @@ import { FooterBar } from '@/components/layout/FooterBar';
 import { IconWarning, IconDownload, IconFileCode } from '@/components/ui/CustomIcons';
 import { FormulaStrip } from '@/components/math/FormulaStrip';
 import { EQ } from '@/config/equations';
+import { getApiBaseUrl } from '@/config/constants';
 
 export default function AboutEpochLabsPage() {
   return (
@@ -76,7 +77,7 @@ export default function AboutEpochLabsPage() {
           </p>
           <div className="flex gap-4 font-mono text-xs flex-wrap">
             <a
-              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/dataset.csv`}
+              href={`${getApiBaseUrl()}/api/dataset.csv`}
               target="_blank"
               className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--panel2)] border border-[var(--banana)] text-[var(--banana)] rounded hover:bg-[var(--banana)] hover:text-[var(--ink)] transition-colors group"
             >
@@ -84,7 +85,7 @@ export default function AboutEpochLabsPage() {
               <span>Download dataset.csv</span>
             </a>
             <a
-              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/methodology.json`}
+              href={`${getApiBaseUrl()}/api/methodology.json`}
               target="_blank"
               className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--panel2)] border border-[var(--rule)] text-[var(--fg)] rounded hover:border-[var(--banana)] transition-colors"
             >

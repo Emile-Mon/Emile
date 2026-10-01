@@ -6,6 +6,7 @@ import { CandidatesList, CandidateItem } from './CandidatesList';
 import { ConfidenceBanner } from './ConfidenceBanner';
 import { RevisedAndExclusions, EliminatedItem, ExclusionItem } from './RevisedAndExclusions';
 import { ScoreHistogram } from './ScoreHistogram';
+import { getApiBaseUrl } from '@/config/constants';
 
 export const IdeasSection: React.FC = () => {
   const [cycleData, setCycleData] = useState<any>(null);
@@ -14,7 +15,7 @@ export const IdeasSection: React.FC = () => {
   const [sourceData, setSourceData] = useState<{ source?: string; sha?: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const API_BASE = getApiBaseUrl();
 
   useEffect(() => {
     async function fetchData() {

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useEmileStore, TokenItem } from '@/store/useEmileStore';
+import { getApiBaseUrl, getWsBaseUrl } from '@/config/constants';
 
 export function useEmileDatabase() {
   const addToken = useEmileStore((state) => state.addToken);
@@ -8,9 +9,8 @@ export function useEmileDatabase() {
   const setConnected = useEmileStore((state) => state.setConnected);
 
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || (typeof window !== 'undefined' ? `${wsProtocol}//${window.location.host}` : 'ws://localhost:8000');
+    const apiBase = getApiBaseUrl();
+    const wsBase = getWsBaseUrl();
 
     // 1. Fetch initial snapshot state from PostgreSQL DB via REST API
     async function fetchStateFromDB() {

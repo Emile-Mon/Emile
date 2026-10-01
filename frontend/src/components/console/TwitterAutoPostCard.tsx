@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getApiBaseUrl } from '@/config/constants';
 
 interface TwitterStatus {
   auto_post_enabled: boolean;
@@ -57,7 +58,7 @@ export function TwitterAutoPostCard() {
   const [showGuide, setShowGuide] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+  const API_BASE = getApiBaseUrl();
 
   const fetchStatus = async () => {
     try {

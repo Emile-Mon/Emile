@@ -5,6 +5,7 @@ import { PreparingLaunchCard, PreparingLaunchData } from './PreparingLaunchCard'
 import { SecondLaunchCountdownCard } from './SecondLaunchCountdownCard';
 import { CalibrationStrip, CalibrationData } from './CalibrationStrip';
 import { LaunchLogEntry, LaunchItemData } from './LaunchLogEntry';
+import { getApiBaseUrl } from '@/config/constants';
 
 export const LaunchesSection: React.FC = () => {
   const [preparingData, setPreparingData] = useState<PreparingLaunchData | undefined>(undefined);
@@ -12,7 +13,7 @@ export const LaunchesSection: React.FC = () => {
   const [launchesList, setLaunchesList] = useState<LaunchItemData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.emilelearns.run';
+  const API_BASE = getApiBaseUrl();
 
   const fetchLaunchesData = async () => {
     try {

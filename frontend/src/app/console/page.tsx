@@ -7,6 +7,7 @@ import { LEARNING_BLOCKS } from '@/config/pipelineCode';
 import { highlightCode } from '@/components/ui/codeHighlight';
 import { FormulaStrip } from '@/components/math/FormulaStrip';
 import { EQ } from '@/config/equations';
+import { getApiBaseUrl, getWsBaseUrl } from '@/config/constants';
 
 interface TokenFeedItem {
   id: number | string;
@@ -84,9 +85,8 @@ export default function SurvivalConsolePage() {
 
   // Fetch real state from PostgreSQL DB & connect live WebSocket
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL || (typeof window !== 'undefined' ? `${wsProtocol}//${window.location.host}` : 'ws://localhost:8000');
+    const apiBase = getApiBaseUrl();
+    const wsBase = getWsBaseUrl();
 
     async function loadRealData() {
       try {
