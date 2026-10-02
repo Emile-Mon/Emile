@@ -94,7 +94,7 @@ export const EmileJarVisual: React.FC = () => {
             </div>
             <div className="p-3 bg-[var(--panel2)] border border-[var(--soft)] rounded-lg">
               <div className="text-[10px] text-[var(--faint)] uppercase">Penalty ε (VC)</div>
-              <div className="text-lg font-bold text-[var(--violet)] font-sans font-semibold mt-0.5">{eps >= 1 ? '—' : eps.toFixed(3)}</div>
+              <div className="text-lg font-bold text-[var(--violet)] font-sans font-semibold mt-0.5">{eps >= 1 ? '-' : eps.toFixed(3)}</div>
             </div>
             <div className="p-3 bg-[var(--panel2)] border border-[var(--soft)] rounded-lg">
               <div className="text-[10px] text-[var(--faint)] uppercase">Proven Floor</div>

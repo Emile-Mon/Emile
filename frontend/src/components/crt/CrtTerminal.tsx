@@ -76,7 +76,7 @@ export const CrtTerminal: React.FC = () => {
       <div className="scr-bar flex items-center gap-3 px-4 py-2.5 border-b border-[var(--rule)] bg-[var(--panel2)] text-xs relative z-2">
         <div className="flex items-center gap-1.5">
           <span className={`lamp w-2 h-2 rounded-full ${isConnected ? 'bg-[var(--live)] lamp-active' : 'bg-[var(--stall)]'}`} />
-          <span className="t text-[var(--live)] font-mono font-medium">epoch labs — live</span>
+          <span className="t text-[var(--live)] font-mono font-medium">epoch labs : live</span>
         </div>
 
         <span className="r ml-auto text-[var(--dim)] font-mono text-[11px] bg-[var(--soft)] px-2.5 py-0.5 rounded border border-[var(--rule)]">
@@ -140,7 +140,7 @@ export const CrtTerminal: React.FC = () => {
                 className={`num text-right font-mono ${t.holders == null ? 'text-[var(--faint)]' : 'text-[var(--live)]'}`}
                 title={t.holders == null ? 'Holders are sampled once, 48h after launch' : undefined}
               >
-                {t.holders == null ? '—' : t.holders.toLocaleString('en-US')}
+                {t.holders == null ? '-' : t.holders.toLocaleString('en-US')}
               </div>
 
               {/* Peak MC Column: Hidden on mobile (hide-sm), lore remains displayed */}

@@ -162,7 +162,7 @@ export const ProofPanel: React.FC = () => {
             </div>
             <div className="ro p-3 px-3 bg-[var(--panel2)] border-l border-[var(--soft)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">penalty ε</div>
-              <div className="ro-v font-sans font-semibold text-lg text-[var(--violet)] tracking-tight">{displayEps >= 1 ? '—' : displayEps.toFixed(3)}</div>
+              <div className="ro-v font-sans font-semibold text-lg text-[var(--violet)] tracking-tight">{displayEps >= 1 ? '-' : displayEps.toFixed(3)}</div>
             </div>
             <div className="ro p-3 px-3 bg-[var(--panel2)] border-l border-[var(--soft)]">
               <div className="ro-k text-[var(--faint)] text-[9.5px] font-mono uppercase tracking-wider">proven floor</div>

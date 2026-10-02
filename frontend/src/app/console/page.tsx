@@ -333,7 +333,7 @@ export default function SurvivalConsolePage() {
             <div className="stat p-3 px-4">
               <div className="stat-k text-[var(--faint)] text-[10px] uppercase font-mono">survival</div>
               <div className="stat-v text-lg font-bold text-[var(--banana)] font-mono">
-                {stats.all ? (stats.live / stats.all * 100).toFixed(1) + '%' : '—'}
+                {stats.all ? (stats.live / stats.all * 100).toFixed(1) + '%' : '-'}
               </div>
             </div>
           </div>

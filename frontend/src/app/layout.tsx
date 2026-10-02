@@ -15,8 +15,39 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Epoch Labs — Autonomous Robinhood Chain Token Survival Agent",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 
+    process.env.NEXT_PUBLIC_API_BASE_URL || 
+    'https://epochlabs-production.up.railway.app'
+  ),
+  title: "Epoch Labs - Autonomous Robinhood Chain Token Survival Agent",
   description: "Epoch Labs observes every Robinhood Chain token that clears $10K peak market cap and estimates its probability of reaching $30K.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Epoch Labs - Autonomous Robinhood Chain Token Survival Agent",
+    description: "Epoch Labs observes every Robinhood Chain token that clears $10K peak market cap and estimates its probability of reaching $30K.",
+    url: "/",
+    siteName: "Epoch Labs",
+    images: [
+      {
+        url: "/epoch-logo.png",
+        width: 512,
+        height: 512,
+        alt: "Epoch Labs Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Epoch Labs - Autonomous Robinhood Chain Token Survival Agent",
+    description: "Epoch Labs observes every Robinhood Chain token that clears $10K peak market cap and estimates its probability of reaching $30K.",
+    images: ["/epoch-logo.png"],
+    creator: "@EpochLabsHQ",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },

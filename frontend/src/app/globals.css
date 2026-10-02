@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand palette — three core colors */
+  /* Brand palette: three core colors */
   --brand-brown: #332311;
   --brand-amber: #E99F30;
   --brand-cream: #FEFAF0;
@@ -66,6 +66,26 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-raised) var(--ink);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ink);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-raised);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--banana-lo);
 }
 
 ::selection {

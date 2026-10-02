@@ -117,7 +117,7 @@ export const LaunchesSection: React.FC = () => {
       </div>
 
       <div className="note border-0 pt-1 mt-2 text-[0.76rem] text-[var(--fg)] max-w-[78ch] leading-relaxed font-mono">
-        <b className="text-[var(--fg-hi)]">Epoch Labs holds none of what it launches.</b> No allocation, no reserve, no team wallet. Its capital goes into liquidity and stays there. It cannot sell into its own prediction because it has nothing to sell. Launch liquidity comes from a separate experiment wallet — the creator fee treasury is untouched and remains reserved for Evolution 2.
+        <b className="text-[var(--fg-hi)]">Epoch Labs holds none of what it launches.</b> No allocation, no reserve, no team wallet. Its capital goes into liquidity and stays there. It cannot sell into its own prediction because it has nothing to sell. Launch liquidity comes from a separate experiment wallet, the creator fee treasury is untouched and remains reserved for Evolution 2.
       </div>
     </section>
   );

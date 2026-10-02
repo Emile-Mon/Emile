@@ -8,7 +8,7 @@ export interface CodeBlock {
   src: string;
 }
 
-/** "epoch labs — live": the ingestion loop that feeds the token table. */
+/** "epoch labs : live": the ingestion loop that feeds the token table. */
 export const LIVE_BLOCKS: CodeBlock[] = [
   {
     stage: 'scan · dexscreener',

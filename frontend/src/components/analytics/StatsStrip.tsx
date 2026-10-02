@@ -36,7 +36,7 @@ export const StatsStrip: React.FC = () => {
       <div className="st p-3.5 px-5">
         <div className="st-k text-[var(--dim)] text-[10.5px] font-mono uppercase tracking-wider">median holders</div>
         <div className="st-v font-sans font-semibold text-2xl text-[var(--cyan)] mt-0.5 tracking-tight">
-          {medianHolders == null ? '—' : medianHolders.toLocaleString('en-US')}
+          {medianHolders == null ? '-' : medianHolders.toLocaleString('en-US')}
         </div>
       </div>
     </div>
