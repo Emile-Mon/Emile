@@ -51,7 +51,7 @@ export const ProofPanel: React.FC = () => {
     setSimParams({
       n: 9600,
       auc: 0.645,
-      d: 28,
+      d: model.d,
       running: false,
     });
   };
@@ -59,9 +59,11 @@ export const ProofPanel: React.FC = () => {
   const syncWithLiveDB = () => {
     setHasUserInteracted(true);
     const state = useEmileStore.getState();
-    const dbN = state.tally.all || state.model.n || 1086;
-    const dbAuc = state.model.auc || 0.9045;
-    const dbD = state.model.d || 28;
+    // Sync to the latest model run exactly; no stand-in numbers when it has not loaded
+    if (!state.modelLoaded) return;
+    const dbN = state.model.n;
+    const dbAuc = state.model.auc;
+    const dbD = state.model.d;
     setSimParams({
       n: dbN,
       auc: dbAuc,
@@ -241,7 +243,7 @@ export const ProofPanel: React.FC = () => {
               onClick={syncWithLiveDB}
               className="btn inline-flex items-center gap-1 bg-[var(--live)]/12 border border-[var(--live)] text-[var(--live)] font-bold text-[10.5px] px-3 py-1.5 rounded-md font-mono cursor-pointer hover:bg-[var(--live)] hover:text-[var(--panel)] transition-all duration-200"
             >
-              <span>Sync Live DB ({tally.all || simState.n || 2346})</span>
+              <span>Sync Live DB ({model.n.toLocaleString('en-US')})</span>
             </button>
 
             <button 

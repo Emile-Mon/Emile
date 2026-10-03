@@ -15,6 +15,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
     { name: 'Console', href: '/console' },
     { name: 'Brain', href: '/brain' },
     { name: 'The Math', href: '/math' },
+    { name: 'Epochs', href: '/epochs' },
     // Launches is hidden from the nav for now; the /launches route still works.
     { name: 'About', href: '/about' },
   ];
@@ -47,7 +48,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
       </div>
 
       {/* Center Navigation Tabs */}
-      <nav className="flex items-center gap-1 p-1 bg-[var(--panel2)] border border-[var(--soft)] rounded-lg text-xs font-mono shrink-0 justify-center">
+      <nav className="flex flex-wrap items-center gap-1 p-1 bg-[var(--panel2)] border border-[var(--soft)] rounded-lg text-xs font-mono min-w-0 lg:shrink-0 justify-center">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const isLaunches = link.name === 'Launches';

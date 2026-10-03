@@ -64,10 +64,27 @@ class Settings(BaseSettings):
     CDN_BASE_URL: str = os.getenv("CDN_BASE_URL", "https://cdn.emile.xyz/t")
 
     # ML & Jar Threshold Parameters
-    CAPACITY_D: int = 28
+    # Single source of truth: trainer, /api/state, /api/methodology.json and the
+    # frontend all read these. Never hardcode them anywhere else.
+    # CAPACITY_D = feature columns produced by app.ml.features.extract_features:
+    # hour sin/cos (2) + dow one-hot (7) + holders_log (1) + lore_len, lore_missing,
+    # name_tokens (3) + lore PCA (24) = 37.
+    CAPACITY_D: int = 37
     AUC_TARGET: float = 0.60
     AUC_FLOOR: float = 0.50
     DELTA_CONFIDENCE: float = 0.05
+
+    # Hard gates (aligned with the published methodology)
+    GATE_N_SAMPLES: int = 2000
+    GATE_N_POSITIVE: int = 200
+    GATE_AUC_STD_MAX: float = 0.05
+    GATE_TIME_SPLIT_GAP_MAX: float = 0.04
+    # Sand level is capped here while any gate fails
+    JAR_GATE_CAP: float = 0.95
+
+    # Model worker: retrain when the labeled set changes, checked every N seconds
+    MODEL_WORKER_INTERVAL_SECONDS: int = int(os.getenv("MODEL_WORKER_INTERVAL_SECONDS", "3600"))
+    MODEL_WORKER_ENABLED: bool = os.getenv("MODEL_WORKER_ENABLED", "true").lower() in ("true", "1", "yes")
 
     # Target Token Contract Addresses (CAs) & Axiom URLs
     EPOCH_TOKEN_CA: str = os.getenv("EPOCH_TOKEN_CA", os.getenv("EMILE_TOKEN_CA", "0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e"))
@@ -76,6 +93,31 @@ class Settings(BaseSettings):
     EMILE_BANANA_TOKEN_CA: str = os.getenv("EMILE_BANANA_TOKEN_CA", "0x3c51485b11d52f90c251e74875a8b93c81027274")
     EMILE_AXIOM_URL: str = EPOCH_AXIOM_URL
     EMILE_BANANA_AXIOM_URL: str = os.getenv("EMILE_BANANA_AXIOM_URL", "https://axiom.trade/token/0x3c51485b11d52f90c251e74875a8b93c81027274?chain=robinhood&chains=robinhood,bnb")
+
+    # Robinhood Chain (Epochs page). Addresses from contracts/deployments/robinhood.json.
+    CHAIN_ID: int = 4663
+    CHAIN_RPC_URL: str = os.getenv("CHAIN_RPC_URL", "https://rpc.mainnet.chain.robinhood.com")
+    BLOCKSCOUT_BASE: str = os.getenv("BLOCKSCOUT_BASE", "https://robinhoodchain.blockscout.com")
+    EPOCH_LAUNCHER: str = os.getenv("EPOCH_LAUNCHER", "0x75fd64Cc8D57c529f34089Ac9083E704c23F0D8B")
+    EPOCH_TOKEN_TEMPLATE: str = os.getenv("EPOCH_TOKEN_TEMPLATE", "0x96508719c110a341708546de78051e020f51D264")
+    EPOCH_LAUNCHER_OWNER: str = os.getenv("EPOCH_LAUNCHER_OWNER", "0x2f9647850484feCcdf316164b4606251Bd4A3bd1")
+    GOLEM_AGENT: str = os.getenv("GOLEM_AGENT", "0x560Eb3767434006b3278810f906d7677C38914aD")
+    GOLEM_WALLET: str = os.getenv("GOLEM_WALLET", "0x0254207EA6658a8F9DAF1EAE0C120796b317dED6")
+    UNISWAP_V2_ROUTER: str = os.getenv("UNISWAP_V2_ROUTER", "0x89e5db8b5aa49aa85ac63f691524311aeb649eba")
+    WETH: str = os.getenv("WETH", "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73")
+    # Unset until the burn rules are published (Epoch IV stays locked without it)
+    EPC_BURN_ADDRESS: str = os.getenv("EPC_BURN_ADDRESS", "")
+    # Unset until the repo is public (Epoch VI stays locked without it), e.g. "epochlabs/golem"
+    GOLEM_GITHUB_REPO: str = os.getenv("GOLEM_GITHUB_REPO", "")
+    GOLEM_RELEASE_TAG: str = os.getenv("GOLEM_RELEASE_TAG", "golem-v1")
+    GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
+    # Launcher deploy block: nothing Epochs cares about can predate it
+    EPOCH_SCAN_FROM_BLOCK: int = int(os.getenv("EPOCH_SCAN_FROM_BLOCK", "78708782"))
+    # Node limit for eth_getLogs without an address filter is 30,000 blocks
+    EPOCH_LOG_CHUNK_BLOCKS: int = int(os.getenv("EPOCH_LOG_CHUNK_BLOCKS", "30000"))
+    EPOCH_MAX_CHUNKS_PER_TICK: int = int(os.getenv("EPOCH_MAX_CHUNKS_PER_TICK", "40"))
+    EPOCH_WATCHER_INTERVAL_SECONDS: int = int(os.getenv("EPOCH_WATCHER_INTERVAL_SECONDS", "60"))
+    EPOCH_WATCHER_ENABLED: bool = os.getenv("EPOCH_WATCHER_ENABLED", "true").lower() in ("true", "1", "yes")
 
     # Twitter / X API v2 Credentials & Auto-Post Settings
     TWITTER_API_KEY: str = os.getenv("TWITTER_API_KEY", "")

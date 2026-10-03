@@ -27,7 +27,7 @@ export const EmileJarVisual: React.FC = () => {
   const { n, auc, d, running } = simState;
   const eps = calcEpsilon(n, d);
   const provenFloor = Math.max(FLOOR_AUC, auc - eps);
-  const jarPct = Math.max(0, Math.min(100, ((auc - FLOOR_AUC) / (TARGET_AUC - FLOOR_AUC)) * 100));
+  const jarPct = Math.max(0, Math.min(100, ((provenFloor - FLOOR_AUC) / (TARGET_AUC - FLOOR_AUC)) * 100));
 
   const isUnlocked = jarPct >= 100.0;
 
@@ -36,7 +36,7 @@ export const EmileJarVisual: React.FC = () => {
     setSimParams({
       n: 9600,
       auc: 0.645,
-      d: 28,
+      d: model.d,
       running: false,
     });
   };

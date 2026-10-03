@@ -421,3 +421,93 @@ html::-webkit-scrollbar-track { background: var(--background); }
   .math-glyph { animation: none; }
 }
 html { scroll-behavior: smooth; }
+
+
+/* ---------- Epochs page ---------- */
+.epoch-card-active { box-shadow: 0 0 0 1px rgb(233 159 48 / .25), 0 0 36px var(--banana-glow); }
+.epoch-dot-active { box-shadow: 0 0 0 4px var(--banana-glow); }
+.epoch-line-fill { transition: width 1.2s var(--ease-instrument), height 1.2s var(--ease-instrument); }
+
+/* Small sand grains falling inside the active card */
+.epoch-grain {
+  position: absolute; top: -6px; width: 3px; height: 3px; border-radius: 999px;
+  background: var(--banana-hi); opacity: 0;
+  animation: epoch-grain-fall 2.4s linear infinite;
+}
+@keyframes epoch-grain-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: .8; }
+  85% { opacity: .5; }
+  100% { transform: translateY(260px); opacity: 0; }
+}
+
+/* One-time sand pour when a card turns from active to complete (~1.2s) */
+.epoch-pour {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgb(233 159 48 / .38) 0%, rgb(233 159 48 / .14) 70%, transparent 100%);
+  transform-origin: top; transform: scaleY(0); opacity: 0;
+  animation: epoch-pour 1.2s var(--ease-instrument) forwards;
+}
+@keyframes epoch-pour {
+  0% { transform: scaleY(0); opacity: 1; }
+  70% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+.epoch-icon-run { animation: epoch-icon-pulse 1.6s ease-in-out infinite; }
+@keyframes epoch-icon-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .epoch-grain, .epoch-pour, .epoch-icon-run { animation: none; }
+  .epoch-grain, .epoch-pour { display: none; }
+  .epoch-line-fill { transition: none; }
+}
+
+/* ---------- Epochs hero ---------- */
+.epochs-hero { background: radial-gradient(120% 90% at 80% 40%, #3a2510 0%, var(--ink) 60%); }
+.epochs-bloom {
+  background: radial-gradient(circle, rgb(233 159 48 / .28) 0%, rgb(233 159 48 / .08) 38%, transparent 68%);
+  filter: blur(8px);
+  animation: epochs-breathe 7s ease-in-out infinite;
+}
+.epochs-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 70% 50%, black 10%, transparent 70%);
+}
+.epochs-dust {
+  position: absolute; border-radius: 999px; background: var(--banana-hi); opacity: 0;
+  box-shadow: 0 0 6px rgb(245 194 111 / .8);
+  animation: epochs-dust-drift 11s linear infinite;
+}
+.epochs-title {
+  background: linear-gradient(180deg, var(--fg-hi) 30%, #f5c26f 120%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 60px rgb(233 159 48 / .18);
+}
+.epochs-orbit {
+  border: 1px dashed rgb(233 159 48 / .22);
+  animation: epochs-spin 60s linear infinite;
+}
+.epochs-orbit-rev { border-style: solid; border-color: rgb(254 250 240 / .06); animation-duration: 90s; animation-direction: reverse; }
+.epochs-pulse { box-shadow: 0 0 0 0 rgb(233 159 48 / .6); animation: epochs-ping 2s ease-out infinite; }
+.epochs-seg-active {
+  background: linear-gradient(90deg, var(--banana) 0%, var(--banana-hi) 50%, var(--banana) 100%);
+  background-size: 200% 100%; animation: epochs-shimmer 1.8s linear infinite;
+}
+@keyframes epochs-breathe { 0%, 100% { opacity: .75; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+@keyframes epochs-dust-drift {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: .7; }
+  85% { opacity: .4; }
+  100% { transform: translate(-40px, 120px); opacity: 0; }
+}
+@keyframes epochs-spin { to { transform: rotate(360deg); } }
+@keyframes epochs-ping { 0% { box-shadow: 0 0 0 0 rgb(233 159 48 / .6); } 100% { box-shadow: 0 0 0 10px rgb(233 159 48 / 0); } }
+@keyframes epochs-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .epochs-bloom, .epochs-dust, .epochs-orbit, .epochs-pulse, .epochs-seg-active { animation: none; }
+  .epochs-dust { display: none; }
+}
+.epochs-floor-glow { background: radial-gradient(ellipse at center, rgb(233 159 48 / .45) 0%, rgb(233 159 48 / .12) 45%, transparent 72%); filter: blur(6px); }

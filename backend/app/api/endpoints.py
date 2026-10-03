@@ -7,6 +7,7 @@ from sqlalchemy import select, desc, text
 from app.db.database import get_db
 from app.db.models import Token, ModelRun, TokenStatus
 from app.core.config import settings
+from app.ml.jar_math import gate_thresholds
 
 import time
 router = APIRouter(prefix="/api")
@@ -15,6 +16,40 @@ router = APIRouter(prefix="/api")
 _cached_state_data = None
 _cached_state_timestamp = 0.0
 STATE_CACHE_TTL_SECONDS = 15.0
+
+
+def invalidate_state_cache() -> None:
+    """Drop the cached /api/state snapshot (called after a new model run is saved)."""
+    global _cached_state_data, _cached_state_timestamp
+    _cached_state_data = None
+    _cached_state_timestamp = 0.0
+
+
+def serialize_model_run(run: ModelRun) -> dict:
+    """Public shape of a model run. Shared by /api/state, the WS `model` event and /api/epochs."""
+    return {
+        "run_id": run.id,
+        "ran_at": run.ran_at.isoformat(),
+        "n": run.n_samples,
+        "n_positive": run.n_positive,
+        "d": run.capacity_d,
+        "auc": run.auc_mean,
+        "auc_std": run.auc_std,
+        "epsilon_vc": run.epsilon_vc,
+        "auc_boot_lower": run.auc_boot_lower,
+        "proven_floor": run.proven_floor,
+        "jar_level": run.jar_level,
+        "gates": run.gates_status,
+        "blocked_by": run.blocked_by,
+        "hour_rates": run.hour_rates,
+        "feature_importance": run.feature_importance
+    }
+
+
+async def get_latest_model(db: AsyncSession) -> ModelRun | None:
+    """The single source for "the current model". Never compute these numbers anywhere else."""
+    res = await db.execute(select(ModelRun).order_by(desc(ModelRun.id)).limit(1))
+    return res.scalar_one_or_none()
 
 @router.get("/state")
 async def get_app_state(db: AsyncSession = Depends(get_db)):
@@ -45,28 +80,8 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
 
         tokens = all_rows[:400]
 
-        stmt_model = select(ModelRun).order_by(desc(ModelRun.id)).limit(1)
-        res_model = await db.execute(stmt_model)
-        latest_model = res_model.scalar_one_or_none()
-
-        model_data = None
-        if latest_model:
-            model_data = {
-                "ran_at": latest_model.ran_at.isoformat(),
-                "n": latest_model.n_samples,
-                "n_positive": latest_model.n_positive,
-                "d": latest_model.capacity_d,
-                "auc": latest_model.auc_mean,
-                "auc_std": latest_model.auc_std,
-                "epsilon_vc": latest_model.epsilon_vc,
-                "auc_boot_lower": latest_model.auc_boot_lower,
-                "proven_floor": latest_model.proven_floor,
-                "jar_level": latest_model.jar_level,
-                "gates": latest_model.gates_status,
-                "blocked_by": latest_model.blocked_by,
-                "hour_rates": latest_model.hour_rates,
-                "feature_importance": latest_model.feature_importance
-            }
+        latest_model = await get_latest_model(db)
+        model_data = serialize_model_run(latest_model) if latest_model else None
 
         token_list = [
             {
@@ -88,19 +103,10 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         import traceback
         print(f"[API ERROR] get_app_state failed: {e}\n{traceback.format_exc()}", flush=True)
-        # Fallback snapshot if database is uninitialized
+        # Database unavailable: report no model rather than inventing numbers
         above_10k, passed_30k, stalled, pending, median_holders = 0, 0, 0, 0, 0
         token_list = []
-        model_data = {
-            "ran_at": datetime.now(timezone.utc).isoformat(),
-            "n": 0, "n_positive": 0, "d": 28,
-            "auc": 0.500, "auc_std": 0.0, "epsilon_vc": 0.0,
-            "auc_boot_lower": 0.500, "proven_floor": 0.500, "jar_level": 0.0,
-            "gates": {"n_samples": False, "n_positive": False, "auc_std": False, "time_split": False},
-            "blocked_by": "n_samples",
-            "hour_rates": {},
-            "feature_importance": {}
-        }
+        model_data = None
 
     response_payload = {
         "counters": {
@@ -111,6 +117,9 @@ async def get_app_state(db: AsyncSession = Depends(get_db)):
             "median_holders": median_holders
         },
         "latest_model": model_data,
+        "gates_config": gate_thresholds(),
+        "target_auc": settings.AUC_TARGET,
+        "floor_auc": settings.AUC_FLOOR,
         "tokens": token_list
     }
     _cached_state_data = response_payload
@@ -140,9 +149,8 @@ async def get_model_history(days: int = 30, db: AsyncSession = Depends(get_db)):
     except Exception:
         return []
 
-@router.get("/methodology.json")
-async def get_methodology():
-    """GET /api/methodology.json - Machine-readable methodology specification."""
+def methodology_snapshot() -> dict:
+    """Machine-readable methodology. Also frozen into Epoch II's proof when it completes."""
     return {
         "universe": "Every token launched on Robinhood Chain",
         "study_population": "Tokens with peak market cap >= $10,000",
@@ -157,16 +165,20 @@ async def get_methodology():
             {"name": "lore_missing", "encoding": "binary flag"},
             {"name": "name_tokens", "encoding": "word count"}
         ],
-        "capacity_d": 41,
-        "gates": {
-            "n_samples_min": 2000,
-            "n_positive_min": 200,
-            "auc_std_max": 0.05,
-            "time_split_gap_max": 0.04
-        },
+        "capacity_d": settings.CAPACITY_D,
+        "delta": settings.DELTA_CONFIDENCE,
+        "proven_floor": "min(auc_mean - epsilon_vc, bootstrap 2.5th percentile AUC)",
+        "jar_level": "clip((proven_floor - floor_auc) / (target_auc - floor_auc), 0, 1), capped while any gate fails",
+        "jar_gate_cap": settings.JAR_GATE_CAP,
+        "gates": gate_thresholds(),
         "target_auc": settings.AUC_TARGET,
         "floor_auc": settings.AUC_FLOOR
     }
+
+@router.get("/methodology.json")
+async def get_methodology():
+    """GET /api/methodology.json - Machine-readable methodology specification."""
+    return methodology_snapshot()
 
 @router.get("/dataset.csv")
 async def download_public_dataset(db: AsyncSession = Depends(get_db)):

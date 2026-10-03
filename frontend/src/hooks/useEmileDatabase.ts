@@ -7,6 +7,9 @@ export function useEmileDatabase() {
   const updateModel = useEmileStore((state) => state.updateModel);
   const setSimParams = useEmileStore((state) => state.setSimParams);
   const setConnected = useEmileStore((state) => state.setConnected);
+  const setThresholds = useEmileStore((state) => state.setThresholds);
+  const onEpochEvent = useEmileStore((state) => state.onEpochEvent);
+  const requestEpochsRefresh = useEmileStore((state) => state.requestEpochsRefresh);
 
   useEffect(() => {
     const apiBase = getApiBaseUrl();
@@ -19,7 +22,7 @@ export function useEmileDatabase() {
         if (res.ok) {
           const data = await res.json();
           const counters = data.counters || {};
-          const latestModel = data.latest_model || {};
+          const latestModel = data.latest_model;
           const dbTokens = data.tokens || [];
 
           // Deduplicate tokens by mint address
@@ -61,19 +64,30 @@ export function useEmileDatabase() {
             },
             holdersList: counters.median_holders ? [counters.median_holders] : [],
             tokens: formattedTokens,
-            simState: {
-              n: totalTokensInDB,
-              auc: latestModel?.auc || 0.544,
-              d: latestModel?.d || 41,
-              running: false
-            }
+            ...(latestModel ? {
+              simState: {
+                n: latestModel.n,
+                auc: latestModel.auc,
+                d: latestModel.d,
+                running: false
+              }
+            } : {})
           });
 
-          if (latestModel && latestModel.auc) {
+          if (data.gates_config) {
+            setThresholds({
+              gatesConfig: data.gates_config,
+              targetAuc: data.target_auc,
+              floorAuc: data.floor_auc
+            });
+          }
+
+          if (latestModel) {
             updateModel({
-              n: latestModel.n || totalTokensInDB,
-              n_positive: latestModel.n_positive || (counters.passed_30k ?? 0),
-              d: latestModel.d || 41,
+              run_id: latestModel.run_id,
+              n: latestModel.n,
+              n_positive: latestModel.n_positive,
+              d: latestModel.d,
               auc: latestModel.auc,
               auc_std: latestModel.auc_std,
               epsilon_vc: latestModel.epsilon_vc,
@@ -82,6 +96,7 @@ export function useEmileDatabase() {
               jar_level: latestModel.jar_level,
               gates: latestModel.gates,
               blocked_by: latestModel.blocked_by,
+              hour_rates: latestModel.hour_rates,
               feature_importance: latestModel.feature_importance
             });
           }
@@ -122,11 +137,17 @@ export function useEmileDatabase() {
             const curState = useEmileStore.getState();
             setSimParams({ n: curState.tally.all });
           }
+          if (payload.epoch) {
+            onEpochEvent(payload.epoch);
+          }
           if (payload.model) {
             updateModel(payload.model);
+            // Epoch I/II progress is read from the same model run: refresh it too
+            requestEpochsRefresh();
             setSimParams({
               n: payload.model.n,
-              auc: payload.model.auc
+              auc: payload.model.auc,
+              d: payload.model.d
             });
           }
         } catch (e) {
@@ -140,5 +161,5 @@ export function useEmileDatabase() {
     return () => {
       if (socket) socket.close();
     };
-  }, [addToken, updateModel, setSimParams, setConnected]);
+  }, [addToken, updateModel, setSimParams, setConnected, setThresholds, onEpochEvent, requestEpochsRefresh]);
 }

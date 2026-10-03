@@ -6,6 +6,7 @@ from sklearn.metrics import roc_auc_score
 
 from app.ml.features import extract_features, assert_no_leakage
 from app.ml.jar_math import evaluate_jar_level
+from app.core.config import settings
 
 def evaluate_time_split_gap(X: np.ndarray, y: np.ndarray, df: pd.DataFrame) -> float:
     """
@@ -71,6 +72,13 @@ def train_model_and_evaluate(df: pd.DataFrame) -> dict:
     X, pca_model = extract_features(df)
     y = (df["status"] == "passed").astype(int).values
 
+    # The VC penalty is only honest if d matches the real feature count.
+    if X.shape[1] != settings.CAPACITY_D:
+        raise ValueError(
+            f"Feature matrix has {X.shape[1]} columns but CAPACITY_D={settings.CAPACITY_D}; "
+            "update settings.CAPACITY_D and the published methodology together."
+        )
+
     n_samples = len(y)
     n_positive = int(y.sum())
 
@@ -118,7 +126,7 @@ def train_model_and_evaluate(df: pd.DataFrame) -> dict:
         y_true=y,
         y_pred_proba=y_pred_proba,
         time_split_gap=time_gap,
-        d=28
+        d=settings.CAPACITY_D
     )
 
     # Feature Importance calculation

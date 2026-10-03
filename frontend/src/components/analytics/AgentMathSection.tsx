@@ -64,10 +64,9 @@ export const AgentMathSection: React.FC<{ showMasthead?: boolean }> = ({ showMas
   const model = useEmileStore((s) => s.model);
   const gates = model.gates || {};
   const allGates = Object.values(gates).length > 0 && Object.values(gates).every(Boolean);
-  // ε recomputed from n and d so the value agrees with its own formula.
-  const eps = model.n > model.d && model.n > 0
-    ? Math.sqrt((model.d * (Math.log((2 * model.n) / model.d) + 1) + Math.log(4 / 0.05)) / model.n)
-    : 1;
+  // ε as stored with the model run (same formula, delta and d as the backend), never recomputed here
+  const eps = model.epsilon_vc;
+
 
   const stages: Stage[] = [
     {

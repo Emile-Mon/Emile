@@ -2,7 +2,18 @@ import math
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-def calculate_epsilon_vc(n: int, d: int = 28, delta: float = 0.05) -> float:
+from app.core.config import settings
+
+def gate_thresholds() -> dict:
+    """Published gate thresholds, served to clients so nothing is hardcoded twice."""
+    return {
+        "n_samples_min": settings.GATE_N_SAMPLES,
+        "n_positive_min": settings.GATE_N_POSITIVE,
+        "auc_std_max": settings.GATE_AUC_STD_MAX,
+        "time_split_gap_max": settings.GATE_TIME_SPLIT_GAP_MAX,
+    }
+
+def calculate_epsilon_vc(n: int, d: int = settings.CAPACITY_D, delta: float = settings.DELTA_CONFIDENCE) -> float:
     """
     Calculates the Vapnik-Chervonenkis (VC) capacity penalty:
     epsilon = sqrt((d * (ln(2n/d) + 1) + ln(4/delta)) / n)
@@ -46,9 +57,9 @@ def evaluate_jar_level(
     y_true: np.ndarray,
     y_pred_proba: np.ndarray,
     time_split_gap: float,
-    d: int = 41,
-    target_auc: float = 0.60,
-    floor_auc: float = 0.50
+    d: int = settings.CAPACITY_D,
+    target_auc: float = settings.AUC_TARGET,
+    floor_auc: float = settings.AUC_FLOOR
 ) -> dict:
     """
     Evaluates the model performance, VC bound, bootstrap bound, gates, and jar level.
@@ -58,8 +69,8 @@ def evaluate_jar_level(
     - floor_vc: auc_mean - eps_vc
     - floor_boot: 2.5th percentile bootstrap lower bound
     - proven_floor: min(floor_vc, floor_boot)
-    - raw_jar_level: clamped 0..1 based on proven_floor
-    - jar_level: final capped jar level (0.95 if any gate fails)
+    - raw_jar_level: clamped 0..1, (proven_floor - floor_auc) / (target_auc - floor_auc)
+    - jar_level: final jar level (capped at JAR_GATE_CAP while any gate fails)
     - gates: dict of bool gate checks
     - blocked_by: first failing gate name or None
     """
@@ -69,22 +80,23 @@ def evaluate_jar_level(
     
     proven_floor = min(floor_vc, floor_boot)
     
-    # Calculate raw jar level scaled between floor_auc (0.50) and target_auc (0.60)
-    raw_jar_level = float(np.clip((auc_mean - floor_auc) / (target_auc - floor_auc), 0.0, 1.0))
+    # Sand level is driven by the proven floor, not the raw AUC: the hourglass
+    # only fills as far as the evidence is provably above chance.
+    raw_jar_level = float(np.clip((proven_floor - floor_auc) / (target_auc - floor_auc), 0.0, 1.0))
     
     # Hard Gates Evaluation
     gates = {
-        "n_samples": n_samples >= 2000,
-        "n_positive": n_positive >= 200,
-        "auc_std": auc_std < 0.05,
-        "time_split": time_split_gap <= 0.04
+        "n_samples": n_samples >= settings.GATE_N_SAMPLES,
+        "n_positive": n_positive >= settings.GATE_N_POSITIVE,
+        "auc_std": auc_std < settings.GATE_AUC_STD_MAX,
+        "time_split": time_split_gap <= settings.GATE_TIME_SPLIT_GAP_MAX
     }
     
     all_passed = all(gates.values())
     blocked_by = None if all_passed else next(k for k, v in gates.items() if not v)
     
-    # Cap jar level at 0.95 if any gate fails
-    jar_level = raw_jar_level if all_passed else min(raw_jar_level, 0.95)
+    # Cap jar level while any gate fails
+    jar_level = raw_jar_level if all_passed else min(raw_jar_level, settings.JAR_GATE_CAP)
     
     return {
         "auc_mean": round(float(auc_mean), 4),
@@ -96,6 +108,7 @@ def evaluate_jar_level(
         "floor_vc": round(float(floor_vc), 4),
         "auc_boot_lower": round(float(floor_boot), 4),
         "proven_floor": round(float(proven_floor), 4),
+        "time_split_gap": round(float(time_split_gap), 4),
         "raw_jar_level": round(float(raw_jar_level), 4),
         "jar_level": round(float(jar_level), 4),
         "gates": gates,

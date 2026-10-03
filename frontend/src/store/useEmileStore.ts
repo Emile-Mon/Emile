@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { EpochEvent, EpochsPayload } from '@/components/epochs/types';
 
 export interface TokenItem {
   mint: string;
@@ -15,7 +16,15 @@ export interface TokenItem {
   hue?: number;
 }
 
+export interface GatesConfig {
+  n_samples_min: number;
+  n_positive_min: number;
+  auc_std_max: number;
+  time_split_gap_max: number;
+}
+
 export interface ModelMetrics {
+  run_id?: number;
   n: number;
   n_positive: number;
   d: number;
@@ -49,8 +58,19 @@ interface EmileState {
   };
   holdersList: number[];
 
-  // Model state
+  // Model state (zeros until /api/state or the WS `model` event arrives)
   model: ModelMetrics;
+  modelLoaded: boolean;
+  // Gate thresholds and AUC bounds, served by /api/state. Never hardcode them in components.
+  gatesConfig: GatesConfig | null;
+  targetAuc: number | null;
+  floorAuc: number | null;
+
+  // Epochs page (/api/epochs). `epochsVersion` bumps on WS events to trigger a refetch.
+  epochs: EpochsPayload | null;
+  epochsError: boolean;
+  epochsVersion: number;
+  justCompleted: number | null;
 
   // Interactive Simulation state
   simState: {
@@ -66,6 +86,10 @@ interface EmileState {
   setCodeBuffer: (code: string) => void;
   addToken: (token: TokenItem) => void;
   updateModel: (model: Partial<ModelMetrics>) => void;
+  setThresholds: (t: { gatesConfig: GatesConfig; targetAuc: number; floorAuc: number }) => void;
+  setEpochs: (payload: EpochsPayload | null, error?: boolean) => void;
+  onEpochEvent: (evt: EpochEvent) => void;
+  requestEpochsRefresh: () => void;
   setSimParams: (params: Partial<{ n: number; auc: number; d: number; running: boolean }>) => void;
   resetSim: () => void;
 }
@@ -77,28 +101,37 @@ export const useEmileStore = create<EmileState>((set, get) => ({
   stage: 'ingest · robinhood chain',
   codeBuffer: '',
   tokens: [],
-  counters: { pump: 1086, dex: 1086, rpc: 1086 },
-  tally: { all: 1086, pass: 292, stall: 694 },
-  holdersList: [288],
+  counters: { pump: 0, dex: 0, rpc: 0 },
+  tally: { all: 0, pass: 0, stall: 0 },
+  holdersList: [],
 
   model: {
-    n: 1086,
-    n_positive: 292,
-    d: 28,
-    auc: 0.6360,
-    auc_std: 0.025,
-    epsilon_vc: 0.3918,
-    auc_boot_lower: 0.6360,
-    proven_floor: 0.520,
-    jar_level: 0.95,
-    gates: { n_samples: true, n_positive: false, auc_std: true, time_split: true },
-    blocked_by: 'n_positive'
+    n: 0,
+    n_positive: 0,
+    d: 0,
+    auc: 0,
+    auc_std: 0,
+    epsilon_vc: 0,
+    auc_boot_lower: 0,
+    proven_floor: 0,
+    jar_level: 0,
+    gates: {},
+    blocked_by: null
   },
+  modelLoaded: false,
+  gatesConfig: null,
+  targetAuc: null,
+  floorAuc: null,
+
+  epochs: null,
+  epochsError: false,
+  epochsVersion: 0,
+  justCompleted: null,
 
   simState: {
-    n: 1086,
-    auc: 0.6360,
-    d: 28,
+    n: 0,
+    auc: 0.5,
+    d: 0,
     running: false
   },
 
@@ -144,11 +177,20 @@ export const useEmileStore = create<EmileState>((set, get) => ({
     });
   },
 
-  updateModel: (metrics) => set((state) => ({ model: { ...state.model, ...metrics } })),
+  updateModel: (metrics) => set((state) => ({ model: { ...state.model, ...metrics }, modelLoaded: true })),
+
+  setThresholds: ({ gatesConfig, targetAuc, floorAuc }) => set({ gatesConfig, targetAuc, floorAuc }),
+
+  setEpochs: (payload, error = false) => set(payload ? { epochs: payload, epochsError: false } : { epochsError: error }),
+
+  // The event only marks which card to animate; the new statuses come from a fresh /api/epochs read.
+  onEpochEvent: (evt) => set((state) => ({ justCompleted: evt.id, epochsVersion: state.epochsVersion + 1 })),
+
+  requestEpochsRefresh: () => set((state) => ({ epochsVersion: state.epochsVersion + 1 })),
 
   setSimParams: (params) => set((state) => ({ simState: { ...state.simState, ...params } })),
 
-  resetSim: () => set({
-    simState: { n: 340, auc: 0.548, d: 28, running: true }
-  })
+  resetSim: () => set((state) => ({
+    simState: { n: 340, auc: 0.548, d: state.model.d || state.simState.d, running: true }
+  }))
 }));

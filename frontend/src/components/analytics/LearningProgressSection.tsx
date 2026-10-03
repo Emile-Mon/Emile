@@ -5,25 +5,26 @@ import { useEmileStore } from '@/store/useEmileStore';
 
 export const LearningProgressSection: React.FC = () => {
   const tally = useEmileStore((state) => state.tally);
-  const counters = useEmileStore((state) => state.counters);
   const model = useEmileStore((state) => state.model);
-  const simState = useEmileStore((state) => state.simState);
+  const modelLoaded = useEmileStore((state) => state.modelLoaded);
+  const gatesConfig = useEmileStore((state) => state.gatesConfig);
+  const targetAuc = useEmileStore((state) => state.targetAuc);
 
-  // Compute calculated metrics
-  const totalTokens = tally.all || simState.n || 2346;
-  const passedTokens = tally.pass || model.n_positive || 723;
-  const stalledTokens = tally.stall || (totalTokens - passedTokens);
-  const winRate = totalTokens > 0 ? ((passedTokens / totalTokens) * 100).toFixed(1) : '30.8';
+  // All numbers come from /api/state; nothing is substituted when data is missing.
+  const totalTokens = tally.all;
+  const passedTokens = tally.pass;
+  const stalledTokens = tally.stall;
+  const winRate = totalTokens > 0 ? ((passedTokens / totalTokens) * 100).toFixed(1) : '0.0';
 
-  const auc = model.auc || 0.9483;
-  const vcFloor = model.proven_floor || 0.6743;
-  const epsilonVal = model.epsilon_vc || 0.274;
-  const featureDim = model.d || 28;
-  const jarPct = model.jar_level ? (model.jar_level * 100).toFixed(1) : '80.0';
+  const auc = model.auc;
+  const vcFloor = model.proven_floor;
+  const featureDim = model.d;
+  const jarPct = (model.jar_level * 100).toFixed(1);
+  const fmt = (v: number, digits: number) => (modelLoaded ? v.toFixed(digits) : '—');
 
   // Parse dynamic feature importance from PostgreSQL model DB state
   const rawImportance = model.feature_importance;
-  let learnedFeatures = [];
+  let learnedFeatures: { name: string; weight: number; code: string; color: string }[] = [];
 
   if (rawImportance && Object.keys(rawImportance).length > 0) {
     const sortedEntries = Object.entries(rawImportance)
@@ -53,31 +54,28 @@ export const LearningProgressSection: React.FC = () => {
       code: code.toUpperCase(),
       color: featureColors[idx % featureColors.length]
     }));
-  } else {
-    learnedFeatures = [
-      { name: 'Holder Log Scale Distribution & Retention', weight: 54.2, code: 'HOLDERS_LOG', color: 'var(--banana)' },
-      { name: '24-Hour Launch Cycle (Cos Signal)', weight: 21.5, code: 'HOUR_COS', color: 'var(--live)' },
-      { name: '24-Hour Launch Cycle (Sin Signal)', weight: 17.5, code: 'HOUR_SIN', color: 'var(--cyan)' },
-      { name: 'Weekday Seasonal Trading Pattern', weight: 4.8, code: 'DOW_SIGNALS', color: 'var(--violet)' },
-      { name: 'Tx Frequency & Micro-Arb Velocity', weight: 2.0, code: 'TX_FREQ', color: 'var(--dim)' },
-    ];
   }
 
-  // Ingestion stream telemetry data (bound directly to live DB counters)
+  // Ingestion counts straight from /api/state; status is the real WebSocket connection, not a fixed label.
+  const isConnected = useEmileStore((state) => state.isConnected);
+  const liveStatus = isConnected ? 'LIVE' : 'OFFLINE';
+  const liveColor = isConnected ? 'text-[var(--live)]' : 'text-[var(--stall)]';
   const streams = [
-    { name: 'Robinhood Chain DEX Ingestion', count: (counters.pump || totalTokens).toLocaleString('en-US'), rate: '18 tokens/m', status: 'ACTIVE', color: 'text-[var(--live)]' },
-    { name: 'Robinhood Chain Indexer', count: (counters.dex || totalTokens * 3).toLocaleString('en-US'), rate: '54 updates/s', status: 'SYNCED', color: 'text-[var(--cyan)]' },
-    { name: 'Robinhood EVM Node Cluster', count: (counters.rpc || totalTokens * 12).toLocaleString('en-US'), rate: '142 req/s', status: 'LATENCY 38ms', color: 'text-[var(--banana)]' },
+    { name: 'Tokens tracked (peak ≥ $10K)', count: tally.all.toLocaleString('en-US'), rate: 'Robinhood Chain ingest worker', status: liveStatus, color: liveColor },
+    { name: 'Labeled: reached $30K', count: tally.pass.toLocaleString('en-US'), rate: 'Positive class', status: liveStatus, color: liveColor },
+    { name: 'Labeled: stalled below $30K', count: tally.stall.toLocaleString('en-US'), rate: 'Negative class (age ≥ 48h)', status: liveStatus, color: liveColor },
   ];
 
   // Validation Proof Gates (bound directly to live DB metrics & model.gates object)
+  // Pass/fail comes from the model run itself; thresholds come from gates_config.
   const dbGates = model.gates || {};
-  const gates = [
-    { label: 'Sample Volume (N ≥ 1,000)', val: `${totalTokens.toLocaleString('en-US')} / 1,000`, passed: totalTokens >= 1000 },
-    { label: 'Positive Target Class (N_pos ≥ 300)', val: `${passedTokens.toLocaleString('en-US')} / 300`, passed: passedTokens >= 300 },
-    { label: 'Variance Bound (σ_AUC ≤ 0.02)', val: `σ = ${(model.auc_std || 0.025).toFixed(4)}`, passed: (model.auc_std || 0.025) <= 0.02 },
-    { label: 'Out-of-Sample Time Split Verification', val: model.blocked_by === 'time_split' ? 'CALIBRATING (PHASE 1)' : 'VERIFIED', passed: model.blocked_by !== 'time_split' },
-  ];
+  const n = (v: number) => v.toLocaleString('en-US');
+  const gates = gatesConfig ? [
+    { label: `Sample Volume (N ≥ ${n(gatesConfig.n_samples_min)})`, val: `${n(model.n)} / ${n(gatesConfig.n_samples_min)}`, passed: !!dbGates.n_samples },
+    { label: `Positive Target Class (N_pos ≥ ${n(gatesConfig.n_positive_min)})`, val: `${n(model.n_positive)} / ${n(gatesConfig.n_positive_min)}`, passed: !!dbGates.n_positive },
+    { label: `Variance Bound (σ_AUC < ${gatesConfig.auc_std_max})`, val: `σ = ${fmt(model.auc_std, 4)}`, passed: !!dbGates.auc_std },
+    { label: `Out-of-Sample Time Split (gap ≤ ${gatesConfig.time_split_gap_max})`, val: dbGates.time_split ? 'VERIFIED' : 'NOT YET', passed: !!dbGates.time_split },
+  ] : [];
 
   return (
     <section className="learning-progress border-t border-[var(--rule)] bg-[var(--panel2)] p-6 md:p-8">
@@ -104,7 +102,7 @@ export const LearningProgressSection: React.FC = () => {
             <span className="text-[var(--banana)] font-bold">1 · INGESTION</span>
           </div>
           <div className="px-3.5 py-1.5 rounded-lg bg-[var(--live)]/10 border border-[var(--live)]/40 font-mono text-xs text-[var(--live)] font-bold">
-            SAND LEVEL {jarPct}%
+            SAND LEVEL {modelLoaded ? `${jarPct}%` : '—'}
           </div>
         </div>
       </div>
@@ -156,13 +154,13 @@ export const LearningProgressSection: React.FC = () => {
           </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-3xl font-sans font-semibold text-[var(--cyan)] tracking-tight">
-              {auc.toFixed(4)}
+              {fmt(auc, 4)}
             </span>
             <span className="text-xs font-mono text-[var(--dim)]">Measured</span>
           </div>
           <div className="text-[11px] font-mono text-[var(--dim)] mt-2 flex items-center justify-between border-t border-[var(--soft)] pt-2">
-            <span>VC Bound Floor (ε={epsilonVal}):</span>
-            <span className="text-[var(--banana)] font-bold">{vcFloor.toFixed(3)}</span>
+            <span>VC Bound Floor (ε={fmt(model.epsilon_vc, 3)}):</span>
+            <span className="text-[var(--banana)] font-bold">{fmt(vcFloor, 3)}</span>
           </div>
         </div>
 
@@ -197,7 +195,7 @@ export const LearningProgressSection: React.FC = () => {
                   </svg>
                   Active Data Streams & Ingestion Pipeline
                 </h3>
-                <span className="text-[10px] font-mono text-[var(--live)] bg-[var(--live)]/10 px-2 py-0.5 rounded border border-[var(--live)]/30">STREAMING</span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${isConnected ? 'text-[var(--live)] bg-[var(--live)]/10 border-[var(--live)]/30' : 'text-[var(--stall)] border-[var(--stall)]/40'}`}>{isConnected ? 'STREAMING' : 'DISCONNECTED'}</span>
               </div>
               <p className="text-[11.5px] text-[var(--dim)] mb-4">
                 Continuous ingestion monitoring live Robinhood Chain EVM transactions, decentralized exchange pairs, and contract deployments.
@@ -207,7 +205,7 @@ export const LearningProgressSection: React.FC = () => {
                 {streams.map((s, idx) => (
                   <div key={idx} className="p-3 rounded-lg bg-[var(--panel2)] border border-[var(--soft)] flex items-center justify-between text-xs font-mono">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-[var(--live)] animate-ping" />
+                      <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-[var(--live)] animate-ping' : 'bg-[var(--stall)]'}`} />
                       <div>
                         <div className="text-[var(--fg)] font-medium">{s.name}</div>
                         <div className="text-[10.5px] text-[var(--dim)]">{s.rate}</div>
@@ -262,13 +260,16 @@ export const LearningProgressSection: React.FC = () => {
                 </svg>
                 Learned Pattern Weights (Feature Importance)
               </h3>
-              <span className="text-[10.5px] font-mono text-[var(--violet)] font-semibold">28 FEATURES TRACKED</span>
+              <span className="text-[10.5px] font-mono text-[var(--violet)] font-semibold">{featureDim} FEATURES TRACKED</span>
             </div>
             <p className="text-[11.5px] text-[var(--dim)] mb-5">
-              The relative impact of extracted data signals calculated by Epoch Labs' training algorithm to distinguish tokens reaching &gt;$30K from stalled ones.
+              The relative impact of extracted data signals calculated by Epoch Labs&apos; training algorithm to distinguish tokens reaching &gt;$30K from stalled ones.
             </p>
 
             <div className="space-y-4">
+              {learnedFeatures.length === 0 && (
+                <div className="text-xs font-mono text-[var(--dim)]">No model run yet. Feature weights appear after the first training run.</div>
+              )}
               {learnedFeatures.map((feat, idx) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between items-center text-xs font-mono">
@@ -302,15 +303,15 @@ export const LearningProgressSection: React.FC = () => {
                 Hourglass Completion Progress
               </div>
               <div className="text-xs text-[var(--dim)] mt-0.5">
-                Vapnik–Chervonenkis proof floor <b className="text-[var(--fg)]">{vcFloor.toFixed(4)}</b> vs Target <b className="text-[var(--banana)]">0.600</b>
+                Vapnik–Chervonenkis proof floor <b className="text-[var(--fg)]">{fmt(vcFloor, 4)}</b> vs Target <b className="text-[var(--banana)]">{targetAuc != null ? targetAuc.toFixed(3) : '—'}</b>
               </div>
             </div>
             <div className="text-right shrink-0">
               <div className="text-xl font-mono font-bold text-[var(--banana)]">
-                {jarPct}%
+                {modelLoaded ? `${jarPct}%` : '—'}
               </div>
               <div className="text-[9.5px] font-mono text-[var(--live)] uppercase font-semibold">
-                PHASE 1 READY
+                {!modelLoaded ? 'NO MODEL RUN' : model.blocked_by ? `BLOCKED BY ${model.blocked_by.toUpperCase()}` : 'ALL GATES PASS'}
               </div>
             </div>
           </div>
