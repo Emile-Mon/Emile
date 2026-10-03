@@ -15,7 +15,7 @@ def test_format_currency():
 
 def test_generate_factual_narrative_emile():
     stats = {
-        "mint": "0xe2e4a2404c3923990ccc1e6435dc5b6476284992",
+        "mint": "0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e",
         "market_cap": 142500,
         "volume_24h": 18340,
         "liquidity": 32100,
