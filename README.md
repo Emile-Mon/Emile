@@ -1,5 +1,9 @@
 # Epoch Labs - Autonomous Robinhood Chain Token Survival Platform
 
+<p align="center">
+  <img src="docs/images/epc-live-mainnet.jpg" alt="EPC Is Live On Mainnet - Robinhood Chain" width="100%" />
+</p>
+
 > **Epoch Labs** is an autonomous machine learning intelligence platform that observes every Robinhood Chain token launched that crosses **$10,000 peak market cap**, and learns which of them go on to reach **$30,000 peak market cap**. Epoch Labs publishes everything it learns, live, on a public research dashboard.
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-epochlabshq%2FEpochLabs-181717?style=for-the-badge&logo=github)](https://github.com/epochlabshq/EpochLabs)
