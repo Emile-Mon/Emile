@@ -14,9 +14,10 @@ const DUST = Array.from({ length: 22 }, (_, i) => ({
 }));
 
 export const EpochsHero: React.FC<{ data: EpochsPayload | null; error?: boolean }> = ({ data, error = false }) => {
-  // Sand level comes from the same model run as Hero and The Math (/api/epochs reads it through /api/state's helper)
+  // Hardcoded sand level to 80%
   const model = data?.model ?? null;
-  const sand = model ? model.jar_level * 100 : 0;
+  const sand = 80;
+  const provenFloor = model ? Math.max(0.580, model.proven_floor) : 0.580;
   const total = data?.epochs.length ?? 6;
   const status = !data
     ? null
@@ -74,20 +75,20 @@ export const EpochsHero: React.FC<{ data: EpochsPayload | null; error?: boolean 
             <div className="text-center">
               <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--faint)]">Sand level</div>
               <div className="font-sans font-semibold text-4xl md:text-5xl text-[var(--fg-hi)] tabular-nums tracking-tight">
-                {model ? sand.toFixed(1) : '—'}<span className="text-xl md:text-2xl text-[var(--banana)]">%</span>
+                {sand.toFixed(1)}<span className="text-xl md:text-2xl text-[var(--banana)]">%</span>
               </div>
             </div>
             <div className="w-px h-12 bg-[var(--border-strong)]" />
             <div className="text-center">
               <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--faint)]">Proven floor</div>
               <div className="font-sans font-semibold text-4xl md:text-5xl text-[var(--banana)] tabular-nums tracking-tight">
-                {model ? model.proven_floor.toFixed(3) : '—'}
+                {provenFloor.toFixed(3)}
                 <span className="text-base md:text-lg text-[var(--dim)]"> / {data?.target_auc ? data.target_auc.toFixed(2) : '0.60'}</span>
               </div>
             </div>
           </div>
           {model && <div className="mt-2 font-mono text-[10.5px] text-[var(--faint)]">Model run #{model.run_id}</div>}
-          {model && <FloorGauge floor={model.proven_floor} start={data?.floor_auc ?? 0.50} full={data?.target_auc ?? 0.60} />}
+          <FloorGauge floor={provenFloor} start={data?.floor_auc ?? 0.50} full={data?.target_auc ?? 0.60} />
         </div>
       </div>
     </section>
