@@ -67,7 +67,8 @@ def heartbeat(last_decision_at: Optional[datetime], now: datetime, warn_after_s:
 # Watching and Waiting (front-running protection)
 # ---------------------------------------------------------------------------
 
-def watching_rows(tokens: list[dict], threshold: float, excluded: frozenset[str], limit: int) -> list[dict]:
+def watching_rows(tokens: list[dict], threshold: float, excluded: frozenset[str], limit: int,
+                  take_profit_mc_usd: float = 30_000) -> list[dict]:
     """
     tokens: rows of tokens joined with desk_scores (mint, name, symbol, peak_mc, launched_at, holders, survival).
     Built only from public feed data and the score: nothing here may depend on the candidate queue.
@@ -75,20 +76,27 @@ def watching_rows(tokens: list[dict], threshold: float, excluded: frozenset[str]
     rows = []
     for t in tokens:
         survival = t.get("survival")
+        mc_now = t.get("mc_now")
         if t["mint"].lower() in excluded:
             status = "excluded"
+        elif mc_now is not None and mc_now >= take_profit_mc_usd:
+            # Already at the take-profit: the outcome is known, so it is neither scored nor bought
+            status = "reached_tp"
         elif survival is None:
             # No holder count yet: the model cannot score it honestly (see app.services.scorer)
             status = "awaiting_holders" if t.get("holders") is None else "unscored"
         else:
             status = "scoring" if survival >= threshold else "below_threshold"
         rows.append({
-            "token": {"name": t["name"], "symbol": t["symbol"], "address": t["mint"]},
+            "token": {"name": t["name"], "symbol": t["symbol"], "address": t["mint"],
+                      "dexscreener_url": t.get("pair_url") or f"https://dexscreener.com/robinhood/{t['mint'].lower()}"},
+            "mc_now": float(mc_now) if mc_now is not None else None,
+            "mc_at": t["mc_at"].isoformat() if t.get("mc_at") else None,
             "peak_mc": float(t["peak_mc"]) if t.get("peak_mc") is not None else None,
             "launched_at": t["launched_at"].isoformat() if t.get("launched_at") else None,
             "holders": t.get("holders"),
             "holders_sampled_at": t["holders_sampled_at"].isoformat() if t.get("holders_sampled_at") else None,
-            "survival": round(survival, 4) if survival is not None else None,
+            "survival": round(survival, 4) if survival is not None and status != "reached_tp" else None,
             "status": status,
         })
     rows.sort(key=lambda r: (r["survival"] is None, -(r["survival"] or 0)))

@@ -159,6 +159,8 @@ class Settings(BaseSettings):
     DESK_TX_DEADLINE_SECONDS: int = int(os.getenv("DESK_TX_DEADLINE_SECONDS", "120"))
     DESK_ENTERING_TIMEOUT_MINUTES: int = int(os.getenv("DESK_ENTERING_TIMEOUT_MINUTES", "10"))
     # Watched tokens whose holder count is recounted onchain per Desk worker cycle (stalest first)
+    # Watching shows a token while its live market cap is at or above this (the feed's $10K entry bar)
+    DESK_WATCH_MIN_MC_USD: float = float(os.getenv("DESK_WATCH_MIN_MC_USD", "10000"))
     DESK_HOLDERS_BATCH: int = int(os.getenv("DESK_HOLDERS_BATCH", "40"))
     DESK_WORKER_INTERVAL_SECONDS: int = int(os.getenv("DESK_WORKER_INTERVAL_SECONDS", "60"))
     DESK_WORKER_ENABLED: bool = os.getenv("DESK_WORKER_ENABLED", "true").lower() in ("true", "1", "yes")

@@ -1,3 +1,4 @@
+import asyncio
 import time
 import traceback
 from dataclasses import dataclass, field
@@ -9,7 +10,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.db.database import get_db
+from app.db.database import AsyncSessionLocal, get_db
 from app.api.endpoints import get_latest_model, serialize_model_run
 from app.api.epochs_endpoints import load_completed
 from app.services import desk_chain
@@ -22,13 +23,16 @@ from app.services.golem_guard import trade_gate
 router = APIRouter(prefix="/api")
 
 CACHE_TTL_SECONDS = 5.0
+STALE_MAX_SECONDS = 120.0
 _cache: Optional["DeskInputs"] = None
 _cache_ts = 0.0
+_refreshing = False
 
 
 def invalidate_desk_cache() -> None:
-    global _cache, _cache_ts
-    _cache, _cache_ts = None, 0.0
+    """Mark the snapshot stale (it is still served once while a fresh one loads)."""
+    global _cache_ts
+    _cache_ts = 0.0
 
 
 @dataclass
@@ -46,6 +50,8 @@ class DeskInputs:
     meta: dict[str, dict]
     burned_wei: int
     watching_not_onchain: int = 0
+    watching_no_price: int = 0
+    watching_below_min: int = 0
     balance_wei: Optional[int] = None
     marks: dict[str, tuple[int, int]] = field(default_factory=dict)
     decimals: dict[str, Optional[int]] = field(default_factory=dict)
@@ -112,8 +118,13 @@ def build_desk_payload(inp: DeskInputs, now: datetime) -> dict:
             "burn_address": _addr(burn) if burn else None,
         },
         "watching": watching_rows(inp.watching_tokens, settings.DESK_ENTRY_THRESHOLD,
-                                  settings.desk_excluded_tokens, settings.DESK_WATCHING_LIMIT),
+                                  settings.desk_excluded_tokens, settings.DESK_WATCHING_LIMIT,
+                                  take_profit_mc_usd=settings.DESK_TP_MC_USD),
         "watching_not_onchain": inp.watching_not_onchain,
+        "watching_no_price": inp.watching_no_price,
+        "watching_below_min": inp.watching_below_min,
+        "watch_min_mc_usd": settings.DESK_WATCH_MIN_MC_USD,
+        "take_profit_mc_usd": settings.DESK_TP_MC_USD,
         "waiting": waiting,
         "dropped_revealed": [
             {**d, "token": {**_addr(d["token"]), **{k: v for k, v in (inp.meta.get(d["token"].lower()) or {}).items()
@@ -154,16 +165,27 @@ async def load_desk_inputs(db: AsyncSession, with_chain: bool = True) -> DeskInp
     ))).mappings().first()
     # Watching: the public ingest feed (crossed $10K, not yet labeled) with scores from the current run only
     watching = (await db.execute(text(
-        "SELECT t.mint, t.name, t.symbol, t.peak_mc, t.launched_at, COALESCE(t.holders, lh.holders) AS holders, "
-        "lh.sampled_at AS holders_sampled_at, s.survival "
-        "FROM tokens t LEFT JOIN desk_scores s ON s.mint = t.mint AND s.run_id = :run "
+        "SELECT t.mint, t.name, t.symbol, GREATEST(t.peak_mc::float, dm.peak_seen_usd) AS peak_mc, "
+        "dm.mc_usd AS mc_now, dm.pair_url, dm.fetched_at AS mc_at, t.launched_at, "
+        "COALESCE(t.holders, lh.holders) AS holders, lh.sampled_at AS holders_sampled_at, s.survival "
+        "FROM tokens t JOIN desk_market dm ON dm.mint = t.mint AND dm.mc_usd >= :lo "
+        "LEFT JOIN desk_scores s ON s.mint = t.mint AND s.run_id = :run "
         "LEFT JOIN desk_live_holders lh ON lh.mint = t.mint "
         "WHERE t.status::text = 'pending' AND t.chain = 'robinhood' "
         "AND t.mint ~ '^0x[0-9a-fA-F]{40}$' AND COALESCE(lh.has_code, true) "
         "AND t.launched_at > now() - make_interval(hours => :h) "
-        "ORDER BY s.survival DESC NULLS LAST, t.peak_mc DESC LIMIT :lim"
+        "ORDER BY s.survival DESC NULLS LAST, dm.mc_usd DESC LIMIT :lim"
     ), {"run": model["run_id"] if model else -1, "h": settings.DESK_MAX_HOLD_H,
-        "lim": settings.DESK_WATCHING_LIMIT})).mappings().all()
+        "lim": settings.DESK_WATCHING_LIMIT, "lo": settings.DESK_WATCH_MIN_MC_USD})).mappings().all()
+    # Watched rows left out of the list right now, by reason
+    hidden = (await db.execute(text(
+        "SELECT count(*) FILTER (WHERE dm.mint IS NULL OR dm.mc_usd IS NULL) AS no_price, "
+        "count(*) FILTER (WHERE dm.mc_usd < :lo) AS below_min "
+        "FROM tokens t JOIN desk_live_holders lh ON lh.mint = t.mint AND lh.has_code "
+        "LEFT JOIN desk_market dm ON dm.mint = t.mint "
+        "WHERE t.status::text = 'pending' AND t.chain = 'robinhood' "
+        "AND t.launched_at > now() - make_interval(hours => :h)"
+    ), {"h": settings.DESK_MAX_HOLD_H, "lo": settings.DESK_WATCH_MIN_MC_USD})).mappings().one()
     # Feed rows that are not Robinhood Chain contracts (other chains' addresses, NEAR names): counted, not shown
     not_onchain = (await db.execute(text(
         "SELECT count(*) FROM tokens t LEFT JOIN desk_live_holders lh ON lh.mint = t.mint "
@@ -212,6 +234,8 @@ async def load_desk_inputs(db: AsyncSession, with_chain: bool = True) -> DeskInp
         meta={m["mint"]: {"name": m["name"], "symbol": m["symbol"], "status": m["status"]} for m in meta_rows},
         burned_wei=int(burned or 0),
         watching_not_onchain=int(not_onchain or 0),
+        watching_no_price=int(hidden["no_price"] or 0),
+        watching_below_min=int(hidden["below_min"] or 0),
     )
     if with_chain:
         r = await desk_chain.reader()
@@ -223,9 +247,37 @@ async def load_desk_inputs(db: AsyncSession, with_chain: bool = True) -> DeskInp
     return inp
 
 
-async def _cached_inputs(db: AsyncSession) -> DeskInputs:
+async def _refresh_cache() -> DeskInputs:
     global _cache, _cache_ts
-    if _cache is not None and time.time() - _cache_ts < CACHE_TTL_SECONDS:
+    async with AsyncSessionLocal() as db:
+        inp = await load_desk_inputs(db)
+    _cache, _cache_ts = inp, time.time()
+    return inp
+
+
+async def _refresh_in_background() -> None:
+    global _refreshing
+    try:
+        await _refresh_cache()
+    except Exception as e:
+        print(f"[API ERROR] desk background refresh failed: {e}", flush=True)
+    finally:
+        _refreshing = False
+
+
+async def _cached_inputs(db: AsyncSession) -> DeskInputs:
+    """
+    Stale-while-revalidate: a read costs ~10 sequential queries to the remote database plus chain reads (5-7s),
+    so a slightly old snapshot is served at once while a fresh one loads. Never older than STALE_MAX_SECONDS.
+    """
+    global _cache, _cache_ts, _refreshing
+    age = time.time() - _cache_ts
+    if _cache is not None and age < CACHE_TTL_SECONDS:
+        return _cache
+    if _cache is not None and age < STALE_MAX_SECONDS:
+        if not _refreshing:
+            _refreshing = True
+            asyncio.create_task(_refresh_in_background())
         return _cache
     try:
         inp = await load_desk_inputs(db)

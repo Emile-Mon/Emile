@@ -74,7 +74,7 @@ export default function DeskPage() {
                   Could not refresh desk data. Showing the last read.
                 </div>
               )}
-              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-10 lg:gap-8 items-start">
+              <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] gap-10 xl:gap-8 items-start">
                 <WatchingPanel data={data} />
                 <WaitingPanel data={data} />
               </div>

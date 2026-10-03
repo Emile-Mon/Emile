@@ -12,16 +12,19 @@ export interface DeskToken {
   symbol: string | null;
   address: string;
   url?: string;
+  dexscreener_url?: string;
 }
 
 export interface WatchingRow {
   token: DeskToken;
   peak_mc: number | null;
+  mc_now: number | null; // live from DexScreener
+  mc_at: string | null;
   launched_at: string | null;
   holders: number | null;
   holders_sampled_at: string | null;
   survival: number | null;
-  status: 'scoring' | 'below_threshold' | 'unscored' | 'awaiting_holders' | 'excluded';
+  status: 'scoring' | 'below_threshold' | 'unscored' | 'awaiting_holders' | 'reached_tp' | 'excluded';
 }
 
 export interface WaitingSlot {
@@ -105,6 +108,10 @@ export interface DeskPayload {
   epc_burned: { amount: number; amount_wei: string; usd: number | null; burn_address: AddressLink | null };
   watching: WatchingRow[];
   watching_not_onchain: number; // feed rows with no contract on Robinhood Chain: counted, not shown
+  watching_no_price: number; // on Robinhood Chain but no DexScreener pair
+  watching_below_min: number; // market cap fell back under the $10K bar
+  watch_min_mc_usd: number;
+  take_profit_mc_usd: number;
   waiting: WaitingSlot[];
   dropped_revealed: { slot: number; token: DeskToken; survival: number; dropped_reason: string; dropped_at: string }[];
   open: OpenTrade[];

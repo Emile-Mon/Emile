@@ -27,6 +27,7 @@ from app.services.desk_executor import run_executor_cycle
 from app.services.desk_poster import initial_post_status, post_due
 from app.services import desk_chain
 from app.services.live_holders import refresh_live_holders
+from app.services.live_market import refresh_market
 from app.services.scorer import ScorerUnavailable, score_mints
 
 DESK_WORKER_LOCK_KEY = 0x45504F43_4445534B  # "EPOC" "DESK"
@@ -39,9 +40,11 @@ async def score_watching(db) -> int:
     # Only tokens that exist on Robinhood Chain (feed rows from other chains are never scored)
     mints = [r[0] for r in (await db.execute(text(
         "SELECT t.mint FROM tokens t JOIN desk_live_holders lh ON lh.mint = t.mint AND lh.has_code "
+        "JOIN desk_market dm ON dm.mint = t.mint AND dm.mc_usd >= :lo AND dm.mc_usd < :hi "
         "WHERE t.status::text = 'pending' AND t.chain = 'robinhood' "
         "AND t.launched_at > now() - make_interval(hours => :h)"
-    ), {"h": settings.DESK_MAX_HOLD_H})).all()]
+    ), {"h": settings.DESK_MAX_HOLD_H, "lo": settings.DESK_WATCH_MIN_MC_USD,
+        "hi": settings.DESK_TP_MC_USD})).all()]
     if not mints:
         return 0
     scores = await score_mints(db, mints)
@@ -104,6 +107,12 @@ async def run_desk_cycle() -> None:
             except Exception as e:
                 await db.rollback()
                 print(f"[DESK WORKER] Holder count failed: {type(e).__name__} {e}", flush=True)
+            try:
+                priced = await refresh_market(db, max_age_h=settings.DESK_MAX_HOLD_H)
+                print(f"[DESK WORKER] Live market cap for {priced} tokens", flush=True)
+            except Exception as e:
+                await db.rollback()
+                print(f"[DESK WORKER] Market refresh failed: {type(e).__name__} {e}", flush=True)
             try:
                 n = await score_watching(db)
                 # A scoring pass over the feed is a decision cycle: that is what the heartbeat reports

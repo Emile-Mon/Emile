@@ -27,6 +27,20 @@ SCHEMA_STATEMENTS: list[str] = [
     """,
     # False when the address has no contract on Robinhood Chain (feed rows from other chains): never scored or shown
     "ALTER TABLE desk_live_holders ADD COLUMN IF NOT EXISTS has_code BOOLEAN NOT NULL DEFAULT true",
+    # Live market cap per watched token from DexScreener (app.services.live_market); peak_seen_usd is the
+    # highest market cap the Desk itself has observed
+    """
+    CREATE TABLE IF NOT EXISTS desk_market (
+        mint           TEXT PRIMARY KEY,
+        mc_usd         DOUBLE PRECISION,
+        liq_usd        DOUBLE PRECISION,
+        price_usd      DOUBLE PRECISION,
+        pair_url       TEXT,
+        dex_id         TEXT,
+        peak_seen_usd  DOUBLE PRECISION,
+        fetched_at     TIMESTAMPTZ NOT NULL
+    )
+    """,
     # Candidate lifecycle, written by the executor. The token column never leaves the backend before the
     # entry tx confirms (app.services.desk.anonymize_waiting is the only reader that serializes it).
     """

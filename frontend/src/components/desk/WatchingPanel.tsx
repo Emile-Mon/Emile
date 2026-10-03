@@ -2,17 +2,35 @@
 
 import React from 'react';
 import { DESK_COPY } from '@/config/deskCopy';
-import { Cell, Empty, HeadRow, Panel, SurvivalBar, rowClass, useNow } from './DeskUi';
+import { Cell, Empty, HeadRow, LiveNumber, Panel, SurvivalBar, rowClass, useNow } from './DeskUi';
 import { STAGE_LABEL, ageSince, fmtCount, fmtUsdCompact, tokenLabel, type DeskPayload, type WatchingRow } from './types';
 
-const WATCH_COLS = 'md:grid-cols-[minmax(0,1.4fr)_0.75fr_0.65fr_0.6fr_1fr_1.05fr]';
+const WATCH_COLS = 'md:grid-cols-[minmax(0,1.35fr)_0.7fr_0.65fr_0.6fr_0.55fr_0.95fr_1fr]';
 
 const STATUS: Record<WatchingRow['status'], { label: string; cls: string }> = {
   scoring: { label: 'scoring', cls: 'text-[var(--banana)]' },
   below_threshold: { label: 'below threshold', cls: 'text-[var(--dim)] text-[11.5px]' },
   unscored: { label: 'unscored', cls: 'text-[var(--faint)]' },
   awaiting_holders: { label: 'counting holders', cls: 'text-[var(--faint)]' },
+  reached_tp: { label: 'reached $30K', cls: 'text-[var(--live)]' },
   excluded: { label: 'excluded', cls: 'text-[var(--faint)]' },
+};
+
+const WatchingNote: React.FC<{ data: DeskPayload }> = ({ data }) => {
+  const hidden = [
+    data.watching_below_min && `${data.watching_below_min} fell back under ${fmtUsdCompact(data.watch_min_mc_usd)}`,
+    data.watching_no_price && `${data.watching_no_price} have no DexScreener pair`,
+    data.watching_not_onchain && `${data.watching_not_onchain} have no contract on Robinhood Chain`,
+  ].filter(Boolean);
+  return (
+    <>
+      Robinhood Chain tokens at or above {fmtUsdCompact(data.watch_min_mc_usd)} right now. Market cap is live from
+      DexScreener every cycle; a token that reaches {fmtUsdCompact(data.take_profit_mc_usd)} is marked and never bought.
+      Holders are counted onchain. Scores come from model run {data.model?.run_id ?? '—'} (entry threshold{' '}
+      {data.threshold.toFixed(2)}), which was trained on 48-hour holder counts: they are not reliable yet.
+      {hidden.length > 0 && <> Hidden: {hidden.join(', ')}.</>}
+    </>
+  );
 };
 
 export const WatchingPanel: React.FC<{ data: DeskPayload }> = ({ data }) => {
@@ -22,32 +40,46 @@ export const WatchingPanel: React.FC<{ data: DeskPayload }> = ({ data }) => {
       id="watching"
       title="Watching"
       count={data.watching.length}
-      note={
-        `Tokens past $10K from the public ingest feed, scored by model run ${data.model?.run_id ?? '—'}. ` +
-        `Entry threshold ${data.threshold.toFixed(2)}. Holders are counted onchain now, while the model was trained ` +
-        `on 48-hour counts: these scores are not reliable yet. Team tokens are never traded.` +
-        (data.watching_not_onchain
-          ? ` ${data.watching_not_onchain} feed ${data.watching_not_onchain === 1 ? 'entry is' : 'entries are'} hidden: no contract on Robinhood Chain.`
-          : '')
-      }
+      note={<WatchingNote data={data} />}
     >
       {data.watching.length === 0 ? (
         <Empty>No tokens in the feed right now.</Empty>
       ) : (
         <>
-          <HeadRow cols={WATCH_COLS} labels={['Token', 'Peak MC', 'Age', 'Holders now', 'Survival', 'Status']} />
+          <HeadRow cols={WATCH_COLS} labels={['Token', 'MC now', 'Peak', 'Age', 'Holders', 'Survival', 'Status']} />
           <ol className="space-y-2 md:space-y-1.5">
             {data.watching.map((r) => (
               <li key={r.token.address} className={rowClass(WATCH_COLS)}>
                 <Cell label="Token" first>
-                  <span className="text-[var(--fg-hi)] font-sans font-semibold text-[14px]">{tokenLabel(r.token)}</span>
-                  {r.token.name && r.token.symbol && (
-                    <span className="ml-2 text-[var(--dim)] text-[11.5px]">{r.token.name}</span>
-                  )}
+                  {/* The name truncates; the DexScreener link never does */}
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="min-w-0 truncate">
+                      <span className="text-[var(--fg-hi)] font-sans font-semibold text-[14px]">{tokenLabel(r.token)}</span>
+                      {r.token.name && r.token.symbol && (
+                        <span className="ml-2 text-[var(--dim)] text-[11.5px]">{r.token.name}</span>
+                      )}
+                    </span>
+                    {r.token.dexscreener_url && (
+                      <a
+                        href={r.token.dexscreener_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Open ${tokenLabel(r.token)} on DexScreener`}
+                        className="shrink-0 inline-flex items-center px-1.5 py-px rounded border border-[var(--banana)]/40 text-[9.5px] uppercase tracking-wider text-[var(--banana)] hover:bg-[var(--banana-glow)]"
+                      >
+                        Dex ↗
+                      </a>
+                    )}
+                  </span>
                 </Cell>
-                <Cell label="Peak MC">{fmtUsdCompact(r.peak_mc)}</Cell>
+                <Cell label="MC now">
+                  <LiveNumber value={r.mc_now} className={r.status === 'reached_tp' ? 'text-[var(--live)]' : ''}>
+                    {fmtUsdCompact(r.mc_now)}
+                  </LiveNumber>
+                </Cell>
+                <Cell label="Peak"><span className="text-[var(--dim)]">{fmtUsdCompact(r.peak_mc)}</span></Cell>
                 <Cell label="Age">{ageSince(r.launched_at, now)}</Cell>
-                <Cell label="Holders now">{fmtCount(r.holders)}</Cell>
+                <Cell label="Holders">{fmtCount(r.holders)}</Cell>
                 <Cell label="Survival">
                   <SurvivalBar value={r.survival} threshold={data.threshold} />
                 </Cell>
