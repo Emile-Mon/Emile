@@ -3,6 +3,7 @@ Minimal JSON-RPC client for Robinhood Chain (chain 4663) plus pure log decoders.
 httpx only; no web3 dependency. Blockscout is used for links, never as a data source
 (its API sits behind a Cloudflare challenge).
 """
+import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -83,7 +84,17 @@ class ChainReader:
         if not calls:
             return []
         payload = [{"jsonrpc": "2.0", "id": i, "method": m, "params": p} for i, (m, p) in enumerate(calls)]
-        res = await self._client.post(self.rpc_url, json=payload)
+        # The public RPC rate-limits (429) and occasionally drops connections: back off and retry
+        for attempt in range(6):
+            try:
+                res = await self._client.post(self.rpc_url, json=payload)
+                if res.status_code == 429 or res.status_code >= 500:
+                    raise httpx.HTTPStatusError(f"HTTP {res.status_code}", request=res.request, response=res)
+                break
+            except (httpx.HTTPStatusError, httpx.TransportError):
+                if attempt == 5:
+                    raise
+                await asyncio.sleep(min(30, 1.5 * 2 ** attempt))
         res.raise_for_status()
         body = res.json()
         if isinstance(body, dict):  # some nodes answer a failed batch with a single error object
@@ -119,8 +130,8 @@ class ChainReader:
     async def block_timestamps(self, blocks: set[int]) -> dict[int, datetime]:
         # Logs on this chain report blockTimestamp 0x0, so read it from the block header
         missing = sorted(b for b in blocks if b not in self._ts_cache)
-        for i in range(0, len(missing), 50):
-            chunk = missing[i:i + 50]
+        for i in range(0, len(missing), 20):
+            chunk = missing[i:i + 20]
             results = await self._batch([("eth_getBlockByNumber", [hex(b), False]) for b in chunk])
             for b, blk in zip(chunk, results):
                 if blk is None:

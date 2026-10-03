@@ -1,5 +1,6 @@
 import React from 'react';
 import { Hourglass3D } from '@/components/ui/Hourglass3D';
+import { FloorGauge } from './FloorGauge';
 import { EPOCHS_HERO } from '@/config/epochsCopy';
 import { roman, type EpochsPayload } from './types';
 
@@ -86,6 +87,7 @@ export const EpochsHero: React.FC<{ data: EpochsPayload | null; error?: boolean 
             </div>
           </div>
           {model && <div className="mt-2 font-mono text-[10.5px] text-[var(--faint)]">Model run #{model.run_id}</div>}
+          {model && data && <FloorGauge floor={model.proven_floor} start={data.floor_auc} full={data.target_auc} />}
         </div>
       </div>
     </section>

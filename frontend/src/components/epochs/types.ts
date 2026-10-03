@@ -49,6 +49,7 @@ export interface EpochsPayload {
   golem_paused: string | null;
   model: EpochsModel | null;
   target_auc: number;
+  floor_auc: number;
   epochs: EpochItem[];
   burns: { total_wei: string; count: number };
   contracts: {

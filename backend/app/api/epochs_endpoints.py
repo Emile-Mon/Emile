@@ -74,6 +74,7 @@ def build_epochs_payload(completed: dict[int, Completion], model: dict | None, b
         "model": model,
         "gates_config": gates,
         "target_auc": target,
+        "floor_auc": settings.AUC_FLOOR,
         "epochs": epochs,
         "burns": burns,
         "contracts": contracts_block(),
