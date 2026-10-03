@@ -1,6 +1,28 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { EPOCH_CONTRACT_ADDRESS } from '@/config/constants';
 
 export const HeroScene: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(EPOCH_CONTRACT_ADDRESS);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textArea = document.createElement('textarea');
+      textArea.value = EPOCH_CONTRACT_ADDRESS;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <div className="scene p-2 md:p-2.5 pt-3 pb-0 bg-[radial-gradient(115%_85%_at_46%_34%,var(--panel)_0%,var(--ink)_75%)] relative overflow-hidden flex flex-col justify-between">
       {/* Background Ambient Glow */}
@@ -24,6 +46,34 @@ export const HeroScene: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[var(--live)] animate-pulse" />
             LIVE EPOCH LABS FEED
           </div>
+
+          {/* CA in Top Right Corner of Video */}
+          <button
+            onClick={handleCopy}
+            type="button"
+            className="absolute top-3 right-3 px-2.5 py-1 bg-black/60 hover:bg-black/85 backdrop-blur-md rounded border border-white/10 hover:border-[var(--live)]/50 text-[10.5px] font-mono text-white/90 hover:text-white transition-all flex items-center gap-1.5 shadow-lg cursor-pointer group/ca z-10"
+            title="Click to copy CA"
+          >
+            <span className="text-[var(--live)] font-semibold">CA:</span>
+            <span className="hidden sm:inline font-mono">
+              {EPOCH_CONTRACT_ADDRESS}
+            </span>
+            <span className="inline sm:hidden font-mono">
+              {EPOCH_CONTRACT_ADDRESS.slice(0, 6)}...{EPOCH_CONTRACT_ADDRESS.slice(-4)}
+            </span>
+            {copied ? (
+              <span className="text-[var(--live)] text-[10px] font-bold flex items-center gap-1 ml-0.5">
+                <svg className="w-3 h-3 text-[var(--live)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                COPIED
+              </span>
+            ) : (
+              <svg className="w-3.5 h-3.5 opacity-60 group-hover/ca:opacity-100 transition-opacity ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
 

@@ -69,9 +69,9 @@ class Settings(BaseSettings):
     DELTA_CONFIDENCE: float = 0.05
 
     # Target Token Contract Addresses (CAs) & Axiom URLs
-    EMILE_TOKEN_CA: str = os.getenv("EMILE_TOKEN_CA", "0xe2e4a2404c3923990ccc1e6435dc5b6476284992")
+    EMILE_TOKEN_CA: str = os.getenv("EMILE_TOKEN_CA", "0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e")
     EMILE_BANANA_TOKEN_CA: str = os.getenv("EMILE_BANANA_TOKEN_CA", "0x3c51485b11d52f90c251e74875a8b93c81027274")
-    EMILE_AXIOM_URL: str = os.getenv("EMILE_AXIOM_URL", "https://axiom.trade/token/0xe2e4a2404c3923990ccc1e6435dc5b6476284992?chain=robinhood&chains=robinhood,bnb")
+    EMILE_AXIOM_URL: str = os.getenv("EMILE_AXIOM_URL", "https://axiom.trade/token/0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e?chain=robinhood&chains=robinhood,bnb")
     EMILE_BANANA_AXIOM_URL: str = os.getenv("EMILE_BANANA_AXIOM_URL", "https://axiom.trade/token/0x3c51485b11d52f90c251e74875a8b93c81027274?chain=robinhood&chains=robinhood,bnb")
 
     # Twitter / X API v2 Credentials & Auto-Post Settings
