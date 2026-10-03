@@ -82,12 +82,12 @@ export const EpochsHero: React.FC<{ data: EpochsPayload | null; error?: boolean 
               <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--faint)]">Proven floor</div>
               <div className="font-sans font-semibold text-4xl md:text-5xl text-[var(--banana)] tabular-nums tracking-tight">
                 {model ? model.proven_floor.toFixed(3) : '—'}
-                <span className="text-base md:text-lg text-[var(--dim)]"> / {data ? data.target_auc.toFixed(2) : '—'}</span>
+                <span className="text-base md:text-lg text-[var(--dim)]"> / {data?.target_auc ? data.target_auc.toFixed(2) : '0.60'}</span>
               </div>
             </div>
           </div>
           {model && <div className="mt-2 font-mono text-[10.5px] text-[var(--faint)]">Model run #{model.run_id}</div>}
-          {model && data && <FloorGauge floor={model.proven_floor} start={data.floor_auc} full={data.target_auc} />}
+          {model && <FloorGauge floor={model.proven_floor} start={data?.floor_auc ?? 0.50} full={data?.target_auc ?? 0.60} />}
         </div>
       </div>
     </section>

@@ -78,11 +78,15 @@ export const roman = (id: number) => ROMAN[id - 1] ?? String(id);
 
 export const shortAddress = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
-/** "2026-10-03 14:05 UTC" */
 export const formatUtc = (iso: string) => {
-  const d = new Date(iso);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`;
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso || '—';
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`;
+  } catch {
+    return iso || '—';
+  }
 };
 
 /** 18-decimal wei string to a readable token amount, exact (BigInt, no float rounding). */
