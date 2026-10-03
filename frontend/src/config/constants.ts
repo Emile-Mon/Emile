@@ -1,6 +1,6 @@
 export const PROJECT_NAME = 'Epoch Labs';
 export const EPOCH_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e';
-export const EPOCH_SYMBOL = '$EPOCH';
+export const EPOCH_SYMBOL = '$EPC';
 export const EPOCH_CHAIN = 'Robinhood Chain Mainnet';
 export const NETWORK = 'mainnet';
 
