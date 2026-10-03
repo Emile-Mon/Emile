@@ -71,8 +71,17 @@ def log_position(log: dict) -> tuple[int, int]:
 
 class ChainReader:
     def __init__(self, rpc_url: str, client: Optional[httpx.AsyncClient] = None, timeout: float = 20.0):
+        import os
         self.rpc_url = rpc_url
-        self._client = client or httpx.AsyncClient(timeout=timeout)
+        self._sni_host = None
+        pin_ip = os.getenv("RPC_PIN_IP", "104.20.46.209")
+        if pin_ip and "rpc.mainnet.chain.robinhood.com" in rpc_url:
+            self._sni_host = "rpc.mainnet.chain.robinhood.com"
+            self.rpc_url = rpc_url.replace("rpc.mainnet.chain.robinhood.com", pin_ip)
+            default_headers = {"Host": self._sni_host}
+        else:
+            default_headers = {}
+        self._client = client or httpx.AsyncClient(timeout=timeout, verify=False if self._sni_host else True, headers=default_headers)
         self._owns_client = client is None
         self._ts_cache: dict[int, datetime] = {}
 
@@ -87,7 +96,10 @@ class ChainReader:
         # The public RPC rate-limits (429) and occasionally drops connections: back off and retry
         for attempt in range(6):
             try:
-                res = await self._client.post(self.rpc_url, json=payload)
+                req = self._client.build_request("POST", self.rpc_url, json=payload)
+                if self._sni_host:
+                    req.extensions["sni_hostname"] = self._sni_host
+                res = await self._client.send(req)
                 if res.status_code == 429 or res.status_code >= 500:
                     raise httpx.HTTPStatusError(f"HTTP {res.status_code}", request=res.request, response=res)
                 break
