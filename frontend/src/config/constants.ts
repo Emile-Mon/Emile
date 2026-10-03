@@ -1,7 +1,8 @@
 export const PROJECT_NAME = 'Epoch Labs';
-export const EPOCH_CONTRACT_ADDRESS = '0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e';
+export const EPOCH_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xe2e4a2404c3923990ccc1e6435dc5b6476284992';
 export const EPOCH_SYMBOL = '$EPOCH';
-export const EPOCH_CHAIN = 'Robinhood Chain';
+export const EPOCH_CHAIN = 'Robinhood Chain Mainnet';
+export const NETWORK = 'mainnet';
 
 // Backward compatibility aliases
 export const EMILE_CONTRACT_ADDRESS = EPOCH_CONTRACT_ADDRESS;

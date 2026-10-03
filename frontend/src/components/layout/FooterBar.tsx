@@ -26,7 +26,7 @@ export const FooterBar: React.FC = () => {
   return (
     <div className="foot p-3 px-6 border-t border-[var(--rule)] text-[var(--faint)] text-[10.5px] flex gap-4.5 flex-wrap items-center justify-between">
       <div className="flex items-center gap-3.5 flex-wrap">
-        <span>Simulated data · Epoch Labs is a research platform, not a financial adviser</span>
+        <span>Live Mainnet Data · Epoch Labs is a research platform, not a financial adviser</span>
         <span className="w text-[var(--banana-lo)]">
           Four features cannot forecast a market. This measures survival, not price.
         </span>

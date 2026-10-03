@@ -37,7 +37,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ phaseText = 'phase 1 · le
               Epoch Labs
             </span>
             <span className="text-xs md:text-sm font-mono text-[var(--banana)]/90 tracking-widest uppercase mt-1 font-semibold">
-              Robinhood Agent
+              Robinhood Mainnet
             </span>
           </div>
         </Link>

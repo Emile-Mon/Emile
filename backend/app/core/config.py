@@ -6,7 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Epoch Labs"
     VERSION: str = "1.0.0"
-    ENVIRONMENT: str = "production"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")
+    NETWORK: str = os.getenv("NETWORK", "mainnet")
 
     @property
     def RAW_DATABASE_URL(self) -> str:
@@ -53,7 +54,7 @@ class Settings(BaseSettings):
         return key
 
     DEFAULT_CHAIN: str = os.getenv("DEFAULT_CHAIN", "robinhood")
-    DEFAULT_CHAIN_LABEL: str = "Robinhood Chain"
+    DEFAULT_CHAIN_LABEL: str = os.getenv("DEFAULT_CHAIN_LABEL", "Robinhood Chain Mainnet")
     DEXSCREENER_API_BASE: str = "https://api.dexscreener.com/latest/dex"
     SOLANA_RPC_URL: str = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
 
@@ -69,9 +70,11 @@ class Settings(BaseSettings):
     DELTA_CONFIDENCE: float = 0.05
 
     # Target Token Contract Addresses (CAs) & Axiom URLs
-    EMILE_TOKEN_CA: str = os.getenv("EMILE_TOKEN_CA", "0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e")
+    EPOCH_TOKEN_CA: str = os.getenv("EPOCH_TOKEN_CA", os.getenv("EMILE_TOKEN_CA", "0xe2e4a2404c3923990ccc1e6435dc5b6476284992"))
+    EPOCH_AXIOM_URL: str = os.getenv("EPOCH_AXIOM_URL", "https://axiom.trade/token/0xe2e4a2404c3923990ccc1e6435dc5b6476284992?chain=robinhood")
+    EMILE_TOKEN_CA: str = EPOCH_TOKEN_CA
     EMILE_BANANA_TOKEN_CA: str = os.getenv("EMILE_BANANA_TOKEN_CA", "0x3c51485b11d52f90c251e74875a8b93c81027274")
-    EMILE_AXIOM_URL: str = os.getenv("EMILE_AXIOM_URL", "https://axiom.trade/token/0xb71463fbe6a6edef8d9d8cb0ccb5ab84cd0a353e?chain=robinhood&chains=robinhood,bnb")
+    EMILE_AXIOM_URL: str = EPOCH_AXIOM_URL
     EMILE_BANANA_AXIOM_URL: str = os.getenv("EMILE_BANANA_AXIOM_URL", "https://axiom.trade/token/0x3c51485b11d52f90c251e74875a8b93c81027274?chain=robinhood&chains=robinhood,bnb")
 
     # Twitter / X API v2 Credentials & Auto-Post Settings
