@@ -127,13 +127,17 @@ async def sync_wallet_transfers(db) -> int:
             # Get existing tx_hashes from DB
             existing = set((await db.execute(text("SELECT lower(tx_hash) FROM golem_swaps"))).scalars().all())
 
+            new_items = [item for tx_h, item in normalized.items() if tx_h not in existing]
+            if not new_items:
+                print(f"[WALLET SYNC] Polled {wallet}: {len(normalized)} onchain transfers, 0 new recorded.", flush=True)
+                return 0
+
             new_count = 0
             goforge = goforge_cas()
             max_decision_id = (await db.execute(text("SELECT COALESCE(MAX(id), 0) FROM golem_trade_decisions"))).scalar()
 
-            for tx_hash, item in normalized.items():
-                if tx_hash in existing:
-                    continue
+            for item in new_items:
+                tx_hash = item["hash"]
 
                 try:
                     side = item["side"]
